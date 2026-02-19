@@ -3,6 +3,17 @@
   --accent-color: #34495e;
   --text-color: #333;
   --line-color: #ddd;
+
+  --space-xs: 4px;
+  --space-sm: 10px;
+  --space-md: 18px;
+  --space-lg: 22px;
+  --space-xl: 45px;
+
+  --font-sm: 0.85em;
+  --font-base: 0.95em;
+  --font-md: 1.05em;
+  --font-skills: 0.92em;
 }
 
 .app-shell {
@@ -17,7 +28,7 @@
   min-height: 11in;
   margin: 0 auto;
   background: #fff;
-  padding: 45px 55px;
+  padding: var(--space-xl) 55px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   line-height: 1.5;
   box-sizing: border-box;
@@ -44,6 +55,8 @@
   gap: 20px;
   justify-content: center;
   flex-wrap: wrap;
+  font-style: normal;
+  /* override browser default italic on <address> */
 }
 
 .contact-info a {
@@ -58,10 +71,10 @@
 .section-title {
   border-bottom: 1px solid var(--line-color);
   text-transform: uppercase;
-  font-size: 1.05em;
+  font-size: var(--font-md);
   color: var(--primary-color);
-  margin-top: 22px;
-  margin-bottom: 10px;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
   letter-spacing: 0.5px;
 }
 
@@ -69,30 +82,33 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 0.92em;
+  font-size: var(--font-skills);
 }
 
 .skill-group strong {
-  font-size: 0.85em;
+  font-size: var(--font-sm);
   text-transform: uppercase;
   margin-right: 6px;
   color: #555;
 }
 
 .entry {
-  margin-bottom: 18px;
+  margin-bottom: var(--space-md);
 }
 
-.job-title {
+.job-header {
   font-weight: bold;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 1.05em;
+  font-size: var(--font-md);
 }
 
 .job-title-name {
   text-transform: uppercase;
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
 }
 
 .company {
@@ -103,32 +119,32 @@
 
 .date-loc,
 .date-loc-inline {
-  font-size: 0.85em;
+  font-size: var(--font-sm);
   color: #666;
 }
 
 .date-loc {
-  margin-bottom: 4px;
+  margin-bottom: var(--space-xs);
 }
 
 ul {
   padding-left: 20px;
-  margin-top: 4px;
+  margin-top: var(--space-xs);
   margin-bottom: 0;
 }
 
 li {
   margin-bottom: 6px;
-  font-size: 0.95em;
+  font-size: var(--font-base);
 }
 
 .interests-text {
-  font-size: 0.92em;
-  margin-top: 4px;
+  font-size: var(--font-skills);
+  margin-top: var(--space-xs);
 }
 
 @media (max-width: 600px) {
-  .job-title {
+  .job-header {
     flex-direction: column;
   }
 
