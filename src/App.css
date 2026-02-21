@@ -30,7 +30,7 @@
   background: #fff;
   padding: var(--space-xl) 55px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  line-height: 1.5;
+  line-height: 1.25;
   box-sizing: border-box;
 }
 
@@ -119,6 +119,11 @@
 
 .date-loc,
 .date-loc-inline {
+  font-size: var(--font-sm);
+  color: #666;
+}
+
+time {
   font-size: var(--font-sm);
   color: #666;
 }

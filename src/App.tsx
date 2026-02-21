@@ -1,14 +1,21 @@
 import './App.css'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons'
+import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
 import { RESUME_STORE } from './resume.store'
-import { ACTIVE_PROFILE } from './resume.profile'
+import { ACTIVE_PROFILE, getPoint } from './resume.profile'
 import type { ExperienceSelection } from './resume.profile'
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="section-title">{children}</h2>
 }
 
-function ContactLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return <a href={href}>{children}</a>
+function ContactLink({ href, icon, children }: { href: string; icon: any; children: React.ReactNode }) {
+  return (
+    <a href={href}>
+      <FontAwesomeIcon icon={icon} /> {children}
+    </a>
+  )
 }
 
 function SkillRow({ label, items }: { label: string; items: readonly string[] }) {
@@ -22,9 +29,6 @@ function SkillRow({ label, items }: { label: string; items: readonly string[] })
 
 function JobEntry({ selection }: { selection: ExperienceSelection }) {
   const job = RESUME_STORE.experience[selection.id]
-  // TypeScript limitation: correlated union indexing can't be statically narrowed here.
-  // Safety is guaranteed upstream — selectJob<K> enforces valid point keys per job at authorship.
-  const points = job.points as Record<string, { category?: string; text: string }>
   return (
     <article className="entry">
       <div className="job-header">
@@ -32,11 +36,11 @@ function JobEntry({ selection }: { selection: ExperienceSelection }) {
         <span className="company">{job.company}</span>
       </div>
       <div className="date-loc">
-        {job.start} — {job.end} | {job.location}
+        <time>{job.start}</time> — <time>{job.end}</time> | {job.location}
       </div>
       <ul>
         {selection.points.map((pointKey) => {
-          const point = points[pointKey]
+          const point = getPoint(job, pointKey)
           return (
             <li key={pointKey}>
               {point.category ? <strong>{point.category}: </strong> : null}
@@ -57,9 +61,9 @@ function App() {
         <header className="resume-header">
           <h1>{header.name}</h1>
           <address className="contact-info">
-            <ContactLink href={`mailto:${header.email}`}>{header.email}</ContactLink>
-            <ContactLink href={`https://${header.linkedin}`}>{header.linkedin}</ContactLink>
-            <ContactLink href={`https://${header.github}`}>{header.github}</ContactLink>
+            <ContactLink icon={faEnvelope} href={`mailto:${header.email}`}>{header.email}</ContactLink>
+            <ContactLink icon={faLinkedin} href={`https://${header.linkedin}`}>{header.linkedin}</ContactLink>
+            <ContactLink icon={faGithub} href={`https://${header.github}`}>{header.github}</ContactLink>
           </address>
         </header>
 
@@ -84,7 +88,7 @@ function App() {
           <article className="entry">
             <div className="job-header">
               <span><strong>{education.school}</strong> — {education.degree}</span>
-              <span className="date-loc-inline">{education.date}</span>
+              <time className="date-loc-inline">{education.date}</time>
             </div>
           </article>
         </section>
