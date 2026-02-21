@@ -8,6 +8,10 @@
     const { header, skills, education, interests } = RESUME_STORE;
 </script>
 
+<svelte:head>
+    <title>{header.name}</title>
+</svelte:head>
+
 <!--
   {#snippet} defines a reusable template fragment local to this file.
   {@render} calls it — like calling a function that returns markup.
