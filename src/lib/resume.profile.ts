@@ -26,5 +26,6 @@ export const ACTIVE_PROFILE = {
         selectJob('ouster', ['arch', 'api', 'scale', 'devops', 'mentorship']),
         selectJob('untether', ['throughput', 'multichip']),
         selectJob('cepton', ['tracking_redesign', 'lidar_camera_overlay', 'background_detector']),
+        selectJob('linamar', ['cad_design', 'vba', 'ventilation']),
     ],
 }

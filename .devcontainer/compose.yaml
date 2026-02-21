@@ -1,0 +1,9 @@
+name: ${REPO_NAME:?}-${PWD:?}
+
+services:
+  devcontainer:
+    build:
+      context: ../images/ci/
+    volumes:
+      - ..:/workspaces/${REPO_NAME:?}:cached
+    command: "bash -c 'trap exit TERM; sleep infinity & wait;'"

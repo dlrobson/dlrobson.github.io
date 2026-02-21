@@ -1,0 +1,19 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "svelte.svelte-vscode",
+                "vunguyentuan.vscode-css-variables"
+            ]
+        }
+    },
+    "dockerComposeFile": [
+        "compose.yaml",
+        "compose.override.yaml"
+    ],
+    "initializeCommand": ".devcontainer/initialize.sh",
+    "name": "${localWorkspaceFolderBasename}",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
