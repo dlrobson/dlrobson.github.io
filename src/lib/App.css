@@ -1,10 +1,12 @@
 :root {
   --primary-color: #2c3e50;
-  --accent-color: #34495e;
+  --secondary-color: #666;
+  --tertiary-color: #999;
   --text-color: #333;
   --line-color: #ddd;
+  --white: #fff;
 
-  --space-xs: 4px;
+  --space-xs: 2px;
   --space-sm: 10px;
   --space-md: 18px;
   --space-lg: 22px;
@@ -13,12 +15,11 @@
   --font-sm: 0.85em;
   --font-base: 0.95em;
   --font-md: 1.05em;
-  --font-skills: 0.92em;
 }
 
 .app-shell {
   min-height: 100vh;
-  background-color: #f4f4f4;
+  background-color: var(--white);
   padding: 30px 20px;
 }
 
@@ -27,45 +28,11 @@
   width: min(8.5in, calc(100vw - 40px));
   min-height: 11in;
   margin: 0 auto;
-  background: #fff;
+  background: var(--white);
   padding: var(--space-xl) 55px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   line-height: 1.25;
   box-sizing: border-box;
-}
-
-.resume-header {
-  text-align: center;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 12px;
-  margin-bottom: 12px;
-}
-
-.resume-header h1 {
-  margin: 0;
-  font-size: 2.2em;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.contact-info {
-  margin-top: 8px;
-  font-size: 0.9em;
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
-  font-style: normal;
-  /* override browser default italic on <address> */
-}
-
-.contact-info a {
-  color: var(--text-color);
-  text-decoration: none;
-}
-
-.contact-info a:hover {
-  text-decoration: underline;
 }
 
 .section-title {
@@ -76,60 +43,6 @@
   margin-top: var(--space-lg);
   margin-bottom: var(--space-sm);
   letter-spacing: 0.5px;
-}
-
-.skills-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--font-skills);
-}
-
-.skill-group strong {
-  font-size: var(--font-sm);
-  text-transform: uppercase;
-  margin-right: 6px;
-  color: #555;
-}
-
-.entry {
-  margin-bottom: var(--space-md);
-}
-
-.job-header {
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: var(--font-md);
-}
-
-.job-title-name {
-  text-transform: uppercase;
-  font-size: inherit;
-  font-weight: inherit;
-  margin: 0;
-}
-
-.company {
-  font-style: italic;
-  color: var(--accent-color);
-  text-transform: uppercase;
-}
-
-.date-loc,
-.date-loc-inline {
-  font-size: var(--font-sm);
-  color: #666;
-}
-
-time {
-  font-size: var(--font-sm);
-  color: #666;
-}
-
-.date-loc {
-  margin-bottom: var(--space-xs);
 }
 
 ul {
@@ -143,16 +56,7 @@ li {
   font-size: var(--font-base);
 }
 
-.interests-text {
-  font-size: var(--font-skills);
-  margin-top: var(--space-xs);
-}
-
 @media (max-width: 600px) {
-  .job-header {
-    flex-direction: column;
-  }
-
   .resume-card {
     width: 100%;
     min-height: auto;

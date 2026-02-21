@@ -29,3 +29,48 @@
         {/each}
     </ul>
 </article>
+
+<style>
+    .entry {
+        margin-bottom: var(--space-md);
+    }
+
+    .job-header {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: var(--font-md);
+    }
+
+    .job-title-name {
+        text-transform: uppercase;
+        font-size: inherit;
+        font-weight: inherit;
+        color: var(--primary-color);
+        margin: 0;
+    }
+
+    .company {
+        font-style: italic;
+        color: var(--primary-color);
+        text-transform: uppercase;
+    }
+
+    .date-loc {
+        font-size: var(--font-sm);
+        color: var(--secondary-color);
+        margin-bottom: var(--space-xs);
+    }
+
+    time {
+        font-size: var(--font-sm);
+        color: var(--secondary-color);
+    }
+
+    @media (max-width: 600px) {
+        .job-header {
+            flex-direction: column;
+        }
+    }
+</style>

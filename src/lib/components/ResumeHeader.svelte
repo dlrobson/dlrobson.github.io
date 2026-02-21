@@ -28,3 +28,38 @@
         </a>
     </address>
 </header>
+
+<style>
+    .resume-header {
+        text-align: center;
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+    }
+
+    .resume-header h1 {
+        margin: 0;
+        font-size: 2.2em;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .contact-info {
+        margin-top: 8px;
+        font-size: 0.9em;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        font-style: normal;
+    }
+
+    .contact-info a {
+        color: var(--text-color);
+        text-decoration: none;
+    }
+
+    .contact-info a:hover {
+        text-decoration: underline;
+    }
+</style>

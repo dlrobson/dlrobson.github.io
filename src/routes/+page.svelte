@@ -52,3 +52,34 @@
         </section>
     </div>
 </div>
+
+<style>
+    .entry {
+        margin-bottom: var(--space-md);
+    }
+
+    .job-header {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: var(--font-md);
+    }
+
+    .date-loc-inline,
+    time {
+        font-size: var(--font-sm);
+        color: var(--secondary-color);
+    }
+
+    .interests-text {
+        font-size: var(--font-base);
+        margin-top: var(--space-xs);
+    }
+
+    @media (max-width: 600px) {
+        .job-header {
+            flex-direction: column;
+        }
+    }
+</style>
