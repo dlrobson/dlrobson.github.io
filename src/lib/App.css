@@ -10,78 +10,14 @@
   --space-md: 18px;
   --space-lg: 22px;
   --space-xl: 45px;
+  --space-2xl: 55px;
 
   --font-sm: 0.85em;
   --font-base: 0.95em;
   --font-md: 1.05em;
 }
 
-.app-shell {
-  min-height: 100vh;
-  background-color: var(--white);
-  padding: 30px 20px;
-}
-
-.resume-card {
-  color: var(--text-color);
-  width: min(8.5in, calc(100vw - 40px));
-  min-height: 11in;
-  margin: 0 auto;
-  background: var(--white);
-  padding: var(--space-xl) 55px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  line-height: 1.25;
-  box-sizing: border-box;
-}
-
-.section-title {
-  border-bottom: 1px solid var(--line-color);
-  text-transform: uppercase;
-  font-size: var(--font-md);
-  color: var(--primary-color);
-  margin-top: var(--space-lg);
-  margin-bottom: var(--space-sm);
-  letter-spacing: 0.5px;
-}
-
-ul {
-  padding-left: var(--space-lg);
-  margin-top: var(--space-xs);
-  margin-bottom: 0;
-}
-
-li {
-  margin-bottom: 6px;
-  font-size: var(--font-base);
-}
-
-@media (max-width: 600px) {
-  .resume-card {
-    width: 100%;
-    min-height: auto;
-    padding: 20px;
-  }
-}
-
 @page {
   size: Letter;
-  margin: var(--space-xl) 0 0 0;
-}
-
-@media print {
-  .app-shell {
-    background: none;
-    padding: 0;
-  }
-
-  .resume-card {
-    width: 8.5in;
-    min-height: 11in;
-    margin: 0;
-    /* Allow the paper's top margin to handle spacing, and remove the card's own padding */
-    padding-top: 0;
-    box-shadow: none;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
+  margin: var(--space-xl) 0 var(--space-xl) 0;
 }

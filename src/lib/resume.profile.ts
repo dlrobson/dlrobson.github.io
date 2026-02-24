@@ -1,4 +1,4 @@
-import type { JobKey, PointKey, SkillKey, ExperiencePoint, Job } from './resume.store'
+import type { JobKey, PointKey, SkillKey } from './resume.data'
 
 // Strict per-job type — used by selectJob to enforce correct point keys at authorship.
 export interface ExperienceSelectionFor<K extends JobKey> {
@@ -11,13 +11,6 @@ export type ExperienceSelection = { [K in JobKey]: ExperienceSelectionFor<K> }[J
 
 function selectJob<K extends JobKey>(id: K, points: readonly PointKey<K>[]): ExperienceSelectionFor<K> {
     return { id, points }
-}
-
-// Helper to safely access a job point from a job object.
-// The selection.points array is guaranteed to contain only valid keys for its job
-// because selectJob<K> validated them at authorship time.
-export function getPoint(job: Job, pointKey: string): ExperiencePoint {
-    return (job.points as Record<string, ExperiencePoint>)[pointKey]
 }
 
 export const ACTIVE_PROFILE = {

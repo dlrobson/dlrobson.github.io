@@ -1,19 +1,19 @@
 <script lang="ts">
-    import type { AppStore, SkillKey } from "$lib/resume.store";
+    import type { AppData, SkillKey } from '$lib/resume.data'
 
     interface Props {
-        skills: AppStore["skills"];
-        skillGroups: readonly SkillKey[];
+        skills: AppData['skills']
+        skillGroups: readonly SkillKey[]
     }
 
-    let { skills, skillGroups }: Props = $props();
+    let { skills, skillGroups }: Props = $props()
 </script>
 
 <div class="skills-list">
     {#each skillGroups as key}
         <div class="skill-group">
             <strong>{skills[key].label}:</strong>
-            {skills[key].items.join(", ")}
+            {skills[key].items.join(', ')}
         </div>
     {/each}
 </div>

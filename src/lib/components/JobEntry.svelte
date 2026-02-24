@@ -1,14 +1,13 @@
 <script lang="ts">
-    import type { Job } from "$lib/resume.store";
-    import type { ExperienceSelection } from "$lib/resume.profile";
-    import { getPoint } from "$lib/resume.profile";
+    import type { Job } from '$lib/resume.types'
+    import type { ExperienceSelection } from '$lib/resume.profile'
 
     interface Props {
-        job: Job;
-        selection: ExperienceSelection;
+        job: Job
+        selection: ExperienceSelection
     }
 
-    let { job, selection }: Props = $props();
+    let { job, selection }: Props = $props()
 </script>
 
 <article class="entry">
@@ -17,11 +16,14 @@
         <span class="company">{job.company}</span>
     </div>
     <div class="date-loc">
-        <time>{job.start}</time> — <time>{job.end}</time> | {job.location}
+        <time datetime={job.start.datetime}>{job.start.display()}</time>
+        —
+        <time datetime={job.end.datetime}>{job.end.display()}</time>
+        | {job.location}
     </div>
     <ul>
         {#each selection.points as pointKey}
-            {@const point = getPoint(job, pointKey)}
+            {@const point = job.points[pointKey]}
             <li>
                 {#if point.category}<strong>{point.category}: </strong>{/if}
                 {point.text}
@@ -66,6 +68,17 @@
     time {
         font-size: var(--font-sm);
         color: var(--secondary-color);
+    }
+
+    ul {
+        padding-left: var(--space-lg);
+        margin-top: var(--space-xs);
+        margin-bottom: 0;
+    }
+
+    li {
+        margin-bottom: var(--space-xs);
+        font-size: var(--font-base);
     }
 
     @media (max-width: 600px) {

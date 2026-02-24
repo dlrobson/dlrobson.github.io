@@ -1,4 +1,4 @@
-FROM node:25.6-trixie-slim
+FROM node:24.13-trixie-slim
 
 ENV USER=node
 
@@ -8,7 +8,7 @@ RUN apt-get update && \
     # Development packages
     locales procps sudo && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-    
+
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen && \
     chsh -s /bin/bash node && \
     echo "node ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/nopasswd

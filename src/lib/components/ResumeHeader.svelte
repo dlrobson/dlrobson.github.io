@@ -1,14 +1,14 @@
 <script lang="ts">
-    import Fa from "svelte-fa";
-    import { faLinkedin, faGithub } from "@fortawesome/free-brands-svg-icons";
-    import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
-    import type { AppStore } from "$lib/resume.store";
+    import Fa from 'svelte-fa'
+    import { faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons'
+    import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
+    import type { AppData } from '$lib/resume.data'
 
     interface Props {
-        header: AppStore["header"];
+        header: AppData['header']
     }
 
-    let { header }: Props = $props();
+    let { header }: Props = $props()
 </script>
 
 <header class="resume-header">
@@ -18,13 +18,13 @@
             <Fa icon={faEnvelope} />
             {header.email}
         </a>
-        <a href="https://{header.linkedin}">
+        <a href={header.linkedin}>
             <Fa icon={faLinkedin} />
-            {header.linkedin}
+            {header.linkedin.replace('https://', '')}
         </a>
-        <a href="https://{header.github}">
+        <a href={header.github}>
             <Fa icon={faGithub} />
-            {header.github}
+            {header.github.replace('https://', '')}
         </a>
     </address>
 </header>
@@ -33,8 +33,8 @@
     .resume-header {
         text-align: center;
         border-bottom: 2px solid var(--primary-color);
-        padding-bottom: 12px;
-        margin-bottom: 12px;
+        padding-bottom: var(--space-sm);
+        margin-bottom: var(--space-sm);
     }
 
     .resume-header h1 {
@@ -45,10 +45,10 @@
     }
 
     .contact-info {
-        margin-top: 8px;
+        margin-top: var(--space-sm);
         font-size: 0.9em;
         display: flex;
-        gap: 20px;
+        gap: var(--space-lg);
         justify-content: center;
         flex-wrap: wrap;
         font-style: normal;

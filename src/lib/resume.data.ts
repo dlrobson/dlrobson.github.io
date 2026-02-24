@@ -1,43 +1,14 @@
-export interface ExperiencePoint {
-    category?: string
-    text: string
-}
+import { ResumeDate } from './resume.types'
+import type { ResumeData } from './resume.types'
 
-export interface Job {
-    title: string
-    company: string
-    location: string
-    start: string
-    end: string
-    points: Record<string, ExperiencePoint>
-}
+const createResumeDate = (iso: string | null) => new ResumeDate(iso)
 
-export interface ResumeStore {
-    header: {
-        name: string
-        email: string
-        linkedin: string
-        github: string
-    }
-    skills: Record<string, {
-        label: string
-        items: readonly string[]
-    }>
-    experience: Record<string, Job>
-    education: {
-        school: string
-        degree: string
-        date: string
-    }
-    interests: string
-}
-
-export const RESUME_STORE = {
+export const RESUME_DATA = {
     header: {
         name: 'Daniel Robson',
         email: '',
-        linkedin: 'linkedin.com/in/dlrobson',
-        github: 'github.com/dlrobson',
+        linkedin: 'https://linkedin.com/in/dlrobson',
+        github: 'https://github.com/dlrobson',
     },
     skills: {
         languages: {
@@ -52,18 +23,14 @@ export const RESUME_STORE = {
             label: 'Systems & Perception',
             items: ['System Architecture', 'API Design', 'Algorithm Optimization', 'OpenCV', 'Kalman Filtering'],
         },
-        devops: {
-            label: 'DevOps & Tooling',
-            items: ['Jenkins', 'GitHub Actions', 'Docker', 'Kubernetes', 'Terraform'],
-        },
     },
     experience: {
         ouster: {
             title: 'Software Developer',
             company: 'Ouster',
             location: 'Ottawa, ON',
-            start: 'May 2022',
-            end: 'Present',
+            start: createResumeDate('2022-05'),
+            end: createResumeDate(null),
             points: {
                 arch: {
                     category: 'Core Software & Architecture',
@@ -91,8 +58,8 @@ export const RESUME_STORE = {
             title: 'Runtime Software Engineer — Internship',
             company: 'Untether AI',
             location: 'Toronto, ON',
-            start: 'May 2021',
-            end: 'Aug 2021',
+            start: createResumeDate('2021-05'),
+            end: createResumeDate('2021-08'),
             points: {
                 throughput: {
                     text: 'Developed high-performance software interfaces for AI inference acceleration, increasing data throughput by 40-100×...',
@@ -109,8 +76,8 @@ export const RESUME_STORE = {
             title: 'Software Engineer — Internship',
             company: 'Cepton',
             location: 'Ottawa, ON',
-            start: 'Jan 2020',
-            end: 'Dec 2020',
+            start: createResumeDate('2020-01'),
+            end: createResumeDate('2020-12'),
             points: {
                 tracking_redesign: {
                     text: 'Redesigned the object tracking logic with a C++ K-d Tree implementation that matches tracked objects with clusters from the proceeding point cloud frame, increasing the maximum number of trackable objects by 900%.',
@@ -139,8 +106,8 @@ export const RESUME_STORE = {
             title: 'Embedded Systems Engineer',
             company: 'Savormetrics',
             location: 'Mississauga, ON',
-            start: 'May 2019',
-            end: 'Aug 2019',
+            start: createResumeDate('2019-05'),
+            end: createResumeDate('2019-08'),
             points: {
                 automation: {
                     text: 'Automated product testing procedures to control multiple devices using serial port communication in bash, increasing the rate of data collection by over 1000%.',
@@ -160,8 +127,8 @@ export const RESUME_STORE = {
             title: 'Software Developer',
             company: 'Teranet',
             location: 'Mississauga, ON',
-            start: 'Sept 2018',
-            end: 'Dec 2018',
+            start: createResumeDate('2018-09'),
+            end: createResumeDate('2018-12'),
             points: {
                 testing: {
                     text: 'Designed an offline testing environment to mimic registry responses using C# and HTML, allowing the international team to perform uninterrupted application testing.',
@@ -178,8 +145,8 @@ export const RESUME_STORE = {
             title: 'Mechanical Engineer',
             company: 'Linamar Corporation',
             location: 'Guelph, ON',
-            start: 'Jan 2018',
-            end: 'Apr 2018',
+            start: createResumeDate('2018-01'),
+            end: createResumeDate('2018-04'),
             points: {
                 cad_design: {
                     text: 'Designed many mechanical fixtures using SolidWorks, including one that measures 6 different product specifications simultaneously. This specific fixture increased the efficiency of the process by over 300%.',
@@ -196,8 +163,8 @@ export const RESUME_STORE = {
             title: 'Lead Employee',
             company: 'Sub and Sandwich Factory',
             location: 'Ayr, ON',
-            start: 'Jun 2017',
-            end: 'Sept 2017',
+            start: createResumeDate('2017-06'),
+            end: createResumeDate('2017-09'),
             points: {
                 communication: {
                     text: 'Developed communication skills through interactions with customers and coworkers.',
@@ -214,12 +181,12 @@ export const RESUME_STORE = {
     education: {
         school: 'University of Waterloo',
         degree: 'B.A.Sc., Mechatronics Engineering',
-        date: 'April 2022',
+        date: createResumeDate('2022-04'),
     },
     interests: 'Sourdough Baking, Self-Hosting',
-} as const satisfies ResumeStore
+} as const satisfies ResumeData
 
-export type AppStore = typeof RESUME_STORE
-export type JobKey = keyof AppStore['experience']
-export type SkillKey = keyof AppStore['skills']
-export type PointKey<J extends JobKey> = keyof AppStore['experience'][J]['points']
+export type AppData = typeof RESUME_DATA
+export type JobKey = keyof AppData['experience']
+export type SkillKey = keyof AppData['skills']
+export type PointKey<J extends JobKey> = keyof AppData['experience'][J]['points']

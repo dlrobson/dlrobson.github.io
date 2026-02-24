@@ -15,7 +15,7 @@ dist-ssr
 # SvelteKit — auto-generated on every dev/build run, never commit
 .svelte-kit
 
-# Static build output — commit only if deploying via git push (e.g. GitHub Pages without CI)
+# Static build output
 build
 
 # Editor directories and files

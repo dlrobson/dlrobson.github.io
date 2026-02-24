@@ -1,19 +1,26 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import svelte from 'eslint-plugin-svelte'
 
-export default defineConfig([
-  globalIgnores(['dist', '.svelte-kit']),
+/** @type {import('eslint').Linter.Config[]} */
+export default [
+  { ignores: ['dist', 'build', '.svelte-kit'] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...svelte.configs['flat/recommended'],
   {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-    ],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
     },
   },
-])
+  {
+    files: ['**/*.svelte'],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+  },
+]
