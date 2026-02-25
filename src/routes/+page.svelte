@@ -10,6 +10,7 @@
 
 <svelte:head>
     <title>{header.name}</title>
+    <meta name="description" content="Resume of {header.name}" />
 </svelte:head>
 
 <!--
@@ -25,39 +26,44 @@
     <div class="resume-card">
         <ResumeHeader {header} />
 
-        <section>
-            {@render sectionTitle('Technical Skills')}
-            <SkillSection {skills} skillGroups={ACTIVE_PROFILE.skillGroups} />
-        </section>
+        <main>
+            <section>
+                {@render sectionTitle('Technical Skills')}
+                <SkillSection
+                    {skills}
+                    skillGroups={ACTIVE_PROFILE.skillGroups}
+                />
+            </section>
 
-        <section>
-            {@render sectionTitle('Work Experience')}
-            {#each ACTIVE_PROFILE.experience as selection}
-                {@const job = RESUME_DATA.experience[selection.id]}
-                <JobEntry {job} {selection} />
-            {/each}
-        </section>
+            <section>
+                {@render sectionTitle('Work Experience')}
+                {#each ACTIVE_PROFILE.experience as selection}
+                    {@const job = RESUME_DATA.experience[selection.id]}
+                    <JobEntry {job} {selection} />
+                {/each}
+            </section>
 
-        <section>
-            {@render sectionTitle('Education')}
-            <article class="entry">
-                <div class="job-header">
-                    <span
-                        ><strong>{education.school}</strong> — {education.degree}</span
-                    >
-                    <time
-                        class="date-loc-inline"
-                        datetime={education.date.datetime}
-                        >{education.date.display()}</time
-                    >
-                </div>
-            </article>
-        </section>
+            <section>
+                {@render sectionTitle('Education')}
+                <article class="entry">
+                    <div class="job-header">
+                        <span
+                            ><strong>{education.school}</strong> — {education.degree}</span
+                        >
+                        <time
+                            class="date-loc-inline"
+                            datetime={education.date.datetime}
+                            >{education.date.display()}</time
+                        >
+                    </div>
+                </article>
+            </section>
 
-        <section>
-            {@render sectionTitle('Interests')}
-            <p class="interests-text">{interests}</p>
-        </section>
+            <section>
+                {@render sectionTitle('Interests')}
+                <p class="interests-text">{interests.join(', ')}</p>
+            </section>
+        </main>
     </div>
 </div>
 

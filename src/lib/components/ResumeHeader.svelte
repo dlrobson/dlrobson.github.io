@@ -16,15 +16,15 @@
     <address class="contact-info">
         <a href="mailto:{header.email}">
             <Fa icon={faEnvelope} />
-            {header.email}
+            <span>{header.email}</span>
         </a>
         <a href={header.linkedin}>
             <Fa icon={faLinkedin} />
-            {header.linkedin.replace('https://', '')}
+            <span>{header.linkedin.replace('https://', '')}</span>
         </a>
         <a href={header.github}>
             <Fa icon={faGithub} />
-            {header.github.replace('https://', '')}
+            <span>{header.github.replace('https://', '')}</span>
         </a>
     </address>
 </header>
@@ -57,9 +57,16 @@
     .contact-info a {
         color: var(--text-color);
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3em;
     }
 
-    .contact-info a:hover {
+    .contact-info a span {
         text-decoration: underline;
+    }
+
+    .contact-info a:hover span {
+        text-decoration: none;
     }
 </style>

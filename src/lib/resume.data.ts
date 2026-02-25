@@ -1,7 +1,5 @@
-import { ResumeDate } from './resume.types'
+import { ResumeDate } from './resume-date'
 import type { ResumeData } from './resume.types'
-
-const createResumeDate = (iso: string | null) => new ResumeDate(iso)
 
 export const RESUME_DATA = {
     header: {
@@ -29,8 +27,8 @@ export const RESUME_DATA = {
             title: 'Software Developer',
             company: 'Ouster',
             location: 'Ottawa, ON',
-            start: createResumeDate('2022-05'),
-            end: createResumeDate(null),
+            start: new ResumeDate('2022-05'),
+            end: new ResumeDate(null),
             points: {
                 arch: {
                     category: 'Core Software & Architecture',
@@ -58,8 +56,8 @@ export const RESUME_DATA = {
             title: 'Runtime Software Engineer — Internship',
             company: 'Untether AI',
             location: 'Toronto, ON',
-            start: createResumeDate('2021-05'),
-            end: createResumeDate('2021-08'),
+            start: new ResumeDate('2021-05'),
+            end: new ResumeDate('2021-08'),
             points: {
                 throughput: {
                     text: 'Developed high-performance software interfaces for AI inference acceleration, increasing data throughput by 40-100×...',
@@ -76,8 +74,8 @@ export const RESUME_DATA = {
             title: 'Software Engineer — Internship',
             company: 'Cepton',
             location: 'Ottawa, ON',
-            start: createResumeDate('2020-01'),
-            end: createResumeDate('2020-12'),
+            start: new ResumeDate('2020-01'),
+            end: new ResumeDate('2020-12'),
             points: {
                 tracking_redesign: {
                     text: 'Redesigned the object tracking logic with a C++ K-d Tree implementation that matches tracked objects with clusters from the proceeding point cloud frame, increasing the maximum number of trackable objects by 900%.',
@@ -106,8 +104,8 @@ export const RESUME_DATA = {
             title: 'Embedded Systems Engineer',
             company: 'Savormetrics',
             location: 'Mississauga, ON',
-            start: createResumeDate('2019-05'),
-            end: createResumeDate('2019-08'),
+            start: new ResumeDate('2019-05'),
+            end: new ResumeDate('2019-08'),
             points: {
                 automation: {
                     text: 'Automated product testing procedures to control multiple devices using serial port communication in bash, increasing the rate of data collection by over 1000%.',
@@ -127,8 +125,8 @@ export const RESUME_DATA = {
             title: 'Software Developer',
             company: 'Teranet',
             location: 'Mississauga, ON',
-            start: createResumeDate('2018-09'),
-            end: createResumeDate('2018-12'),
+            start: new ResumeDate('2018-09'),
+            end: new ResumeDate('2018-12'),
             points: {
                 testing: {
                     text: 'Designed an offline testing environment to mimic registry responses using C# and HTML, allowing the international team to perform uninterrupted application testing.',
@@ -145,8 +143,8 @@ export const RESUME_DATA = {
             title: 'Mechanical Engineer',
             company: 'Linamar Corporation',
             location: 'Guelph, ON',
-            start: createResumeDate('2018-01'),
-            end: createResumeDate('2018-04'),
+            start: new ResumeDate('2018-01'),
+            end: new ResumeDate('2018-04'),
             points: {
                 cad_design: {
                     text: 'Designed many mechanical fixtures using SolidWorks, including one that measures 6 different product specifications simultaneously. This specific fixture increased the efficiency of the process by over 300%.',
@@ -163,8 +161,8 @@ export const RESUME_DATA = {
             title: 'Lead Employee',
             company: 'Sub and Sandwich Factory',
             location: 'Ayr, ON',
-            start: createResumeDate('2017-06'),
-            end: createResumeDate('2017-09'),
+            start: new ResumeDate('2017-06'),
+            end: new ResumeDate('2017-09'),
             points: {
                 communication: {
                     text: 'Developed communication skills through interactions with customers and coworkers.',
@@ -181,9 +179,9 @@ export const RESUME_DATA = {
     education: {
         school: 'University of Waterloo',
         degree: 'B.A.Sc., Mechatronics Engineering',
-        date: createResumeDate('2022-04'),
+        date: new ResumeDate('2022-04'),
     },
-    interests: 'Sourdough Baking, Self-Hosting',
+    interests: ['Sourdough Baking', 'Self-Hosting'],
 } as const satisfies ResumeData
 
 export type AppData = typeof RESUME_DATA
