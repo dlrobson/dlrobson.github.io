@@ -1,9 +1,44 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { ResumeDate } from './resume-date'
+import { ResumeDate, type ISOMonth } from './resume-date'
 
 describe('ResumeDate', () => {
     afterEach(() => {
         vi.useRealTimers()
+    })
+
+    describe('constructor validation', () => {
+        it('should accept a valid YYYY-MM string', () => {
+            expect(() => new ResumeDate('2022-05')).not.toThrow()
+        })
+
+        it('should accept null', () => {
+            expect(() => new ResumeDate(null)).not.toThrow()
+        })
+
+        it('should throw for a date missing the month', () => {
+            // @ts-expect-error: intentionally passing an invalid type to test runtime validation
+            expect(() => new ResumeDate('2022')).toThrow(/Invalid ResumeDate format/)
+        })
+
+        it('should throw for an invalid month (00)', () => {
+            // @ts-expect-error: intentionally passing an invalid type to test runtime validation
+            expect(() => new ResumeDate('2022-00')).toThrow(/Invalid ResumeDate format/)
+        })
+
+        it('should throw for an invalid month (13)', () => {
+            // @ts-expect-error: intentionally passing an invalid type to test runtime validation
+            expect(() => new ResumeDate('2022-13')).toThrow(/Invalid ResumeDate format/)
+        })
+
+        it('should throw for a full date string (YYYY-MM-DD)', () => {
+            // @ts-expect-error: intentionally passing an invalid type to test runtime validation
+            expect(() => new ResumeDate('2022-05-01')).toThrow(/Invalid ResumeDate format/)
+        })
+
+        it('should throw for a non-numeric string', () => {
+            // @ts-expect-error: intentionally passing an invalid type to test runtime validation
+            expect(() => new ResumeDate('not-a-date')).toThrow(/Invalid ResumeDate format/)
+        })
     })
 
     describe('datetime', () => {
@@ -86,7 +121,7 @@ describe('ResumeDate', () => {
             ]
 
             const results = expected.map(([month, abbr]) => ({
-                actual: new ResumeDate(`2024-${month}`).display(),
+                actual: new ResumeDate(`2024-${month}` as ISOMonth).display(),
                 expected: `${abbr} 2024`,
             }))
 

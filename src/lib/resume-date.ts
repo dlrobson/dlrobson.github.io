@@ -9,10 +9,24 @@ const MONTH_NAMES = [
 ]
 
 /**
+ * Valid two-digit month strings.
+ */
+type ValidMonth =
+    | '01' | '02' | '03' | '04' | '05' | '06'
+    | '07' | '08' | '09' | '10' | '11' | '12'
+
+/**
+ * A YYYY-MM string with a valid month, e.g. "2022-05".
+ * Using a template literal type gives IDE and compiler errors for
+ * obviously wrong literals at the call site, before any code runs.
+ */
+export type ISOMonth = `${number}-${ValidMonth}`
+
+/**
  * Represents a year-month date (e.g. "2022-05"), or null for an ongoing/present date.
  */
 export class ResumeDate {
-    constructor(private readonly iso: string | null) { }
+    constructor(private readonly iso: ISOMonth | null) { }
 
     /**
      * ISO month string for use in `<time datetime="...">`.
