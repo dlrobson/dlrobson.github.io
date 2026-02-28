@@ -76,7 +76,7 @@ export const RESUME_DATA = {
       end: new ResumeDate('2021-08'),
       points: {
         throughput: {
-          text: 'Developed high-performance software interfaces for AI inference acceleration, increasing data throughput by 40-100×...',
+          text: 'Developed high-performance software interfaces for AI inference acceleration, increasing data throughput by 40-100x...',
         },
         multichip: {
           text: 'Optimized multi-chip utilization logic to meet strict latency requirements...',
@@ -157,7 +157,7 @@ export const RESUME_DATA = {
     },
     linamar: {
       title: 'Mechanical Engineer',
-      company: 'Linamar Corporation',
+      company: 'Linamar',
       location: 'Guelph, ON',
       start: new ResumeDate('2018-01'),
       end: new ResumeDate('2018-04'),

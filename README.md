@@ -1,5 +1,7 @@
 # Resume App (SvelteKit + TypeScript)
 
+Live site: **https://dlrobson.github.io/**
+
 This project renders my resume as a statically pre-rendered SvelteKit app.
 
 ## Install dependencies
