@@ -2,8 +2,7 @@ name: ${REPO_NAME:?}-${PWD:?}
 
 services:
   devcontainer:
-    build:
-      context: ../images/ci/
+    image: ghcr.io/dlrobson/${REPO_NAME}-ci:latest
     volumes:
       - ..:/workspaces/${REPO_NAME:?}:cached
     command: "bash -c 'trap exit TERM; sleep infinity & wait;'"

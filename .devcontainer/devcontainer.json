@@ -3,6 +3,7 @@
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
         "svelte.svelte-vscode",
         "vunguyentuan.vscode-css-variables"
       ]
