@@ -12,6 +12,7 @@
 <div class="home">
   <h1>{header.name}</h1>
   <nav>
+    <a href="/posts">Posts</a>
     <a href="/resume">Resume</a>
   </nav>
 </div>
