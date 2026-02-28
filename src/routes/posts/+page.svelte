@@ -1,13 +1,7 @@
 <script lang="ts">
   import { formatDateShort } from '$lib/format-date'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
-
-  interface PostMeta {
-    title: string
-    date: string
-    description?: string
-    slug: string
-  }
+  import type { PostMeta } from '$lib/post.types'
 
   let { data }: { data: { posts: PostMeta[] } } = $props()
 </script>

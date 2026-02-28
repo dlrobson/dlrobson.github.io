@@ -1,14 +1,12 @@
 import type { PageLoad } from './$types'
-
-interface PostMeta {
-  title: string
-  date: string
-  description?: string
-  slug: string
-}
+import type { PostMeta } from '$lib/post.types'
 
 const modules = import.meta.glob<{
-  metadata: { title: string; date: string; description?: string }
+  metadata: {
+    title: string
+    date: string
+    description?: string
+  }
 }>('/src/posts/*.md', { eager: true })
 
 export const load: PageLoad = async () => {

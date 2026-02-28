@@ -1,7 +1,7 @@
 <script lang="ts">
   import Fa from 'svelte-fa'
   import { faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons'
-  import { faGlobe } from '@fortawesome/free-solid-svg-icons'
+  import { faGlobe, faEnvelope } from '@fortawesome/free-solid-svg-icons'
   import type { AppData } from '$lib/resume.data'
 
   interface Props {
@@ -14,6 +14,12 @@
 <header class="resume-header">
   <h1>{header.name}</h1>
   <address class="contact-info">
+    {#if header.email}
+      <a href="mailto:{header.email}">
+        <Fa icon={faEnvelope} />
+        <span>{header.email}</span>
+      </a>
+    {/if}
     <a href={header.linkedin}>
       <Fa icon={faLinkedin} />
       <span>{header.linkedin.replace('https://', '')}</span>

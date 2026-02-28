@@ -14,8 +14,12 @@
     <a href="/resume">Resume</a>
   </nav>
   <div class="socials">
-    <a href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub</a>
-    <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    <a href="mailto:{PROFILE.email}">Email</a>
+    <a href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub</a
+    >
+    <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer"
+      >LinkedIn</a
+    >
   </div>
 </div>
 
