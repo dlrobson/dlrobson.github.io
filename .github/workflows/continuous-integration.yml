@@ -57,6 +57,10 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/
 
   test:
     runs-on: ubuntu-latest
@@ -93,3 +97,18 @@ jobs:
         run: npm ci
       - name: Check formatting
         run: npx prettier --check .
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build, test, lint, format-check]
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
