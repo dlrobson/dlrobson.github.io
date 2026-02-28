@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatDateShort } from '$lib/format-date'
-  import BackLink from '$lib/components/BackLink.svelte'
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
   interface PostMeta {
     title: string
@@ -19,7 +19,7 @@
 
 <div class="posts-page">
   <header>
-    <BackLink href="/" label="Home" />
+    <Breadcrumb crumbs={[{ href: '/', label: 'Home' }, { label: 'Posts' }]} />
     <h1>Posts</h1>
   </header>
 

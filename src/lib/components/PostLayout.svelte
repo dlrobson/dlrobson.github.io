@@ -1,7 +1,7 @@
 <script lang="ts">
   import 'prism-themes/themes/prism-one-dark.css'
   import { formatDate } from '$lib/format-date'
-  import BackLink from '$lib/components/BackLink.svelte'
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
   interface Props {
     title: string
@@ -22,7 +22,13 @@
 
 <article class="post">
   <header>
-    <BackLink href="/posts" label="Posts" />
+    <Breadcrumb
+      crumbs={[
+        { href: '/', label: 'Home' },
+        { href: '/posts', label: 'Posts' },
+        { label: title },
+      ]}
+    />
     <h1>{title}</h1>
     <time datetime={date}>{formatDate(date)}</time>
   </header>
