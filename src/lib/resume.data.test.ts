@@ -13,14 +13,6 @@ describe('RESUME_DATA', () => {
       expect(isNonEmpty).toBe(true)
     })
 
-    it('should have a valid email format', () => {
-      const { email } = RESUME_DATA.header
-
-      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-
-      expect(isValidEmail).toBe(true)
-    })
-
     it('should have an HTTPS LinkedIn URL', () => {
       const { linkedin } = RESUME_DATA.header
 

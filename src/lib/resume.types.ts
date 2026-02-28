@@ -19,7 +19,7 @@ export interface Job {
 export interface ResumeData {
   header: {
     name: string
-    email: string
+    email?: string
     linkedin: string
     github: string
     website: string
