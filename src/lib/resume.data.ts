@@ -1,14 +1,9 @@
 import { ResumeDate } from './resume-date'
 import type { ResumeData } from './resume.types'
+import { PROFILE } from './profile'
 
 export const RESUME_DATA = {
-  header: {
-    name: 'Daniel Robson',
-    email: '',
-    linkedin: 'https://linkedin.com/in/dlrobson',
-    github: 'https://github.com/dlrobson',
-    website: 'https://dlrobson.github.io/',
-  },
+  header: PROFILE,
   skills: {
     languages: {
       label: 'Software & Languages',

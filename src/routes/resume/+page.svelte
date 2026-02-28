@@ -26,7 +26,7 @@
   <div class="resume-card">
     <ResumeHeader {header} />
 
-    <main>
+    <section>
       <section>
         {@render sectionTitle('Technical Skills')}
         <SkillSection {skills} skillGroups={ACTIVE_PROFILE.skillGroups} />
@@ -57,7 +57,7 @@
         {@render sectionTitle('Interests')}
         <p class="interests-text">{interests.join(', ')}</p>
       </section>
-    </main>
+    </section>
   </div>
 </div>
 

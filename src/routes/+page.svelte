@@ -1,20 +1,22 @@
 <script lang="ts">
-  import { RESUME_DATA } from '$lib/resume.data'
-
-  const { header } = RESUME_DATA
+  import { PROFILE } from '$lib/profile'
 </script>
 
 <svelte:head>
-  <title>{header.name}</title>
-  <meta name="description" content="Personal website of {header.name}" />
+  <title>{PROFILE.name}</title>
+  <meta name="description" content="Personal website of {PROFILE.name}" />
 </svelte:head>
 
 <div class="home">
-  <h1>{header.name}</h1>
+  <h1>{PROFILE.name}</h1>
   <nav>
     <a href="/posts">Posts</a>
     <a href="/resume">Resume</a>
   </nav>
+  <div class="socials">
+    <a href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+    <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+  </div>
 </div>
 
 <style>
@@ -54,5 +56,24 @@
 
   nav a:hover {
     border-color: var(--primary-color);
+  }
+
+  .socials {
+    display: flex;
+    gap: var(--space-lg);
+  }
+
+  .socials a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: var(--font-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .socials a:hover {
+    opacity: 1;
   }
 </style>

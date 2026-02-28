@@ -138,4 +138,18 @@
   .prose :global(strong) {
     color: var(--primary-color);
   }
+
+  .prose :global(.token.property),
+  .prose :global(.token.tag),
+  .prose :global(.token.symbol),
+  .prose :global(.token.deleted),
+  .prose :global(.token.important),
+  .prose :global(.language-css .token.selector),
+  .prose :global(.language-markdown .token.strike .token.content),
+  .prose :global(.language-markdown .token.strike .token.punctuation),
+  .prose :global(.language-markdown .token.list.punctuation),
+  .prose
+    :global(.language-markdown .token.title.important > .token.punctuation) {
+    color: #e88991;
+  }
 </style>
