@@ -1,7 +1,7 @@
 <script lang="ts">
   import Fa from 'svelte-fa'
   import { faLinkedin, faGithub } from '@fortawesome/free-brands-svg-icons'
-  import { faEnvelope } from '@fortawesome/free-solid-svg-icons'
+  import { faEnvelope, faGlobe } from '@fortawesome/free-solid-svg-icons'
   import type { AppData } from '$lib/resume.data'
 
   interface Props {
@@ -25,6 +25,10 @@
     <a href={header.github}>
       <Fa icon={faGithub} />
       <span>{header.github.replace('https://', '')}</span>
+    </a>
+    <a href={header.website}>
+      <Fa icon={faGlobe} />
+      <span>{header.website.replace('https://', '')}</span>
     </a>
   </address>
 </header>

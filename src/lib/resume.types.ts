@@ -22,6 +22,7 @@ export interface ResumeData {
     email: string
     linkedin: string
     github: string
+    website: string
   }
   skills: Record<
     string,

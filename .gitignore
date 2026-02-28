@@ -18,6 +18,10 @@ dist-ssr
 # Static build output
 build
 
+# Devcontainer
+.devcontainer/.env
+.devcontainer/compose.override.yaml
+
 # Editor directories and files
 .vscode
 !.vscode/extensions.json
