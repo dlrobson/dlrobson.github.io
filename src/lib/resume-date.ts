@@ -4,16 +4,36 @@
  * keeps the output deterministic and avoids locale-dependent surprises.
  */
 const MONTH_NAMES = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
 ]
 
 /**
  * Valid two-digit month strings.
  */
 type ValidMonth =
-    | '01' | '02' | '03' | '04' | '05' | '06'
-    | '07' | '08' | '09' | '10' | '11' | '12'
+    | '01'
+    | '02'
+    | '03'
+    | '04'
+    | '05'
+    | '06'
+    | '07'
+    | '08'
+    | '09'
+    | '10'
+    | '11'
+    | '12'
 
 /**
  * A YYYY-MM string with a valid month, e.g. "2022-05".

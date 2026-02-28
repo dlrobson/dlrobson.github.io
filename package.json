@@ -11,7 +11,8 @@
     "preview:host": "vite preview --host",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint .",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "lint": "npm run check && eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."
   },
@@ -30,6 +31,7 @@
     "prettier": "^3.5.0",
     "prettier-plugin-svelte": "^3.5.0",
     "svelte": "^5.53.1",
+    "svelte-check": "^4.4.3",
     "svelte-fa": "^4.0.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",

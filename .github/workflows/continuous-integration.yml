@@ -1,0 +1,95 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+# Sequential queue for 'main', cancel-in-progress for PRs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  prepare-ci-image:
+    uses: dlrobson/rust-starter/.github/workflows/prepare-ci-image.yml@main
+    permissions:
+      packages: write
+    with:
+      registry: ghcr.io
+      image-name: ${{ github.repository }}-ci
+      dockerfile-context: images/ci/
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+
+  workflow-initialization:
+    runs-on: ubuntu-latest
+    if: success() || failure()
+    needs: prepare-ci-image
+    outputs:
+      image: ${{ needs.prepare-ci-image.outputs.image }}
+    steps:
+      - name: Check prepare-ci-image result
+        run: |
+          if [ "${{ needs.prepare-ci-image.result }}" != "success" ]; then
+            echo "prepare-ci-image failed (result: ${{ needs.prepare-ci-image.result }}). Failing workflow-initialization job explicitly."
+            exit 1
+          fi
+      - name: Set outputs
+        run: |
+          echo "image=${{ needs.prepare-ci-image.outputs.image }}" >> $GITHUB_OUTPUT
+
+  build:
+    runs-on: ubuntu-latest
+    needs: workflow-initialization
+    container: &build-container
+      image: ${{ needs.workflow-initialization.outputs.image }}
+      options: --user 0
+    steps:
+      - uses: actions/checkout@v6
+      - &npm-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules/
+          key: ${{ github.job }}-${{ hashFiles('package-lock.json') }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+
+  test:
+    runs-on: ubuntu-latest
+    needs: workflow-initialization
+    container: *build-container
+    steps:
+      - uses: actions/checkout@v6
+      - *npm-cache
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: npm test
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: workflow-initialization
+    container: *build-container
+    steps:
+      - uses: actions/checkout@v6
+      - *npm-cache
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+
+  format-check:
+    runs-on: ubuntu-latest
+    needs: workflow-initialization
+    container: *build-container
+    steps:
+      - uses: actions/checkout@v6
+      - *npm-cache
+      - name: Install dependencies
+        run: npm ci
+      - name: Check formatting
+        run: npx prettier --check .

@@ -22,22 +22,30 @@ describe('ResumeDate', () => {
 
         it('should throw for an invalid month (00)', () => {
             // @ts-expect-error: intentionally passing an invalid type to test runtime validation
-            expect(() => new ResumeDate('2022-00')).toThrow(/Invalid ResumeDate format/)
+            expect(() => new ResumeDate('2022-00')).toThrow(
+                /Invalid ResumeDate format/,
+            )
         })
 
         it('should throw for an invalid month (13)', () => {
             // @ts-expect-error: intentionally passing an invalid type to test runtime validation
-            expect(() => new ResumeDate('2022-13')).toThrow(/Invalid ResumeDate format/)
+            expect(() => new ResumeDate('2022-13')).toThrow(
+                /Invalid ResumeDate format/,
+            )
         })
 
         it('should throw for a full date string (YYYY-MM-DD)', () => {
             // @ts-expect-error: intentionally passing an invalid type to test runtime validation
-            expect(() => new ResumeDate('2022-05-01')).toThrow(/Invalid ResumeDate format/)
+            expect(() => new ResumeDate('2022-05-01')).toThrow(
+                /Invalid ResumeDate format/,
+            )
         })
 
         it('should throw for a non-numeric string', () => {
             // @ts-expect-error: intentionally passing an invalid type to test runtime validation
-            expect(() => new ResumeDate('not-a-date')).toThrow(/Invalid ResumeDate format/)
+            expect(() => new ResumeDate('not-a-date')).toThrow(
+                /Invalid ResumeDate format/,
+            )
         })
     })
 
@@ -114,10 +122,18 @@ describe('ResumeDate', () => {
 
         it('should format each month abbreviation correctly', () => {
             const expected = [
-                ['01', 'Jan'], ['02', 'Feb'], ['03', 'Mar'],
-                ['04', 'Apr'], ['05', 'May'], ['06', 'Jun'],
-                ['07', 'Jul'], ['08', 'Aug'], ['09', 'Sep'],
-                ['10', 'Oct'], ['11', 'Nov'], ['12', 'Dec'],
+                ['01', 'Jan'],
+                ['02', 'Feb'],
+                ['03', 'Mar'],
+                ['04', 'Apr'],
+                ['05', 'May'],
+                ['06', 'Jun'],
+                ['07', 'Jul'],
+                ['08', 'Aug'],
+                ['09', 'Sep'],
+                ['10', 'Oct'],
+                ['11', 'Nov'],
+                ['12', 'Dec'],
             ]
 
             const results = expected.map(([month, abbr]) => ({
@@ -125,7 +141,7 @@ describe('ResumeDate', () => {
                 expected: `${abbr} 2024`,
             }))
 
-            expect(results.every(r => r.actual === r.expected)).toBe(true)
+            expect(results.every((r) => r.actual === r.expected)).toBe(true)
         })
     })
 })
