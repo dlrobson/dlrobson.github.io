@@ -1,6 +1,7 @@
 <script lang="ts">
   import 'prism-themes/themes/prism-one-dark.css'
   import { formatDate } from '$lib/format-date'
+  import BackLink from '$lib/components/BackLink.svelte'
 
   interface Props {
     title: string
@@ -21,7 +22,7 @@
 
 <article class="post">
   <header>
-    <a href="/posts" class="back">&larr; Posts</a>
+    <BackLink href="/posts" label="Posts" />
     <h1>{title}</h1>
     <time datetime={date}>{formatDate(date)}</time>
   </header>
@@ -42,18 +43,6 @@
 
   header {
     margin-bottom: var(--space-xl);
-  }
-
-  .back {
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-size: var(--font-sm);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .back:hover {
-    color: var(--primary-color);
   }
 
   h1 {

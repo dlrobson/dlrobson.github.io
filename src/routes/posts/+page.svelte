@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatDateShort } from '$lib/format-date'
+  import BackLink from '$lib/components/BackLink.svelte'
 
   interface PostMeta {
     title: string
@@ -18,7 +19,7 @@
 
 <div class="posts-page">
   <header>
-    <a href="/" class="back">&larr; Home</a>
+    <BackLink href="/" label="Home" />
     <h1>Posts</h1>
   </header>
 
@@ -51,18 +52,6 @@
 
   header {
     margin-bottom: var(--space-xl);
-  }
-
-  .back {
-    color: var(--secondary-color);
-    text-decoration: none;
-    font-size: var(--font-sm);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  .back:hover {
-    color: var(--primary-color);
   }
 
   h1 {
