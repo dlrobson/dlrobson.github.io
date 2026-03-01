@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   prepare-ci-image:
-    uses: dlrobson/rust-starter/.github/workflows/prepare-ci-image.yml@main
+    uses: dlrobson/toolbox/.github/workflows/prepare-ci-image.yml@main
     permissions:
       packages: write
     with:
