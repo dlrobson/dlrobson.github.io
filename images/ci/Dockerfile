@@ -1,4 +1,4 @@
-FROM node:24.13-trixie-slim
+FROM node:24.14-trixie-slim
 
 ENV USER=node \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
