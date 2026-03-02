@@ -10,7 +10,7 @@
 </script>
 
 <div class="skills-list">
-  {#each skillGroups as key}
+  {#each skillGroups as key (key)}
     <div class="skill-group">
       <strong>{skills[key].label}:</strong>
       {skills[key].items.join(', ')}

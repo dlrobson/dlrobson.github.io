@@ -34,7 +34,7 @@
 
       <section>
         {@render sectionTitle('Work Experience')}
-        {#each ACTIVE_PROFILE.experience as selection}
+        {#each ACTIVE_PROFILE.experience as selection (selection.id)}
           {@const job = RESUME_DATA.experience[selection.id]}
           <JobEntry {job} {selection} />
         {/each}

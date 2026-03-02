@@ -22,7 +22,7 @@
     | {job.location}
   </div>
   <ul>
-    {#each selection.points as pointKey}
+    {#each selection.points as pointKey (pointKey)}
       {@const point = job.points[pointKey]}
       <li>
         {#if point.category}<strong>{point.category}: </strong>{/if}

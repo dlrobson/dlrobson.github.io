@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
   import { formatDateShort } from '$lib/format-date'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
   import type { PostMeta } from '$lib/post.types'
@@ -21,9 +22,9 @@
     <p class="empty">No posts yet.</p>
   {:else}
     <ul>
-      {#each data.posts as post}
+      {#each data.posts as post (post.slug)}
         <li>
-          <a href="/posts/{post.slug}">
+          <a href={resolve(`/posts/${post.slug}`)}>
             <span class="title">{post.title}</span>
             <time datetime={post.date}>{formatDateShort(post.date)}</time>
           </a>

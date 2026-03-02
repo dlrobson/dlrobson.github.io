@@ -20,15 +20,15 @@
         <span>{header.email}</span>
       </a>
     {/if}
-    <a href={header.linkedin}>
+    <a href={header.linkedin} rel="external">
       <Fa icon={faLinkedin} />
       <span>{header.linkedin.replace('https://', '')}</span>
     </a>
-    <a href={header.github}>
+    <a href={header.github} rel="external">
       <Fa icon={faGithub} />
       <span>{header.github.replace('https://', '')}</span>
     </a>
-    <a href={header.website}>
+    <a href={header.website} rel="external">
       <Fa icon={faGlobe} />
       <span>{header.website.replace('https://', '')}</span>
     </a>
