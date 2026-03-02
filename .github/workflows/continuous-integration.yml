@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - &npm-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules/
           key: ${{ github.job }}-${{ hashFiles('package-lock.json') }}
