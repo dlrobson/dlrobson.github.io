@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
   import { PROFILE } from '$lib/profile'
 </script>
 
@@ -10,14 +11,14 @@
 <div class="home">
   <h1>{PROFILE.name}</h1>
   <nav>
-    <a href="/posts">Posts</a>
-    <a href="/resume">Resume</a>
+    <a href={resolve('/posts')}>Posts</a>
+    <a href={resolve('/resume')}>Resume</a>
   </nav>
   <div class="socials">
     <a href="mailto:{PROFILE.email}">Email</a>
-    <a href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub</a
+    <a href={PROFILE.github} target="_blank" rel="external noopener noreferrer">GitHub</a
     >
-    <a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer"
+    <a href={PROFILE.linkedin} target="_blank" rel="external noopener noreferrer"
       >LinkedIn</a
     >
   </div>

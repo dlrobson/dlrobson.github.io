@@ -18,7 +18,7 @@
     "format:check": "prettier --check src/"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^10.0.0",
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",
     "@mermaid-js/mermaid-cli": "^11.12.0",
@@ -27,8 +27,8 @@
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
     "@types/node": "^24.10.1",
     "cspell-lib": "^9.7.0",
-    "eslint": "^9.39.1",
-    "eslint-plugin-svelte": "^2.46.1",
+    "eslint": "^10.0.0",
+    "eslint-plugin-svelte": "^3.0.0",
     "globals": "^17.0.0",
     "mdsvex": "^0.12.6",
     "mermaid": "^11.12.3",

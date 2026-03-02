@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { resolve } from '$app/paths'
+  import type { Pathname } from '$app/types'
+
   interface Crumb {
-    href?: string
+    href?: Pathname
     label: string
   }
 
@@ -13,14 +16,14 @@
 
 <nav aria-label="Breadcrumb" class="breadcrumb">
   <ol itemscope itemtype="https://schema.org/BreadcrumbList">
-    {#each crumbs as crumb, i}
+    {#each crumbs as crumb, i (i)}
       <li
         itemprop="itemListElement"
         itemscope
         itemtype="https://schema.org/ListItem"
       >
         {#if crumb.href}
-          <a href={crumb.href} itemprop="item">
+          <a href={resolve(crumb.href)} itemprop="item">
             <span itemprop="name">{crumb.label}</span>
           </a>
         {:else}
