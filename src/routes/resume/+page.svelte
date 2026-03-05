@@ -1,143 +1,297 @@
 <script lang="ts">
-  import ResumeHeader from '$lib/components/ResumeHeader.svelte'
-  import SkillSection from '$lib/components/SkillSection.svelte'
-  import JobEntry from '$lib/components/JobEntry.svelte'
+  import { resolve } from '$app/paths'
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte'
   import { RESUME_DATA } from '$lib/resume.data'
-  import { ACTIVE_PROFILE } from '$lib/resume.profile'
+  import { SvelteSet } from 'svelte/reactivity'
 
-  const { header, skills, education, interests } = RESUME_DATA
+  const jobs = Object.values(RESUME_DATA.experience)
+
+  const availableTags = [
+    ...new Set(
+      jobs.flatMap((job) =>
+        Object.values(job.points).flatMap((p) => p.tags ?? []),
+      ),
+    ),
+  ].sort()
+
+  let selectedTags: Set<string> = $state(new Set())
+
+  function toggleTag(tag: string) {
+    const next = new SvelteSet(selectedTags)
+    if (next.has(tag)) {
+      next.delete(tag)
+    } else {
+      next.add(tag)
+    }
+    selectedTags = next
+  }
+
+  function clearTags() {
+    selectedTags = new SvelteSet()
+  }
+
+  function isPointVisible(point: { tags?: readonly string[] }): boolean {
+    if (selectedTags.size === 0) return true
+    if (!point.tags) return false
+    return point.tags.some((t) => selectedTags.has(t))
+  }
+
+  function visiblePoints(
+    points: Record<string, { text: string; tags?: readonly string[] }>,
+  ): [string, { text: string; tags?: readonly string[] }][] {
+    return Object.entries(points).filter(([, p]) => isPointVisible(p))
+  }
 </script>
 
 <svelte:head>
-  <title>{header.name} — Resume</title>
-  <meta name="description" content="Resume of {header.name}" />
+  <title>{RESUME_DATA.header.name} — Interactive Resume</title>
+  <meta
+    name="description"
+    content="Interactive filterable resume of {RESUME_DATA.header.name}"
+  />
 </svelte:head>
 
-<!--
-  {#snippet} defines a reusable template fragment local to this file.
-  {@render} calls it — like calling a function that returns markup.
-  Used here to keep section headings DRY without creating a full component.
--->
-{#snippet sectionTitle(title: string)}
-  <h2 class="section-title">{title}</h2>
-{/snippet}
+<div class="interactive-resume">
+  <header class="page-header">
+    <Breadcrumb crumbs={[{ href: '/', label: 'Home' }, { label: 'Resume' }]} />
+    <h1>{RESUME_DATA.header.name}</h1>
+    <a class="alt-view" href={resolve('/resume/static')}>Traditional Resume →</a>
+  </header>
 
-<div class="app-shell">
-  <div class="resume-card">
-    <ResumeHeader {header} />
+  <section class="filter-strip">
+    <span class="filter-label">Filter by tech:</span>
+    <div class="tag-chips">
+      {#each availableTags as tag (tag)}
+        <button
+          class="chip"
+          class:active={selectedTags.has(tag)}
+          onclick={() => toggleTag(tag)}
+        >
+          {tag}
+        </button>
+      {/each}
+    </div>
+    {#if selectedTags.size > 0}
+      <button class="clear-btn" onclick={clearTags}>Clear all</button>
+    {/if}
+  </section>
 
-    <section>
-      <section>
-        {@render sectionTitle('Technical Skills')}
-        <SkillSection {skills} skillGroups={ACTIVE_PROFILE.skillGroups} />
-      </section>
-
-      <section>
-        {@render sectionTitle('Work Experience')}
-        {#each ACTIVE_PROFILE.experience as selection (selection.id)}
-          {@const job = RESUME_DATA.experience[selection.id]}
-          <JobEntry {job} {selection} />
-        {/each}
-      </section>
-
-      <section>
-        {@render sectionTitle('Education')}
-        <article class="entry">
+  <section class="experience">
+    {#each jobs as job (job.company + '|' + job.title + '|' + job.start.datetime)}
+      {@const points = visiblePoints(job.points)}
+      {#if points.length > 0}
+        <article class="job">
           <div class="job-header">
-            <span><strong>{education.school}</strong> — {education.degree}</span
-            >
-            <time class="date-loc-inline" datetime={education.date.datetime}
-              >{education.date.display()}</time
-            >
+            <h2 class="job-title">{job.title}</h2>
+            <span class="company">{job.company}</span>
           </div>
+          <div class="date-loc">
+            <time datetime={job.start.datetime}>{job.start.display()}</time>
+            —
+            <time datetime={job.end.datetime}>{job.end.display()}</time>
+            | {job.location}
+          </div>
+          <ul>
+            {#each points as [id, point] (id)}
+              <li>
+                <span class="point-text">{point.text}</span>
+                {#if point.tags}
+                  <span class="point-tags">
+                    {#each point.tags as tag (tag)}
+                      <span
+                        class="point-tag"
+                        class:highlight={selectedTags.has(tag)}>{tag}</span
+                      >
+                    {/each}
+                  </span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
         </article>
-      </section>
-
-      <section>
-        {@render sectionTitle('Interests')}
-        <p class="interests-text">{interests.join(', ')}</p>
-      </section>
-    </section>
-  </div>
+      {/if}
+    {/each}
+  </section>
 </div>
 
 <style>
-  .app-shell {
-    min-height: 100vh;
-    background-color: var(--white);
-    padding: var(--space-xl) var(--space-lg);
-  }
-
-  .resume-card {
-    color: var(--text-color);
-    width: min(8.5in, calc(100vw - 40px));
-    min-height: 11in;
+  .interactive-resume {
+    max-width: 52rem;
     margin: 0 auto;
-    background: var(--white);
-    padding: var(--space-xl) var(--space-2xl);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    line-height: 1.25;
-    box-sizing: border-box;
+    padding: 2rem 1.5rem;
+    color: var(--text-color, #333);
+    line-height: 1.5;
   }
 
-  .section-title {
-    border-bottom: 1px solid var(--line-color);
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.75rem;
+    color: var(--primary-color, #2c3e50);
+  }
+
+  .alt-view {
+    font-size: var(--font-sm, 0.85rem);
+    color: var(--secondary-color, #666);
+    text-decoration: none;
     text-transform: uppercase;
-    font-size: var(--font-md);
-    color: var(--primary-color);
-    margin-top: var(--space-lg);
-    margin-bottom: var(--space-sm);
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
   }
 
-  .entry {
-    margin-bottom: var(--space-md);
+  .alt-view:hover {
+    color: var(--primary-color, #2c3e50);
+  }
+
+  /* ── Filter strip ────────────────────────────────── */
+  .filter-strip {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--white, #fff);
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line-color, #ddd);
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .filter-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-color, #666);
+    white-space: nowrap;
+  }
+
+  .tag-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .chip {
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--line-color, #ccc);
+    border-radius: 999px;
+    background: transparent;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--text-color, #555);
+    transition:
+      background 0.15s,
+      color 0.15s,
+      border-color 0.15s;
+  }
+
+  .chip:hover {
+    border-color: var(--primary-color, #2c3e50);
+    color: var(--primary-color, #2c3e50);
+  }
+
+  .chip.active {
+    background: var(--primary-color, #2c3e50);
+    color: #fff;
+    border-color: var(--primary-color, #2c3e50);
+  }
+
+  .clear-btn {
+    padding: 0.25rem 0.6rem;
+    border: none;
+    background: none;
+    font-size: 0.78rem;
+    color: var(--primary-color, #2c3e50);
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* ── Job entries ─────────────────────────────────── */
+  .job {
+    margin-bottom: 1.75rem;
   }
 
   .job-header {
-    font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    font-size: var(--font-md);
+    font-weight: bold;
   }
 
-  .date-loc-inline {
-    font-size: var(--font-sm);
-    color: var(--secondary-color);
+  .job-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: var(--primary-color, #2c3e50);
+    margin: 0;
+    font-weight: inherit;
   }
 
-  .interests-text {
-    font-size: var(--font-base);
-    margin-top: var(--space-xs);
+  .company {
+    font-style: italic;
+    color: var(--primary-color, #2c3e50);
+    text-transform: uppercase;
+    font-size: 0.95rem;
   }
 
+  .date-loc {
+    font-size: 0.85rem;
+    color: var(--secondary-color, #666);
+    margin-bottom: 0.35rem;
+  }
+
+  ul {
+    padding-left: 1.25rem;
+    margin: 0.25rem 0 0;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+    font-size: 0.92rem;
+  }
+
+  .point-text {
+    display: inline;
+  }
+
+  /* ── Per-bullet tag badges ───────────────────────── */
+  .point-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: 0.4rem;
+    vertical-align: baseline;
+  }
+
+  .point-tag {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    background: #f0f0f0;
+    color: #777;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+
+  .point-tag.highlight {
+    background: var(--primary-color, #2c3e50);
+    color: #fff;
+  }
+
+  /* ── Responsive ──────────────────────────────────── */
   @media (max-width: 600px) {
-    .resume-card {
-      width: 100%;
-      min-height: auto;
-      padding: var(--space-lg);
+    .interactive-resume {
+      padding: 1rem;
     }
 
     .job-header {
       flex-direction: column;
     }
-  }
 
-  @media print {
-    .app-shell {
-      background: none;
-      padding: 0;
-    }
-
-    .resume-card {
-      width: 8.5in;
-      min-height: 11in;
-      margin: 0;
-      padding-top: 0;
-      box-shadow: none;
-      print-color-adjust: exact;
-      -webkit-print-color-adjust: exact;
+    .filter-strip {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
 </style>

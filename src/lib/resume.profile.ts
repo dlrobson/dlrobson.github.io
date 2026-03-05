@@ -25,13 +25,25 @@ export const ACTIVE_PROFILE = {
     'systems',
   ] as const satisfies readonly SkillKey[],
   experience: [
-    selectJob('ouster', ['arch', 'api', 'scale', 'devops', 'mentorship']),
+    selectJob('ouster', [
+      'arch',
+      'api',
+      'scale',
+      'devops',
+      'mentorship',
+      'auth',
+      'perception_kalman',
+      'eval_metrics',
+      'classification',
+      'tracking_perf',
+      'rust_actuator',
+      'integration_tests',
+    ]),
     selectJob('untether', ['throughput', 'multichip']),
     selectJob('cepton', [
       'tracking_redesign',
       'lidar_camera_overlay',
       'background_detector',
     ]),
-    selectJob('linamar', ['cad_design', 'vba', 'ventilation']),
   ],
 }
