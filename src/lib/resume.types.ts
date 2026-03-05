@@ -13,6 +13,7 @@ export const EXPERIENCE_TAGS = [
   'Leadership',
   'LiDAR',
   'Machine Learning',
+  'Perception',
   'Performance',
   'Python',
   'Rust',

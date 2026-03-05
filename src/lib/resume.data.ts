@@ -91,6 +91,23 @@ export const RESUME_DATA = {
         },
       },
     },
+    ouster_intern: {
+      title: 'Software Engineer — Part-time Internship',
+      company: 'Ouster',
+      location: 'Ottawa, ON',
+      start: new ResumeDate('2021-09'),
+      end: new ResumeDate('2022-04'),
+      points: {
+        kalman_filter: {
+          text: 'Implemented a bicycle-model extended Kalman filter for vehicle tracking, improving motion state estimation from LiDAR detections in dynamic driving scenarios.',
+          tags: ['C++', 'Sensor Fusion', 'LiDAR'],
+        },
+        zone_filtering: {
+          text: 'Built point zone filtering to exclude points using user-defined spatial zones, reducing noise and improving downstream perception stability.',
+          tags: ['C++', 'LiDAR', 'Perception'],
+        },
+      }
+    },
     untether: {
       title: 'Runtime Software Engineer — Internship',
       company: 'Untether AI',

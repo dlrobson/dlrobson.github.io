@@ -3,7 +3,7 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 import { mdsvex } from 'mdsvex'
 import { fileURLToPath } from 'url'
 import path from 'path'
-import remarkMermaid from './remark-mermaid.js'
+import remarkMermaid from './scripts/remark-mermaid.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

@@ -6,7 +6,9 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 
-const mmdc = fileURLToPath(new URL('./node_modules/.bin/mmdc', import.meta.url))
+const mmdc = fileURLToPath(
+  new URL('../node_modules/.bin/mmdc', import.meta.url),
+)
 
 const chromiumPath =
   process.env.PUPPETEER_EXECUTABLE_PATH?.trim() || '/usr/bin/chromium'
