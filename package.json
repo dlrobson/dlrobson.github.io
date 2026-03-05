@@ -11,6 +11,8 @@
     "preview:host": "vite preview --host",
     "test": "vitest run",
     "test:watch": "vitest",
+    "pdf": "node scripts/pdf.js",
+    "pdf:build": "npm run build && node scripts/pdf.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "lint": "npm run check && eslint .",
     "lint:fix": "eslint . --fix",
