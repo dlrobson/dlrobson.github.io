@@ -25,7 +25,6 @@
     {#each selection.points as pointKey (pointKey)}
       {@const point = job.points[pointKey]}
       <li>
-        {#if point.category}<strong>{point.category}: </strong>{/if}
         {point.text}
       </li>
     {/each}

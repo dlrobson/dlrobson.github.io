@@ -2,9 +2,29 @@
 export { ResumeDate } from './resume-date'
 import type { ResumeDate } from './resume-date'
 
+export const EXPERIENCE_TAGS = [
+  'API Design',
+  'Auth',
+  'C++',
+  'CI/CD',
+  'DevOps',
+  'Docker',
+  'Embedded',
+  'Leadership',
+  'LiDAR',
+  'Machine Learning',
+  'Performance',
+  'Python',
+  'Rust',
+  'Sensor Fusion',
+  'Testing',
+] as const
+
+export type ExperienceTag = (typeof EXPERIENCE_TAGS)[number]
+
 export interface ExperiencePoint {
-  category?: string
   text: string
+  tags?: readonly ExperienceTag[]
 }
 
 export interface Job {
