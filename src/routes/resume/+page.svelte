@@ -118,31 +118,31 @@
   .interactive-resume {
     max-width: 52rem;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
-    color: var(--text-color, #333);
+    padding: var(--space-xl) var(--space-lg);
+    color: var(--text-color);
     line-height: 1.5;
   }
 
   .page-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-lg);
   }
 
   .page-header h1 {
-    margin: 0 0 0.25rem;
+    margin: 0 0 var(--space-xs);
     font-size: 1.75rem;
-    color: var(--primary-color, #2c3e50);
+    color: var(--primary-color);
   }
 
   .alt-view {
-    font-size: var(--font-sm, 0.85rem);
-    color: var(--secondary-color, #666);
+    font-size: var(--font-sm);
+    color: var(--secondary-color);
     text-decoration: none;
     text-transform: uppercase;
     letter-spacing: 1px;
   }
 
   .alt-view:hover {
-    color: var(--primary-color, #2c3e50);
+    color: var(--primary-color);
   }
 
   /* ── Filter strip ────────────────────────────────── */
@@ -150,10 +150,10 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--white, #fff);
+    background: var(--bg-body);
     padding: 0.75rem 0;
-    border-bottom: 1px solid var(--line-color, #ddd);
-    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--line-color);
+    margin-bottom: var(--space-lg);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -161,9 +161,9 @@
   }
 
   .filter-label {
-    font-size: 0.85rem;
+    font-size: var(--font-sm);
     font-weight: 600;
-    color: var(--secondary-color, #666);
+    color: var(--secondary-color);
     white-space: nowrap;
   }
 
@@ -175,12 +175,12 @@
 
   .chip {
     padding: 0.25rem 0.6rem;
-    border: 1px solid var(--line-color, #ccc);
+    border: 1px solid var(--line-color);
     border-radius: 999px;
     background: transparent;
     font-size: 0.78rem;
     cursor: pointer;
-    color: var(--text-color, #555);
+    color: var(--text-color);
     transition:
       background 0.15s,
       color 0.15s,
@@ -188,14 +188,14 @@
   }
 
   .chip:hover {
-    border-color: var(--primary-color, #2c3e50);
-    color: var(--primary-color, #2c3e50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
   }
 
   .chip.active {
-    background: var(--primary-color, #2c3e50);
-    color: #fff;
-    border-color: var(--primary-color, #2c3e50);
+    background: var(--primary-color);
+    color: var(--on-primary);
+    border-color: var(--primary-color);
   }
 
   .clear-btn {
@@ -203,7 +203,7 @@
     border: none;
     background: none;
     font-size: 0.78rem;
-    color: var(--primary-color, #2c3e50);
+    color: var(--primary-color);
     cursor: pointer;
     text-decoration: underline;
   }
@@ -223,21 +223,21 @@
   .job-title {
     font-size: 1rem;
     text-transform: uppercase;
-    color: var(--primary-color, #2c3e50);
+    color: var(--primary-color);
     margin: 0;
     font-weight: inherit;
   }
 
   .company {
     font-style: italic;
-    color: var(--primary-color, #2c3e50);
+    color: var(--primary-color);
     text-transform: uppercase;
-    font-size: 0.95rem;
+    font-size: var(--font-base);
   }
 
   .date-loc {
-    font-size: 0.85rem;
-    color: var(--secondary-color, #666);
+    font-size: var(--font-sm);
+    color: var(--secondary-color);
     margin-bottom: 0.35rem;
   }
 
@@ -248,7 +248,7 @@
 
   li {
     margin-bottom: 0.5rem;
-    font-size: 0.92rem;
+    font-size: var(--font-base);
   }
 
   .point-text {
@@ -268,15 +268,15 @@
     font-size: 0.65rem;
     padding: 0.1rem 0.4rem;
     border-radius: 999px;
-    background: #f0f0f0;
-    color: #777;
+    background: var(--tag-bg);
+    color: var(--tag-text);
     white-space: nowrap;
     line-height: 1.4;
   }
 
   .point-tag.highlight {
-    background: var(--primary-color, #2c3e50);
-    color: #fff;
+    background: var(--primary-color);
+    color: var(--on-primary);
   }
 
   /* ── Responsive ──────────────────────────────────── */

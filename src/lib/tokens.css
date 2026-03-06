@@ -1,0 +1,104 @@
+:root {
+  /* Brand */
+  --primary-color: #2c3e50;
+  --secondary-color: #666;
+
+  /* Text */
+  --text-color: #333;
+
+  /* Surfaces */
+  --bg-body: #fff;
+  --bg-surface: #fff;
+
+  /* Borders / dividers */
+  --line-color: #ddd;
+
+  /* Semantic component tokens */
+  --code-bg: #f4f4f4;
+  --tag-bg: #f0f0f0;
+  --tag-text: #777;
+  --on-primary: #fff;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+
+  /* Spacing */
+  --space-xs: 2px;
+  --space-sm: 10px;
+  --space-md: 18px;
+  --space-lg: 22px;
+  --space-xl: 45px;
+  --space-2xl: 55px;
+
+  /* Typography */
+  --font-sm: 0.85em;
+  --font-base: 0.95em;
+  --font-md: 1.05em;
+}
+
+/* ── Dark mode: explicit override ──────────────────── */
+[data-theme='dark'] {
+  --primary-color: #7fa8c9;
+  --secondary-color: #999;
+  --text-color: #e0e0e0;
+  --bg-body: #1a1a1a;
+  --bg-surface: #242424;
+  --line-color: #3a3a3a;
+  --code-bg: #2d2d2d;
+  --tag-bg: #2d2d2d;
+  --tag-text: #aaa;
+  --on-primary: #fff;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+/* ── Dark mode: system preference (no explicit override) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --primary-color: #7fa8c9;
+    --secondary-color: #999;
+    --text-color: #e0e0e0;
+    --bg-body: #1a1a1a;
+    --bg-surface: #242424;
+    --line-color: #3a3a3a;
+    --code-bg: #2d2d2d;
+    --tag-bg: #2d2d2d;
+    --tag-text: #aaa;
+    --on-primary: #fff;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* ── Prism: dark theme overrides (one-dark colours) ── */
+[data-theme='dark'] code[class*='language-'],
+[data-theme='dark'] pre[class*='language-'] {
+  background: hsl(220, 13%, 18%);
+  color: hsl(220, 14%, 71%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) code[class*='language-'],
+  :root:not([data-theme]) pre[class*='language-'] {
+    background: hsl(220, 13%, 18%);
+    color: hsl(220, 14%, 71%);
+  }
+}
+
+@page {
+  size: Letter;
+  margin: var(--space-xl) 0 var(--space-xl) 0;
+}
+
+/* ── Print: always render in light mode ────────────── */
+@media print {
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #666;
+    --text-color: #333;
+    --bg-body: #fff;
+    --bg-surface: #fff;
+    --line-color: #ddd;
+    --code-bg: #f4f4f4;
+    --tag-bg: #f0f0f0;
+    --tag-text: #777;
+    --on-primary: #fff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+}

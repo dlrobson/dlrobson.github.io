@@ -1,5 +1,5 @@
 <script lang="ts">
-  import 'prism-themes/themes/prism-one-dark.css'
+  import 'prism-themes/themes/prism-one-light.css'
   import { formatDate } from '$lib/format-date'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 
@@ -86,7 +86,7 @@
   }
 
   .prose :global(code) {
-    background: #f4f4f4;
+    background: var(--code-bg);
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 0.9em;
@@ -145,17 +145,4 @@
     color: var(--primary-color);
   }
 
-  .prose :global(.token.property),
-  .prose :global(.token.tag),
-  .prose :global(.token.symbol),
-  .prose :global(.token.deleted),
-  .prose :global(.token.important),
-  .prose :global(.language-css .token.selector),
-  .prose :global(.language-markdown .token.strike .token.content),
-  .prose :global(.language-markdown .token.strike .token.punctuation),
-  .prose :global(.language-markdown .token.list.punctuation),
-  .prose
-    :global(.language-markdown .token.title.important > .token.punctuation) {
-    color: #e88991;
-  }
 </style>
