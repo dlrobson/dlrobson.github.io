@@ -69,7 +69,7 @@
 <style>
   .app-shell {
     min-height: 100vh;
-    background-color: var(--white);
+    background-color: var(--bg-body);
     padding: var(--space-xl) var(--space-lg);
   }
 
@@ -78,9 +78,9 @@
     width: min(8.5in, calc(100vw - 40px));
     min-height: 11in;
     margin: 0 auto;
-    background: var(--white);
+    background: var(--bg-surface);
     padding: var(--space-xl) var(--space-2xl);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px var(--shadow-color);
     line-height: 1.25;
     box-sizing: border-box;
   }
@@ -99,14 +99,6 @@
     margin-bottom: var(--space-md);
   }
 
-  .job-header {
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: var(--font-md);
-  }
-
   .date-loc-inline {
     font-size: var(--font-sm);
     color: var(--secondary-color);
@@ -122,10 +114,6 @@
       width: 100%;
       min-height: auto;
       padding: var(--space-lg);
-    }
-
-    .job-header {
-      flex-direction: column;
     }
   }
 
