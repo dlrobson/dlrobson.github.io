@@ -1,10 +1,12 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+  import JobHeader from '$lib/components/JobHeader.svelte'
   import { RESUME_DATA } from '$lib/resume.data'
+  import type { Job } from '$lib/resume.types'
   import { SvelteSet } from 'svelte/reactivity'
 
-  const jobs = Object.values(RESUME_DATA.experience)
+  const jobs = Object.values(RESUME_DATA.experience) as Job[]
 
   const availableTags = [
     ...new Set(
@@ -55,7 +57,8 @@
   <header class="page-header">
     <Breadcrumb crumbs={[{ href: '/', label: 'Home' }, { label: 'Resume' }]} />
     <h1>{RESUME_DATA.header.name}</h1>
-    <a class="alt-view" href={resolve('/resume/static')}>Traditional Resume →</a>
+    <a class="alt-view" href={resolve('/resume/static')}>Traditional Resume →</a
+    >
   </header>
 
   <section class="filter-strip">
@@ -77,20 +80,11 @@
   </section>
 
   <section class="experience">
-    {#each jobs as job (job.company + '|' + job.title + '|' + job.start.datetime)}
+    {#each jobs as job (job.company)}
       {@const points = visiblePoints(job.points)}
       {#if points.length > 0}
         <article class="job">
-          <div class="job-header">
-            <h2 class="job-title">{job.title}</h2>
-            <span class="company">{job.company}</span>
-          </div>
-          <div class="date-loc">
-            <time datetime={job.start.datetime}>{job.start.display()}</time>
-            —
-            <time datetime={job.end.datetime}>{job.end.display()}</time>
-            | {job.location}
-          </div>
+          <JobHeader {job} />
           <ul>
             {#each points as [id, point] (id)}
               <li>
@@ -213,34 +207,6 @@
     margin-bottom: 1.75rem;
   }
 
-  .job-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-weight: bold;
-  }
-
-  .job-title {
-    font-size: 1rem;
-    text-transform: uppercase;
-    color: var(--primary-color);
-    margin: 0;
-    font-weight: inherit;
-  }
-
-  .company {
-    font-style: italic;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    font-size: var(--font-base);
-  }
-
-  .date-loc {
-    font-size: var(--font-sm);
-    color: var(--secondary-color);
-    margin-bottom: 0.35rem;
-  }
-
   ul {
     padding-left: 1.25rem;
     margin: 0.25rem 0 0;
@@ -283,10 +249,6 @@
   @media (max-width: 600px) {
     .interactive-resume {
       padding: 1rem;
-    }
-
-    .job-header {
-      flex-direction: column;
     }
 
     .filter-strip {

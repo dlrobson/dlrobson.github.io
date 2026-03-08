@@ -144,5 +144,4 @@
   .prose :global(strong) {
     color: var(--primary-color);
   }
-
 </style>
