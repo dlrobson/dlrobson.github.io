@@ -83,7 +83,7 @@ export const RESUME_DATA = {
         },
         auth: {
           text: 'Implemented an OAuth 2.0 Authorization Code Flow with PKCE using Keycloak to secure the perception product stack, enabling fine-grained access control and user management for customers.',
-          tags: ['Auth'],
+          tags: ['Auth', 'Docker'],
         },
         installation: {
           text: 'Redesigned and re-implemented the software installation and distribution system across Debian, RPM, and container-based delivery targets, establishing a reliable and maintainable packaging pipeline.',
