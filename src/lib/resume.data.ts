@@ -26,7 +26,6 @@ export const RESUME_DATA = {
       label: 'Systems & Perception',
       items: [
         'System Architecture',
-        'API Design',
         'Algorithm Optimization',
         'OpenCV',
         'Kalman Filtering',
@@ -80,7 +79,7 @@ export const RESUME_DATA = {
         },
         multi_instance: {
           text: 'Architected a scalable, distributed perception system to balance computational load across multiple nodes. Secured inter-node communication using mutual TLS client certificate authentication.',
-          tags: ['Auth', 'C++', 'API Design', 'Performance'],
+          tags: ['Auth', 'C++', 'Performance'],
         },
         auth: {
           text: 'Implemented an OAuth 2.0 Authorization Code Flow with PKCE using Keycloak to secure the perception product stack, enabling fine-grained access control and user management for customers.',
@@ -104,7 +103,7 @@ export const RESUME_DATA = {
         },
         event_system: {
           text: 'Designed and delivered a modular, Rust-based event-driven system under tight deadlines, enabling configurable condition-action pipelines (e.g., triggering webhooks when objects satisfy spatial or temporal criteria). Iterated significantly on the initial release in response to customer feedback, reducing system complexity, standardizing output payloads across all modules for easier downstream consumption, and broadening extensibility.',
-          tags: ['Rust', 'API Design'],
+          tags: ['Rust'],
         },
         tbb: {
           text: 'Evaluated, validated, and integrated Intel TBB into the perception product to parallelize previously serial processing stages, achieving a 10x throughput improvement in many cases.',
@@ -175,7 +174,7 @@ export const RESUME_DATA = {
       points: {
         perception_sensor_fusion: {
           text: 'Engineered a multi-modal calibration and overlay system using OpenCV and DBSCAN to compute homogeneous transforms, aligning LiDAR point clouds with camera feeds for real-time spatial visualization.',
-          tags: ['C++', 'Sensor Fusion', 'LiDAR'],
+          tags: ['C++', 'LiDAR'],
         },
         tracking_optimization: {
           text: 'Architected a high-performance tracking engine using C++ K-d Trees and Extended Kalman Filters, increasing trackable object capacity by 900% while improving motion prediction via bicycle kinematic modeling.',

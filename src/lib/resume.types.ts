@@ -3,7 +3,6 @@ export { ResumeDate } from './resume-date'
 import type { ResumeDate } from './resume-date'
 
 export const EXPERIENCE_TAGS = [
-  'API Design',
   'Auth',
   'C++',
   'CI/CD',
@@ -17,7 +16,6 @@ export const EXPERIENCE_TAGS = [
   'Performance',
   'Python',
   'Rust',
-  'Sensor Fusion',
   'Testing',
 ] as const
 
