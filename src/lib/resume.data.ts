@@ -144,11 +144,11 @@ export const RESUME_DATA = {
       points: {
         throughput: {
           text: 'Developed high-performance software interfaces for AI inference acceleration, increasing data throughput by 40-100x through optimized memory-mapped I/O and DMA transfers.',
-          tags: ['C++', 'Performance'],
+          tags: ['Embedded', 'Performance'],
         },
         multichip: {
           text: 'Optimized multi-chip utilization logic to meet strict latency requirements, balancing workload distribution across inference accelerator cores.',
-          tags: ['C++', 'Performance'],
+          tags: ['Embedded', 'Performance'],
         },
         tools: {
           text: 'Developed tools for the hardware team to ensure the reliability of the product.',
