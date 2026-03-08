@@ -16,10 +16,13 @@
   </nav>
   <div class="socials">
     <a href="mailto:{PROFILE.email}">Email</a>
-    <a href={PROFILE.github} target="_blank" rel="external noopener noreferrer">GitHub</a
+    <a href={PROFILE.github} target="_blank" rel="external noopener noreferrer"
+      >GitHub</a
     >
-    <a href={PROFILE.linkedin} target="_blank" rel="external noopener noreferrer"
-      >LinkedIn</a
+    <a
+      href={PROFILE.linkedin}
+      target="_blank"
+      rel="external noopener noreferrer">LinkedIn</a
     >
   </div>
 </div>

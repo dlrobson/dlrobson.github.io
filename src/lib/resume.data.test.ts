@@ -178,7 +178,15 @@ describe('RESUME_DATA', () => {
 
   describe('spell check', () => {
     /** Domain-specific terms that are correctly spelled but not in standard dictionaries. */
-    const DOMAIN_WORDS = ['Kalman', 'scikit', 'DBSCAN', 'LiDAR', 'Ouster', 'DMA', 'pytest']
+    const DOMAIN_WORDS = [
+      'Kalman',
+      'scikit',
+      'DBSCAN',
+      'LiDAR',
+      'Ouster',
+      'DMA',
+      'pytest',
+    ]
 
     it('should have no misspelled words in experience point text', async () => {
       const allText = Object.values(RESUME_DATA.experience)

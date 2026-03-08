@@ -8,6 +8,9 @@ export type Theme = 'light' | 'system' | 'dark'
  * because it runs before any module can be imported. Keep them in sync if
  * this list ever changes.
  */
-export const EXPLICIT_THEMES = ['light', 'dark'] as const satisfies readonly Theme[]
+export const EXPLICIT_THEMES = [
+  'light',
+  'dark',
+] as const satisfies readonly Theme[]
 
 export const CYCLE: readonly Theme[] = ['system', 'light', 'dark']

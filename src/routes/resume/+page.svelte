@@ -2,9 +2,10 @@
   import { resolve } from '$app/paths'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
   import { RESUME_DATA } from '$lib/resume.data'
+  import type { Job } from '$lib/resume.types'
   import { SvelteSet } from 'svelte/reactivity'
 
-  const jobs = Object.values(RESUME_DATA.experience)
+  const jobs = Object.values(RESUME_DATA.experience) as Job[]
 
   const availableTags = [
     ...new Set(
@@ -55,7 +56,8 @@
   <header class="page-header">
     <Breadcrumb crumbs={[{ href: '/', label: 'Home' }, { label: 'Resume' }]} />
     <h1>{RESUME_DATA.header.name}</h1>
-    <a class="alt-view" href={resolve('/resume/static')}>Traditional Resume →</a>
+    <a class="alt-view" href={resolve('/resume/static')}>Traditional Resume →</a
+    >
   </header>
 
   <section class="filter-strip">
@@ -77,20 +79,28 @@
   </section>
 
   <section class="experience">
-    {#each jobs as job (job.company + '|' + job.title + '|' + job.start.datetime)}
+    {#each jobs as job (job.company)}
       {@const points = visiblePoints(job.points)}
       {#if points.length > 0}
         <article class="job">
-          <div class="job-header">
-            <h2 class="job-title">{job.title}</h2>
+          <div class="company-row">
             <span class="company">{job.company}</span>
+            <span class="location">{job.location}</span>
           </div>
-          <div class="date-loc">
-            <time datetime={job.start.datetime}>{job.start.display()}</time>
-            —
-            <time datetime={job.end.datetime}>{job.end.display()}</time>
-            | {job.location}
-          </div>
+          {#each job.periods as period (period.title + period.start.datetime + period.end.datetime)}
+            <div class="role-row">
+              <h2 class="job-title">{period.title}</h2>
+              <span class="date-range">
+                <time datetime={period.start.datetime}
+                  >{period.start.display()}</time
+                >
+                —
+                <time datetime={period.end.datetime}
+                  >{period.end.display()}</time
+                >
+              </span>
+            </div>
+          {/each}
           <ul>
             {#each points as [id, point] (id)}
               <li>
@@ -213,19 +223,12 @@
     margin-bottom: 1.75rem;
   }
 
-  .job-header {
+  .company-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     font-weight: bold;
-  }
-
-  .job-title {
-    font-size: 1rem;
-    text-transform: uppercase;
-    color: var(--primary-color);
-    margin: 0;
-    font-weight: inherit;
+    font-size: var(--font-md);
   }
 
   .company {
@@ -235,10 +238,31 @@
     font-size: var(--font-base);
   }
 
-  .date-loc {
+  .location {
     font-size: var(--font-sm);
     color: var(--secondary-color);
-    margin-bottom: 0.35rem;
+    font-weight: normal;
+  }
+
+  .role-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1px;
+  }
+
+  .job-title {
+    font-size: var(--font-base);
+    text-transform: uppercase;
+    color: var(--text-color);
+    margin: 0;
+    font-weight: normal;
+  }
+
+  .date-range {
+    font-size: var(--font-sm);
+    color: var(--secondary-color);
+    white-space: nowrap;
   }
 
   ul {
@@ -285,7 +309,8 @@
       padding: 1rem;
     }
 
-    .job-header {
+    .company-row,
+    .role-row {
       flex-direction: column;
     }
 

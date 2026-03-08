@@ -11,16 +11,20 @@
 </script>
 
 <article class="entry">
-  <div class="job-header">
-    <h3 class="job-title-name">{job.title}</h3>
+  <div class="company-row">
     <span class="company">{job.company}</span>
+    <span class="location">{job.location}</span>
   </div>
-  <div class="date-loc">
-    <time datetime={job.start.datetime}>{job.start.display()}</time>
-    —
-    <time datetime={job.end.datetime}>{job.end.display()}</time>
-    | {job.location}
-  </div>
+  {#each job.periods as period (period.title + period.start.datetime + period.end.datetime)}
+    <div class="role-row">
+      <h3 class="job-title-name">{period.title}</h3>
+      <span class="date-range">
+        <time datetime={period.start.datetime}>{period.start.display()}</time>
+        —
+        <time datetime={period.end.datetime}>{period.end.display()}</time>
+      </span>
+    </div>
+  {/each}
   <ul>
     {#each selection.points as pointKey (pointKey)}
       {@const point = job.points[pointKey]}
@@ -36,20 +40,12 @@
     margin-bottom: var(--space-md);
   }
 
-  .job-header {
-    font-weight: bold;
+  .company-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    font-weight: bold;
     font-size: var(--font-md);
-  }
-
-  .job-title-name {
-    text-transform: uppercase;
-    font-size: inherit;
-    font-weight: inherit;
-    color: var(--primary-color);
-    margin: 0;
   }
 
   .company {
@@ -58,10 +54,32 @@
     text-transform: uppercase;
   }
 
-  .date-loc {
+  .location {
     font-size: var(--font-sm);
     color: var(--secondary-color);
-    margin-bottom: var(--space-xs);
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  .role-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 1px;
+  }
+
+  .job-title-name {
+    text-transform: uppercase;
+    font-size: var(--font-base);
+    font-weight: normal;
+    color: var(--text-color);
+    margin: 0;
+  }
+
+  .date-range {
+    font-size: var(--font-sm);
+    color: var(--secondary-color);
+    white-space: nowrap;
   }
 
   time {
@@ -81,7 +99,8 @@
   }
 
   @media (max-width: 600px) {
-    .job-header {
+    .company-row,
+    .role-row {
       flex-direction: column;
     }
   }

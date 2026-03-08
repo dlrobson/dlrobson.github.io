@@ -17,7 +17,9 @@
   function initialTheme(): Theme {
     if (!browser) return 'system'
     const saved = localStorage.getItem('theme') as Theme | null
-    return (EXPLICIT_THEMES as readonly string[]).includes(saved ?? '') ? (saved as Theme) : 'system'
+    return (EXPLICIT_THEMES as readonly string[]).includes(saved ?? '')
+      ? (saved as Theme)
+      : 'system'
   }
 
   let current = $state<Theme>(initialTheme())

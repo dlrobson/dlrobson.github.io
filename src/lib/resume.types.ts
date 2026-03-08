@@ -28,12 +28,16 @@ export interface ExperiencePoint {
   tags?: readonly ExperienceTag[]
 }
 
-export interface Job {
+export interface JobPeriod {
   title: string
-  company: string
-  location: string
   start: ResumeDate
   end: ResumeDate
+}
+
+export interface Job {
+  company: string
+  location: string
+  periods: readonly JobPeriod[]
   points: Record<string, ExperiencePoint>
 }
 
