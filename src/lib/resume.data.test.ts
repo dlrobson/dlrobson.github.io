@@ -66,7 +66,10 @@ describe('RESUME_DATA', () => {
     })
 
     it('should have non-empty title for every job', () => {
-      const titles = jobs.map(([, job]) => job.title)
+      const titles = jobs
+        .map(([, job]) => job.periods)
+        .flat()
+        .map((period) => period.title)
 
       const allNonEmpty = titles.every((t) => t.length > 0)
 
@@ -90,7 +93,10 @@ describe('RESUME_DATA', () => {
     })
 
     it('should use ResumeDate instances for start dates', () => {
-      const startDates = jobs.map(([, job]) => job.start)
+      const startDates = jobs
+        .map(([, job]) => job.periods)
+        .flat()
+        .map((period) => period.start)
 
       const allResumeDate = startDates.every((d) => d instanceof ResumeDate)
 
@@ -98,7 +104,10 @@ describe('RESUME_DATA', () => {
     })
 
     it('should use ResumeDate instances for end dates', () => {
-      const endDates = jobs.map(([, job]) => job.end)
+      const endDates = jobs
+        .map(([, job]) => job.periods)
+        .flat()
+        .map((period) => period.end)
 
       const allResumeDate = endDates.every((d) => d instanceof ResumeDate)
 
@@ -122,12 +131,14 @@ describe('RESUME_DATA', () => {
     })
 
     it('should have start date before end date for completed jobs', () => {
-      const completedJobs = jobs.filter(
-        ([, job]) => job.end.display() !== 'Present',
+      const completedJobs = jobs.filter(([, job]) =>
+        job.periods.some((period) => period.end.display() !== 'Present'),
       )
 
-      const allOrdered = completedJobs.every(
-        ([, job]) => job.start.datetime < job.end.datetime,
+      const allOrdered = completedJobs.every(([, job]) =>
+        job.periods.every(
+          (period) => period.start.datetime < period.end.datetime,
+        ),
       )
 
       expect(allOrdered).toBe(true)
@@ -186,6 +197,10 @@ describe('RESUME_DATA', () => {
       'Ouster',
       'DMA',
       'pytest',
+      'MOTA',
+      'MOTP',
+      'PKCE',
+      'hyperparameters',
     ]
 
     it('should have no misspelled words in experience point text', async () => {

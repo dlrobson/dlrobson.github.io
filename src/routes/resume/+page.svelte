@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
+  import JobHeader from '$lib/components/JobHeader.svelte'
   import { RESUME_DATA } from '$lib/resume.data'
   import type { Job } from '$lib/resume.types'
   import { SvelteSet } from 'svelte/reactivity'
@@ -83,24 +84,7 @@
       {@const points = visiblePoints(job.points)}
       {#if points.length > 0}
         <article class="job">
-          <div class="company-row">
-            <span class="company">{job.company}</span>
-            <span class="location">{job.location}</span>
-          </div>
-          {#each job.periods as period (period.title + period.start.datetime + period.end.datetime)}
-            <div class="role-row">
-              <h2 class="job-title">{period.title}</h2>
-              <span class="date-range">
-                <time datetime={period.start.datetime}
-                  >{period.start.display()}</time
-                >
-                —
-                <time datetime={period.end.datetime}
-                  >{period.end.display()}</time
-                >
-              </span>
-            </div>
-          {/each}
+          <JobHeader {job} />
           <ul>
             {#each points as [id, point] (id)}
               <li>
@@ -223,48 +207,6 @@
     margin-bottom: 1.75rem;
   }
 
-  .company-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-weight: bold;
-    font-size: var(--font-md);
-  }
-
-  .company {
-    font-style: italic;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    font-size: var(--font-base);
-  }
-
-  .location {
-    font-size: var(--font-sm);
-    color: var(--secondary-color);
-    font-weight: normal;
-  }
-
-  .role-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-top: 1px;
-  }
-
-  .job-title {
-    font-size: var(--font-base);
-    text-transform: uppercase;
-    color: var(--text-color);
-    margin: 0;
-    font-weight: normal;
-  }
-
-  .date-range {
-    font-size: var(--font-sm);
-    color: var(--secondary-color);
-    white-space: nowrap;
-  }
-
   ul {
     padding-left: 1.25rem;
     margin: 0.25rem 0 0;
@@ -307,11 +249,6 @@
   @media (max-width: 600px) {
     .interactive-resume {
       padding: 1rem;
-    }
-
-    .company-row,
-    .role-row {
-      flex-direction: column;
     }
 
     .filter-strip {

@@ -167,7 +167,7 @@ export const RESUME_DATA = {
           end: new ResumeDate('2020-12'),
         },
         {
-          title: '',
+          title: 'Software Developer Intern',
           start: new ResumeDate('2020-01'),
           end: new ResumeDate('2020-04'),
         },
