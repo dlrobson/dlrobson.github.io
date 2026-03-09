@@ -141,7 +141,73 @@
     height: auto;
   }
 
+  /* Light SVG shown by default; dark SVG hidden until theme activates. */
+  :global(.mermaid-dark) {
+    display: none;
+  }
+
+  :global([data-theme='dark'] .mermaid-dark) {
+    display: block;
+  }
+  :global([data-theme='dark'] .mermaid-light) {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme]) .mermaid-dark) {
+      display: block;
+    }
+    :global(:root:not([data-theme]) .mermaid-light) {
+      display: none;
+    }
+  }
+
   .prose :global(strong) {
     color: var(--primary-color);
+  }
+
+  /* ── Tables ────────────────────────────────────────── */
+  .prose :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--space-lg) 0;
+    font-size: var(--font-sm);
+  }
+
+  .prose :global(th) {
+    background: var(--bg-surface);
+    color: var(--primary-color);
+    font-weight: 600;
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 2px solid var(--primary-color);
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  .prose :global(td) {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--line-color);
+    vertical-align: top;
+    white-space: normal;
+    word-break: keep-all;
+  }
+
+  .prose :global(tr:last-child td) {
+    border-bottom: none;
+  }
+
+  .prose :global(tr:nth-child(even) td) {
+    background: var(--bg-surface);
+  }
+
+  /* ── .grid-table: equal-width columns ─────────────── */
+  .prose :global(.grid-table) {
+    overflow-x: auto;
+  }
+
+  .prose :global(.grid-table table) {
+    table-layout: auto;
+    min-width: 100%;
   }
 </style>
