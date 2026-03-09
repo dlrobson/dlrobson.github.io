@@ -21,16 +21,18 @@
   {#if data.posts.length === 0}
     <p class="empty">No posts yet.</p>
   {:else}
-    <ul>
+    <ul class="posts-list">
       {#each data.posts as post (post.slug)}
-        <li>
-          <a href={resolve(`/posts/${post.slug}`)}>
-            <span class="title">{post.title}</span>
-            <time datetime={post.date}>{formatDateShort(post.date)}</time>
+        <li class="post-item">
+          <a href={resolve(`/posts/${post.slug}`)} class="post-link">
+            <div class="post-header">
+              <span class="title">{post.title}</span>
+              <time datetime={post.date}>{formatDateShort(post.date)}</time>
+            </div>
+            {#if post.description}
+              <p class="desc">{post.description}</p>
+            {/if}
           </a>
-          {#if post.description}
-            <p class="desc">{post.description}</p>
-          {/if}
         </li>
       {/each}
     </ul>
@@ -55,37 +57,44 @@
     margin: var(--space-md) 0 0;
   }
 
-  ul {
+  .posts-list {
     list-style: none;
     padding: 0;
     margin: 0;
   }
 
-  li {
+  .post-item {
     border-bottom: 1px solid var(--line-color);
-    padding: var(--space-lg) 0;
   }
 
-  li:last-child {
+  .post-item:last-child {
     border-bottom: none;
   }
 
-  li a {
+  .post-link {
+    display: block;
+    padding: var(--space-lg) 0;
+    text-decoration: none;
+    transition: transform 0.1s ease;
+  }
+
+  .post-link:hover .title {
+    color: var(--primary-color);
+    text-decoration: underline;
+  }
+
+  .post-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    text-decoration: none;
     gap: var(--space-lg);
+    margin-bottom: var(--space-xs);
   }
 
   .title {
     color: var(--text-color);
     font-size: var(--font-md);
     font-weight: 500;
-  }
-
-  li a:hover .title {
-    color: var(--primary-color);
   }
 
   time {
@@ -97,8 +106,8 @@
   .desc {
     color: var(--secondary-color);
     font-size: var(--font-sm);
-    margin: var(--space-xs) 0 0;
-    line-height: 1.4;
+    margin: 0;
+    line-height: 1.5;
   }
 
   .empty {
