@@ -1,5 +1,4 @@
 <script lang="ts">
-  import 'prism-themes/themes/prism-one-light.css'
   import { formatDate } from '$lib/format-date'
   import Breadcrumb from '$lib/components/Breadcrumb.svelte'
 

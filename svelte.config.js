@@ -24,8 +24,9 @@ export default {
       // Output directory for the static build
       pages: 'build',
       assets: 'build',
-      // No SPA fallback needed — the page is fully prerendered
-      fallback: undefined,
+      // GitHub Pages serves 404.html for unmatched paths, which loads the
+      // SvelteKit client runtime and renders +error.svelte for unknown routes.
+      fallback: '404.html',
     }),
   },
 }
