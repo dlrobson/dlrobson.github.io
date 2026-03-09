@@ -51,8 +51,6 @@ Garlic will be harvested during the third week of July.
 **Sun Orientation:** North (Top/Row A) is the "back." South (Bottom/Row D) is the "front."
 Each cell represents 1 square foot.
 
-**Format:** Early Crop → Successor
-
 <div class="grid-table">
 
 |           | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
