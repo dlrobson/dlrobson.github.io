@@ -1,0 +1,214 @@
+/* ── Post layout ───────────────────────────────────── */
+.post {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-lg);
+  color: var(--text-color);
+}
+
+.post header {
+  margin-bottom: var(--space-xl);
+}
+
+.post h1 {
+  font-size: 2em;
+  color: var(--primary-color);
+  margin: var(--space-md) 0 var(--space-sm);
+  line-height: 1.2;
+}
+
+.post time {
+  color: var(--secondary-color);
+  font-size: var(--font-sm);
+}
+
+/* ── Breadcrumb ────────────────────────────────────── */
+.breadcrumb {
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.breadcrumb ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3em;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+
+.breadcrumb a {
+  color: var(--secondary-color);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--primary-color);
+}
+
+.breadcrumb span[aria-current='page'] {
+  color: var(--text-color);
+}
+
+.breadcrumb .sep {
+  color: var(--secondary-color);
+  opacity: 0.5;
+}
+
+/* ── Prose content ─────────────────────────────────── */
+.prose {
+  line-height: 1.7;
+}
+
+.prose h2 {
+  color: var(--primary-color);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-md);
+  font-size: 1.4em;
+}
+
+.prose h3 {
+  color: var(--primary-color);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-sm);
+  font-size: 1.15em;
+}
+
+.prose p {
+  margin: var(--space-md) 0;
+}
+
+.prose code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.prose pre {
+  border-radius: 6px;
+  padding: var(--space-lg);
+  overflow-x: auto;
+  margin: var(--space-lg) 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--space-lg);
+  margin: var(--space-md) 0;
+}
+
+.prose li {
+  margin: var(--space-xs) 0;
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--primary-color);
+  margin: var(--space-lg) 0;
+  padding: var(--space-sm) var(--space-lg);
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--line-color);
+  margin: var(--space-xl) 0;
+}
+
+.prose strong {
+  color: var(--primary-color);
+}
+
+/* ── Mermaid diagrams ──────────────────────────────── */
+.prose .mermaid-diagram {
+  margin: var(--space-lg) 0;
+  display: flex;
+  justify-content: center;
+}
+
+.prose .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Light SVG shown by default; dark SVG hidden until theme activates. */
+.mermaid-dark {
+  display: none;
+}
+
+[data-theme='dark'] .mermaid-dark {
+  display: block;
+}
+[data-theme='dark'] .mermaid-light {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .mermaid-dark {
+    display: block;
+  }
+  :root:not([data-theme]) .mermaid-light {
+    display: none;
+  }
+}
+
+/* ── Tables ────────────────────────────────────────── */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-lg) 0;
+  font-size: var(--font-sm);
+}
+
+.prose th {
+  background: var(--bg-surface);
+  color: var(--primary-color);
+  font-weight: 600;
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 2px solid var(--primary-color);
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.prose td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--line-color);
+  vertical-align: top;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.prose tr:last-child td {
+  border-bottom: none;
+}
+
+.prose tr:nth-child(even) td {
+  background: var(--bg-surface);
+}
+
+/* ── .grid-table: equal-width columns ─────────────── */
+.prose .grid-table {
+  overflow-x: auto;
+}
+
+.prose .grid-table table {
+  table-layout: auto;
+  min-width: 100%;
+}
