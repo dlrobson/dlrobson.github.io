@@ -131,6 +131,12 @@
   margin: var(--space-xl) 0;
 }
 
+/* Ensure links inside post content are readable in both themes */
+.prose a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
 .prose strong {
   color: var(--primary-color);
 }
