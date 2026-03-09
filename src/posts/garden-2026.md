@@ -8,18 +8,15 @@ description: 'This is the plan for my 2026 garden.'
 
 ### Physical Garden Layout (8' x 4' Grid)
 
-**Sun Orientation:** North (Top/Row A) is the "back." South (Bottom/Row D) is the "front."
-Each cell represents 1 square foot.
-
 <div class="grid-table">
 
-|           | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
-| --------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
-| Border    | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
-| A (NORTH) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| B         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| C         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| D (SOUTH) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Garlic    | Garlic    | Garlic    |
+|            | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
+| ---------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
+| Border     | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
+| 1' (North) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Garlic    | Garlic    | Garlic    |
+| 2'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
+| 3'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
+| 4' (South) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Garlic    | Garlic    | Garlic    |
 
 </div>
 
@@ -53,13 +50,13 @@ Each cell represents 1 square foot.
 
 <div class="grid-table">
 
-|           | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
-| --------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
-| Border    | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
-| A (NORTH) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Bush Peas | Bush Peas | Bush Peas |
-| B         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Bok Choy  | Bok Choy  | Bok Choy  |
-| C         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Carrots   | Carrots   | Carrots   |
-| D (SOUTH) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Carrots   | Carrots   | Carrots   |
+|            | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
+| ---------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
+| Border     | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
+| 1' (North) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Bush Peas | Bush Peas | Bush Peas |
+| 2'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Bok Choy  | Bok Choy  | Bok Choy  |
+| 3'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Carrots   | Carrots   | Carrots   |
+| 4' (South) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Carrots   | Carrots   | Carrots   |
 
 </div>
 
