@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:host": "vite --host",
-    "build": "vite build",
+    "build": "svelte-kit sync && vite build",
     "preview": "vite preview",
     "preview:host": "vite preview --host",
     "test": "vitest run",

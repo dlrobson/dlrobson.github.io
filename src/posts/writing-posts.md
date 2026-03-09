@@ -1,11 +1,10 @@
 ---
 title: 'Writing Posts'
 date: '2026-02-28'
-description: 'A reference guide for authoring blog posts on this site.'
+description: 'Reference Guide for Writing Posts'
 ---
 
-This is a reference for writing posts. Keep it around — the steps below are all
-you need to publish new content.
+This guide shows advanced markdown patterns and examples useful for gardening and technical posts.
 
 ## Creating a Post
 
@@ -35,7 +34,7 @@ description: 'A one-sentence summary shown on the listing page.'
 | `date`        | Yes      | Must be `YYYY-MM-DD`. Controls sort order on `/posts` |
 | `description` | No       | Shown as a subtitle on the listing page               |
 
-## Markdown Syntax
+## Basic Markdown Syntax
 
 Standard Markdown works as expected.
 
@@ -89,6 +88,81 @@ Use `##` and `###` inside posts — `#` is reserved for the post title rendered 
 | Column A | Column B |
 | -------- | -------- |
 | value    | value    |
+```
+
+## Advanced Markdown Features
+
+Beyond basic styling, you can use these advanced patterns to add depth to your gardening or technical posts.
+
+### Callouts (Admonitions)
+
+Use blockquotes with a specific prefix to create highlighted callout boxes:
+
+> **Note**
+> This is a general informational callout.
+
+> **Tip**
+> Pro-tip: Use cedar for raised beds to prevent rot.
+
+> **Warning**
+> Be careful not to overwater seedlings in the first week.
+
+### Footnotes
+
+Footnotes are great for technical citations or side-notes without cluttering the main text.
+
+Here is a statement that needs a citation.[^1]
+
+[^1]: This is the text of the footnote shown at the bottom of the post.
+
+### Task Lists (Checklists)
+
+Perfect for garden planning or to-do lists.
+
+```markdown
+- [x] Buy organic compost
+- [x] Start kale seeds indoors
+- [ ] Prepare the South bed
+- [ ] Install trellis for peas
+```
+
+### Definition Lists
+
+Use these for glossaries or plant descriptions.
+
+```markdown
+Term 1
+: Definition of term 1
+
+Hugelkultur
+: A gardening technique where mounds are constructed from decaying wood debris and other compostable plant materials.
+```
+
+### Media & Embeds
+
+#### Images with Captions
+
+While standard markdown `![alt](url)` works, using a `<figure>` tag allows for better styling and captions:
+
+```html
+<figure>
+  <img src="/images/garden-layout.png" alt="2026 Garden Layout" />
+  <figcaption>The final blueprint for the 8x4 raised bed.</figcaption>
+</figure>
+```
+
+#### Responsive Video
+
+To embed a YouTube video or similar content that scales correctly:
+
+```html
+<div class="video-container">
+  <iframe
+    src="https://www.youtube.com/embed/VIDEO_ID"
+    frameborder="0"
+    allowfullscreen
+  ></iframe>
+</div>
 ```
 
 ## Code Blocks
