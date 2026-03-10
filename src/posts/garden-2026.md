@@ -117,3 +117,7 @@ squirrels so we'll need to plan for that.
 | Rosemary    | Common                         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/rosemary/)                       |
 | Thyme       | Common                         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
 | Green Onion | Evergreen Hardy White Scallion | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
+
+## References
+
+Planting timeline, we referenced the [Almanac's Planting Calendar](https://www.almanac.com/gardening/planting-calendar).
