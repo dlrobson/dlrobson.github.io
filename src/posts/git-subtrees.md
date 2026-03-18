@@ -100,13 +100,13 @@ git subtree add --prefix=my-folder my-subtree main --squash
 
 ## Subtrees vs. Submodules
 
-| | Subtree | Submodule | 
-| --- | --- | --- | 
-| **Clone experience** | Transparent — just works | Requires `git submodule update` | 
-| **History** | Embedded in main repo | Separate repos, pointer commits | 
-| **Two-way sync** | Possible, but fragile | Clean — repos stay independent | 
-| **Secret isolation** | Must verify manually | Automatic |
-| **Complexity** | Low to medium | Medium | 
+|                      | Subtree                  | Submodule                       |
+| -------------------- | ------------------------ | ------------------------------- |
+| **Clone experience** | Transparent — just works | Requires `git submodule update` |
+| **History**          | Embedded in main repo    | Separate repos, pointer commits |
+| **Two-way sync**     | Possible, but fragile    | Clean — repos stay independent  |
+| **Secret isolation** | Must verify manually     | Automatic                       |
+| **Complexity**       | Low to medium            | Medium                          |
 
 **Use a subtree when:**
 
