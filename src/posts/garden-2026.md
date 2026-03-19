@@ -77,46 +77,58 @@ None for this phase, as all plants will be started outdoors after the garlic har
 We have a small 1 x 4 foot container garden in our backyard. We have lots of
 squirrels so we'll need to plan for that.
 
-### Physical Garden Layout (1' x 4' Grid)
+### Indoor Growing Timeline
+
+| Month                 | Action Item                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| February 17 - March 3 | Start Rosemary                                                   |
+| March 3 - March 18    | Start Thyme and Jalapeno Peppers                                 |
+| March 25 - April 1    | [Start Green Onion](https://greg.app/when-to-plant-scallion/)    |
+| April 1 - April 15    | Start Basil                                                      |
+| May 20 - May 27       | Plant Rosemary seedlings outdoors after hardening off.           |
+| May 27 - June 3       | Plant Thyme and Jalapeno seedlings outdoors after hardening off. |
+| May 27 - June 10      | Plant Basil seedlings outdoors after hardening off.              |
+
+### Physical Garden Layout (16" x 44" Grid)
 
 <div class="grid-table">
 
-|           | 1'          | 2'       | 3'       | 4'       |
-| --------- | ----------- | -------- | -------- | -------- |
-| 0" - 0.5" | Jalapeno    | Jalapeno | Jalapeno | Jalapeno |
-| 0.5"      | Basil       | Basil    | Cilantro | Cilantro |
-| 0.5" - 1" | Green Onion | Rosemary | Thyme    | Thyme    |
+|          | 11"         | 22"      | 33"      | 44"      |
+| -------- | ----------- | -------- | -------- | -------- |
+| 0" - 8"  | Jalapeno    | Jalapeno | Jalapeno | Jalapeno |
+| 8"       | Basil       | Basil    | Cilantro | Cilantro |
+| 8" - 16" | Green Onion | Rosemary | Thyme    | Thyme    |
 
 </div>
 
 ## Vegetable Varieties
 
-| Vegetable    | Variety Name               | Origin                                                                            |
-| ------------ | -------------------------- | --------------------------------------------------------------------------------- |
-| Garlic       | Music                      | [Terramore Farms](https://terramorfarm.com/)                                      |
-| Carrots      | Nantes                     | [Gaia Organic Seeds](https://gaiaorganics.ca/product/scarlet-nantes-carrot/)      |
-| Trellis Peas | Sugar Snap                 | [Gaia Organic Seeds](https://gaiaorganics.ca/product/sugar-snap-peas/)            |
-| Bush Peas    | Oregon Sugar Pod           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/oregon-sugar-pod-snow-pea/)  |
-| Zucchini     | Black Beauty               | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
-| Radishes     | Cherry Belle               | [Gaia Organic Seeds](https://gaiaorganics.ca/product/cherry-belle-radish/)        |
-| Kale         | Darkibor F1 Kale           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/darkibor-f1-kale/)           |
-| Chives       | Common                     | [Gaia Organic Seeds](https://gaiaorganics.ca/product/chives/)                     |
-| Bok Choy     | Bopak F1 Pac Choi          | [Gaia Organic Seeds](https://gaiaorganics.ca/product/bopak-f1-pac-choi/)          |
-| Calendula    | Pacific Beauty Mix         | From last year's Seed                                                             |
-| Nasturtiums  | Dwarf Jewel Nasturtium Mix | [Gaia Organic Seeds](https://gaiaorganics.ca/product/dwarf-jewel-nasturtium-mix/) |
-| Chamomile    | German                     | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
-| Jalapeno     | Early Jalapeno Hot Pepper  | [Gaia Organic Seeds](https://gaiaorganics.ca/product/early-jalapeno-hot-pepper/)  |
+| Vegetable    | Variety Name               | Plant Spacing       | Row Spacing | Plant Count | Plant Date | Origin                                                                            |
+| ------------ | -------------------------- | ------------------- | ----------- | ----------- | ---------- | --------------------------------------------------------------------------------- |
+| Garlic       | Music                      |                     |             | 48          |            | [Terramore Farms](https://terramorfarm.com/)                                      |
+| Carrots      | Nantes                     | 1-2”                | 18-24”      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/scarlet-nantes-carrot/)      |
+| Trellis Peas | Sugar Snap                 | 4-6″                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/sugar-snap-peas/)            |
+| Bush Peas    | Oregon Sugar Pod           | 1-2”                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/oregon-sugar-pod-snow-pea/)  |
+| Zucchini     | Black Beauty               | 12-24”              | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
+| Radishes     | Cherry Belle               | 1-4”                | 8-12”       |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/cherry-belle-radish/)        |
+| Kale         | Darkibor F1 Kale           | 2-4” – S 12-18” – L | 18-36”      | 6           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/darkibor-f1-kale/)           |
+| Chives       | Common                     | 6”                  | 12”         | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/chives/)                     |
+| Bok Choy     | Bopak F1 Pac Choi          | 6-18″               | 18”         |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/bopak-f1-pac-choi/)          |
+| Calendula    | Pacific Beauty Mix         |                     |             | ?           |            | From last year's Seed                                                             |
+| Nasturtiums  | Dwarf Jewel Nasturtium Mix | 6-12″               | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/dwarf-jewel-nasturtium-mix/) |
+| Chamomile    | German                     | 6-8”                | 18”         | ?           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
+| Jalapeno     | Early Jalapeno Hot Pepper  | 12-18”              | 24-30″      | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/early-jalapeno-hot-pepper/)  |
 
 ## Herb Varieties
 
-| Herb        | Variety Name                   | Origin                                                                                |
-| ----------- | ------------------------------ | ------------------------------------------------------------------------------------- |
-| Dill        | Fernleaf Dill                  | [OSC Seeds](https://www.oscseeds.com/product/fernleaf-dill-seeds-3052/)               |
-| Basil       | Sweet Basil                    | [OSC Seeds](https://www.oscseeds.com/product/sweet-organic-basil-seeds-4070/)         |
-| Cilantro    | Santo                          | [Gaia Organic Seeds](https://gaiaorganics.ca/product/santo-cilantro/)                 |
-| Rosemary    | Common                         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/rosemary/)                       |
-| Thyme       | Common                         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
-| Green Onion | Evergreen Hardy White Scallion | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
+| Herb        | Variety Name                   | Plant Spacing | Row Spacing | Plant Count | Origin                                                                                |
+| ----------- | ------------------------------ | ------------- | ----------- | ----------- | ------------------------------------------------------------------------------------- |
+| Dill        | Fernleaf Dill                  | 1"            |             |             | [OSC Seeds](https://www.oscseeds.com/product/fernleaf-dill-seeds-3052/)               |
+| Basil       | Sweet Basil                    |               |             | ?           | [OSC Seeds](https://www.oscseeds.com/product/sweet-organic-basil-seeds-4070/)         |
+| Cilantro    | Santo                          | 2-4”          | 4-6”        |             | [Gaia Organic Seeds](https://gaiaorganics.ca/product/santo-cilantro/)                 |
+| Rosemary    | Common                         | 18-24″        | 24-36″      | 1           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/rosemary/)                       |
+| Thyme       | Common                         | 6-8”          | 12-18”      | 3-4         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
+| Green Onion | Evergreen Hardy White Scallion | 2-3″          | 12-24″      | 4-5         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
 
 ## References
 
