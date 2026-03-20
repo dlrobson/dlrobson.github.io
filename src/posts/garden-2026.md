@@ -4,21 +4,24 @@ date: '2026-03-08'
 description: 'This is the plan for my 2026 garden.'
 ---
 
+<script>
+  import GardenGrid from '$lib/components/GardenGrid.svelte'
+</script>
+
 ## 8 x 4 Raised Bed Garden Initial Planting Timeline
 
 ### Physical Garden Layout (8' x 4' Grid)
 
-<div class="grid-table">
-
-|            | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
-| ---------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
-| Border     | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
-| 1' (North) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| 2'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| 3'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Garlic    | Garlic    | Garlic    |
-| 4' (South) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Garlic    | Garlic    | Garlic    |
-
-</div>
+<GardenGrid
+  border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
+  rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
+  grid={[
+    ["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+    ["Kale + Dill",  "Kale + Dill",  "Chives",            "Chives",            "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+  ]}
+/>
 
 ### Indoor Growing Timeline
 
@@ -48,17 +51,16 @@ Garlic will be harvested during the third week of July.
 **Sun Orientation:** North (Top/Row A) is the "back." South (Bottom/Row D) is the "front."
 Each cell represents 1 square foot.
 
-<div class="grid-table">
-
-|            | 1'           | 2'           | 3'                | 4'                | 5'          | 6'        | 7'        | 8'        |
-| ---------- | ------------ | ------------ | ----------------- | ----------------- | ----------- | --------- | --------- | --------- |
-| Border     | Calendula    | Chamomile    | Calendula         | Chamomile         | Calendula   | Chamomile | Calendula | Chamomile |
-| 1' (North) | Trellis Peas | Trellis Peas | Trellis Peas      | Trellis Peas      | Nasturtiums | Bush Peas | Bush Peas | Bush Peas |
-| 2'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Bok Choy  | Bok Choy  | Bok Choy  |
-| 3'         | Kale + Dill  | Kale + Dill  | Zucchini + Radish | Zucchini + Radish | Nasturtiums | Carrots   | Carrots   | Carrots   |
-| 4' (South) | Kale + Dill  | Kale + Dill  | Chives            | Chives            | Nasturtiums | Carrots   | Carrots   | Carrots   |
-
-</div>
+<GardenGrid
+  border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
+  rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
+  grid={[
+    ["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Bush Peas", "Bush Peas", "Bush Peas"],
+    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Bok Choy", "Bok Choy", "Bok Choy"],
+    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Carrots", "Carrots", "Carrots"],
+    ["Kale + Dill",  "Kale + Dill",  "Chives",            "Chives",            "Nasturtiums", "Carrots", "Carrots", "Carrots"],
+  ]}
+/>
 
 ### Indoor Growing Timeline
 
@@ -91,33 +93,32 @@ squirrels so we'll need to plan for that.
 
 ### Physical Garden Layout (16" x 44" Grid)
 
-<div class="grid-table">
-
-|          | 11"         | 22"      | 33"      | 44"      |
-| -------- | ----------- | -------- | -------- | -------- |
-| 0" - 8"  | Jalapeno    | Jalapeno | Jalapeno | Jalapeno |
-| 8"       | Basil       | Basil    | Cilantro | Cilantro |
-| 8" - 16" | Green Onion | Rosemary | Thyme    | Thyme    |
-
-</div>
+<GardenGrid
+  rowLabels={['0" - 8"', '8"', '8" - 16"']}
+  grid={[
+    ["Jalapeno",    "Jalapeno", "Jalapeno", "Jalapeno"],
+    ["Basil",       "Basil",    "Cilantro", "Cilantro"],
+    ["Green Onion", "Rosemary", "Thyme",    "Thyme"],
+  ]}
+/>
 
 ## Vegetable Varieties
 
 | Vegetable    | Variety Name               | Plant Spacing       | Row Spacing | Plant Count | Plant Date | Origin                                                                            |
 | ------------ | -------------------------- | ------------------- | ----------- | ----------- | ---------- | --------------------------------------------------------------------------------- |
 | Garlic       | Music                      |                     |             | 48          |            | [Terramore Farms](https://terramorfarm.com/)                                      |
-| Carrots      | Nantes                     | 1-2”                | 18-24”      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/scarlet-nantes-carrot/)      |
+| Carrots      | Nantes                     | 1-2"                | 18-24"      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/scarlet-nantes-carrot/)      |
 | Trellis Peas | Sugar Snap                 | 4-6″                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/sugar-snap-peas/)            |
-| Bush Peas    | Oregon Sugar Pod           | 1-2”                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/oregon-sugar-pod-snow-pea/)  |
-| Zucchini     | Black Beauty               | 12-24”              | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
-| Radishes     | Cherry Belle               | 1-4”                | 8-12”       |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/cherry-belle-radish/)        |
-| Kale         | Darkibor F1 Kale           | 2-4” – S 12-18” – L | 18-36”      | 6           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/darkibor-f1-kale/)           |
-| Chives       | Common                     | 6”                  | 12”         | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/chives/)                     |
-| Bok Choy     | Bopak F1 Pac Choi          | 6-18″               | 18”         |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/bopak-f1-pac-choi/)          |
+| Bush Peas    | Oregon Sugar Pod           | 1-2"                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/oregon-sugar-pod-snow-pea/)  |
+| Zucchini     | Black Beauty               | 12-24"              | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
+| Radishes     | Cherry Belle               | 1-4"                | 8-12"       |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/cherry-belle-radish/)        |
+| Kale         | Darkibor F1 Kale           | 2-4" – S 12-18" – L | 18-36"      | 6           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/darkibor-f1-kale/)           |
+| Chives       | Common                     | 6"                  | 12"         | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/chives/)                     |
+| Bok Choy     | Bopak F1 Pac Choi          | 6-18″               | 18"         |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/bopak-f1-pac-choi/)          |
 | Calendula    | Pacific Beauty Mix         |                     |             | ?           |            | From last year's Seed                                                             |
 | Nasturtiums  | Dwarf Jewel Nasturtium Mix | 6-12″               | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/dwarf-jewel-nasturtium-mix/) |
-| Chamomile    | German                     | 6-8”                | 18”         | ?           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
-| Jalapeno     | Early Jalapeno Hot Pepper  | 12-18”              | 24-30″      | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/early-jalapeno-hot-pepper/)  |
+| Chamomile    | German                     | 6-8"                | 18"         | ?           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
+| Jalapeno     | Early Jalapeno Hot Pepper  | 12-18"              | 24-30″      | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/early-jalapeno-hot-pepper/)  |
 
 ## Herb Varieties
 
@@ -125,9 +126,9 @@ squirrels so we'll need to plan for that.
 | ----------- | ------------------------------ | ------------- | ----------- | ----------- | ------------------------------------------------------------------------------------- |
 | Dill        | Fernleaf Dill                  | 1"            |             |             | [OSC Seeds](https://www.oscseeds.com/product/fernleaf-dill-seeds-3052/)               |
 | Basil       | Sweet Basil                    |               |             | ?           | [OSC Seeds](https://www.oscseeds.com/product/sweet-organic-basil-seeds-4070/)         |
-| Cilantro    | Santo                          | 2-4”          | 4-6”        |             | [Gaia Organic Seeds](https://gaiaorganics.ca/product/santo-cilantro/)                 |
+| Cilantro    | Santo                          | 2-4"          | 4-6"        |             | [Gaia Organic Seeds](https://gaiaorganics.ca/product/santo-cilantro/)                 |
 | Rosemary    | Common                         | 18-24″        | 24-36″      | 1           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/rosemary/)                       |
-| Thyme       | Common                         | 6-8”          | 12-18”      | 3-4         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
+| Thyme       | Common                         | 6-8"          | 12-18"      | 3-4         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
 | Green Onion | Evergreen Hardy White Scallion | 2-3″          | 12-24″      | 4-5         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
 
 ## References

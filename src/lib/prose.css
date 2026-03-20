@@ -209,16 +209,6 @@
   background: var(--bg-surface);
 }
 
-/* ── .grid-table: equal-width columns ─────────────── */
-.prose .grid-table {
-  overflow-x: auto;
-}
-
-.prose .grid-table table {
-  table-layout: auto;
-  min-width: 100%;
-}
-
 /* ── CodeTabs ─────────────────────────────────────── */
 
 /* Pre-hydration: hide all but first code block to prevent stacked layout */

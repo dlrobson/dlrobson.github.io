@@ -50,6 +50,7 @@ class UserRegistrationService:
 ```
 
 ```rust
+#[derive(Clone, Debug)]
 pub struct User {
     pub id: String,
     pub email: String,
@@ -314,9 +315,13 @@ class FakeUserRepository:
     def save(self, user: User) -> None:
         self._store[user.email] = user
 
+class NullEmailService:
+    def send(self, to: str, subject: str, body: str) -> None:
+        pass
+
 def test_cannot_register_same_email_twice():
     repo = FakeUserRepository()
-    service = UserRegistrationService(repo, DummyEmailService())
+    service = UserRegistrationService(repo, NullEmailService())
     service.register("alice@example.com", "first_secret")
 
     with pytest.raises(ValueError, match="already registered"):
@@ -345,9 +350,15 @@ impl UserRepository for FakeUserRepository {
     }
 }
 
+struct NullEmailService;
+
+impl EmailService for NullEmailService {
+    fn send(&mut self, _to: &str, _subject: &str, _body: &str) {}
+}
+
 #[test]
 fn cannot_register_same_email_twice() {
-    let mut service = UserRegistrationService::new(FakeUserRepository::new(), DummyEmailService);
+    let mut service = UserRegistrationService::new(FakeUserRepository::new(), NullEmailService);
     service.register("alice@example.com", "first_secret").unwrap();
 
     let result = service.register("alice@example.com", "second_secret");
@@ -371,9 +382,13 @@ struct FakeUserRepository : UserRepository {
     }
 };
 
+struct NullEmailService : EmailService {
+    void send(const std::string&, const std::string&, const std::string&) override {}
+};
+
 void test_cannot_register_same_email_twice() {
     FakeUserRepository repo;
-    DummyEmailService email;
+    NullEmailService email;
     UserRegistrationService service{repo, email};
     service.register_user("alice@example.com", "first_secret");
 
@@ -677,6 +692,10 @@ def test_register_raises_when_email_already_registered():
 
 # ── Fake ──────────────────────────────────────────────────────────────────────
 
+class NullEmailService:
+    def send(self, to: str, subject: str, body: str) -> None:
+        pass
+
 class FakeUserRepository:
     def __init__(self) -> None:
         self._store: dict[str, User] = {}
@@ -689,7 +708,7 @@ class FakeUserRepository:
 
 def test_cannot_register_same_email_twice():
     repo = FakeUserRepository()
-    service = UserRegistrationService(repo, DummyEmailService())
+    service = UserRegistrationService(repo, NullEmailService())
     service.register("alice@example.com", "first_secret")
 
     with pytest.raises(ValueError, match="already registered"):
@@ -744,11 +763,13 @@ def test_welcome_email_sent_with_correct_subject():
 ```
 
 ```rust
+#![cfg(test)]
+
 use std::collections::HashMap;
 
 // ── Domain ────────────────────────────────────────────────────────────────────
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct User {
     pub id: String,
     pub email: String,
@@ -839,6 +860,12 @@ fn register_raises_when_email_already_registered() {
 
 // ── Fake ──────────────────────────────────────────────────────────────────────
 
+struct NullEmailService;
+
+impl EmailService for NullEmailService {
+    fn send(&mut self, _to: &str, _subject: &str, _body: &str) {}
+}
+
 struct FakeUserRepository {
     store: HashMap<String, User>,
 }
@@ -860,7 +887,7 @@ impl UserRepository for FakeUserRepository {
 
 #[test]
 fn cannot_register_same_email_twice() {
-    let mut service = UserRegistrationService::new(FakeUserRepository::new(), DummyEmailService);
+    let mut service = UserRegistrationService::new(FakeUserRepository::new(), NullEmailService);
     service.register("alice@example.com", "first_secret").unwrap();
 
     let result = service.register("alice@example.com", "second_secret");
@@ -1035,6 +1062,10 @@ void test_register_raises_when_email_already_registered() {
 
 // ── Fake ──────────────────────────────────────────────────────────────────────
 
+struct NullEmailService : EmailService {
+    void send(const std::string&, const std::string&, const std::string&) override {}
+};
+
 struct FakeUserRepository : UserRepository {
     std::unordered_map<std::string, User> store;
 
@@ -1049,7 +1080,7 @@ struct FakeUserRepository : UserRepository {
 
 void test_cannot_register_same_email_twice() {
     FakeUserRepository repo;
-    DummyEmailService email;
+    NullEmailService email;
     UserRegistrationService service{repo, email};
     service.register_user("alice@example.com", "first_secret");
 

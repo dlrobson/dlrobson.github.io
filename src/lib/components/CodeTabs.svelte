@@ -84,7 +84,7 @@
 <div class="code-tabs" bind:this={container}>
   {#if tabs.length > 0}
     <div class="code-tabs-bar">
-      {#each tabs as lang}
+      {#each tabs as lang (lang)}
         <button
           class:active={lang === activeTab}
           onclick={() => selectTab(lang)}
