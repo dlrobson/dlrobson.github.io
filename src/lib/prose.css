@@ -218,3 +218,58 @@
   table-layout: auto;
   min-width: 100%;
 }
+
+/* ── CodeTabs ─────────────────────────────────────── */
+
+/* Pre-hydration: hide all but first code block to prevent stacked layout */
+.prose .code-tabs:not([data-tabbed]) > pre ~ pre {
+  display: none;
+}
+
+/* Post-hydration: JS controls visibility via .hidden-tab */
+.prose .code-tabs > pre.hidden-tab {
+  display: none;
+}
+
+.prose .code-tabs {
+  margin: var(--space-lg) 0;
+}
+
+/* Remove margin and top border-radius from pre inside code-tabs */
+.prose .code-tabs > pre {
+  margin: 0;
+  border-radius: 0 0 6px 6px;
+}
+
+.code-tabs-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--code-bg);
+  border-radius: 6px 6px 0 0;
+  padding: var(--space-sm) var(--space-sm) 0;
+  border-bottom: 1px solid var(--line-color);
+}
+
+.code-tabs-bar button {
+  padding: 4px var(--space-sm);
+  border: none;
+  background: transparent;
+  color: var(--secondary-color);
+  cursor: pointer;
+  font-size: var(--font-sm);
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.code-tabs-bar button:hover {
+  color: var(--text-color);
+}
+
+.code-tabs-bar button.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}

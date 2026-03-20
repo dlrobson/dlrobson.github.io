@@ -10,4 +10,3 @@ Here are some future post ideas that I may write about:
 - Devcontainers
 - Home manager for dotfiles
 - Home server setup with Tailscale
-- stubs vs mocks vs fakes vs spies vs dummies
