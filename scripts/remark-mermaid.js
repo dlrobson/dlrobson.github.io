@@ -31,20 +31,25 @@ function createMermaidDiagram(
   svgId,
   theme,
 ) {
-  execFileSync(mmdc, [
-    '--input',
-    inputPath,
-    '--output',
-    outputPath,
-    '--puppeteerConfigFile',
-    puppeteerConfigPath,
-    '--theme',
-    theme,
-    '--svgId',
-    svgId,
-    '--backgroundColor',
-    'transparent',
-  ])
+  const { DBUS_SESSION_BUS_ADDRESS: _, ...envWithoutDbus } = process.env
+  execFileSync(
+    mmdc,
+    [
+      '--input',
+      inputPath,
+      '--output',
+      outputPath,
+      '--puppeteerConfigFile',
+      puppeteerConfigPath,
+      '--theme',
+      theme,
+      '--svgId',
+      svgId,
+      '--backgroundColor',
+      'transparent',
+    ],
+    { env: envWithoutDbus },
+  )
 }
 
 /**
