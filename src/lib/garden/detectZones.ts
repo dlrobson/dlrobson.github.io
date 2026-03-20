@@ -42,7 +42,8 @@ export function detectZones(grid: string[][]): Zone[] {
       let rowSpan = 1
       outer: while (row + rowSpan < rows) {
         for (let c = col; c < col + colSpan; c++) {
-          if (grid[row + rowSpan][c] !== plant || visited[row + rowSpan][c]) break outer
+          if (grid[row + rowSpan][c] !== plant || visited[row + rowSpan][c])
+            break outer
         }
         rowSpan++
       }

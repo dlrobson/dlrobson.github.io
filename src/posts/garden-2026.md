@@ -13,14 +13,14 @@ description: 'This is the plan for my 2026 garden.'
 ### Physical Garden Layout (8' x 4' Grid)
 
 <GardenGrid
-  border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
-  rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
-  grid={[
-    ["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
-    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
-    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
-    ["Kale + Dill",  "Kale + Dill",  "Chives",            "Chives",            "Nasturtiums", "Garlic", "Garlic", "Garlic"],
-  ]}
+border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
+rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
+grid={[
+["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+["Kale + Dill", "Kale + Dill", "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+["Kale + Dill", "Kale + Dill", "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+["Kale + Dill", "Kale + Dill", "Chives", "Chives", "Nasturtiums", "Garlic", "Garlic", "Garlic"],
+]}
 />
 
 ### Indoor Growing Timeline
@@ -52,14 +52,14 @@ Garlic will be harvested during the third week of July.
 Each cell represents 1 square foot.
 
 <GardenGrid
-  border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
-  rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
-  grid={[
-    ["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Bush Peas", "Bush Peas", "Bush Peas"],
-    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Bok Choy", "Bok Choy", "Bok Choy"],
-    ["Kale + Dill",  "Kale + Dill",  "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Carrots", "Carrots", "Carrots"],
-    ["Kale + Dill",  "Kale + Dill",  "Chives",            "Chives",            "Nasturtiums", "Carrots", "Carrots", "Carrots"],
-  ]}
+border={["Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile", "Calendula", "Chamomile"]}
+rowLabels={["1' (North)", "2'", "3'", "4' (South)"]}
+grid={[
+["Trellis Peas", "Trellis Peas", "Trellis Peas", "Trellis Peas", "Nasturtiums", "Bush Peas", "Bush Peas", "Bush Peas"],
+["Kale + Dill", "Kale + Dill", "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Bok Choy", "Bok Choy", "Bok Choy"],
+["Kale + Dill", "Kale + Dill", "Zucchini + Radish", "Zucchini + Radish", "Nasturtiums", "Carrots", "Carrots", "Carrots"],
+["Kale + Dill", "Kale + Dill", "Chives", "Chives", "Nasturtiums", "Carrots", "Carrots", "Carrots"],
+]}
 />
 
 ### Indoor Growing Timeline
@@ -94,12 +94,12 @@ squirrels so we'll need to plan for that.
 ### Physical Garden Layout (16" x 44" Grid)
 
 <GardenGrid
-  rowLabels={['0" - 8"', '8"', '8" - 16"']}
-  grid={[
-    ["Jalapeno",    "Jalapeno", "Jalapeno", "Jalapeno"],
-    ["Basil",       "Basil",    "Cilantro", "Cilantro"],
-    ["Green Onion", "Rosemary", "Thyme",    "Thyme"],
-  ]}
+rowLabels={['0" - 8"', '8"', '8" - 16"']}
+grid={[
+["Jalapeno", "Jalapeno", "Jalapeno", "Jalapeno"],
+["Basil", "Basil", "Cilantro", "Cilantro"],
+["Green Onion", "Rosemary", "Thyme", "Thyme"],
+]}
 />
 
 ## Vegetable Varieties

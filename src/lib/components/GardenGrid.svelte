@@ -15,7 +15,9 @@
   const uniquePlants = $derived([...new Set(zones.map((z) => z.plant))])
 
   // Column header labels: 1' through N'
-  const colHeaders = $derived(Array.from({ length: cols }, (_, i) => `${i + 1}'`))
+  const colHeaders = $derived(
+    Array.from({ length: cols }, (_, i) => `${i + 1}'`),
+  )
 
   // Row labels default to 1' through N' if not provided
   const resolvedRowLabels = $derived(
@@ -29,7 +31,10 @@
 <div class="garden-grid-wrapper">
   <div class="garden-grid-scroll">
     <!-- Column headers -->
-    <div class="garden-grid" style="grid-template-columns: 4rem {gridTemplate};">
+    <div
+      class="garden-grid"
+      style="display: grid; grid-template-columns: 4rem {gridTemplate};"
+    >
       <!-- top-left corner spacer -->
       <div class="garden-cell header-corner"></div>
       {#each colHeaders as label (label)}
@@ -52,7 +57,12 @@
 
       <!-- Zone cells — CSS grid-area positions each zone -->
       <!-- Row header column offset: zones are 1-indexed in CSS grid, +1 for the label column, +1 for border row if present -->
-      <div class="zones-layer" style="grid-column: 2 / span {cols}; grid-row: {border ? 3 : 2} / span {grid.length}; display: contents;">
+      <div
+        class="zones-layer"
+        style="grid-column: 2 / span {cols}; grid-row: {border
+          ? 3
+          : 2} / span {grid.length}; display: contents;"
+      >
         {#each zones as zone (`${zone.row},${zone.col}`)}
           <div
             class="garden-cell zone-cell"
@@ -84,7 +94,10 @@
   <div class="garden-legend">
     {#each uniquePlants as plant (plant)}
       <div class="legend-item">
-        <span class="legend-swatch" style="background-color: {getPlantColor(plant)};"></span>
+        <span
+          class="legend-swatch"
+          style="background-color: {getPlantColor(plant)};"
+        ></span>
         <span class="legend-label">{plant}</span>
       </div>
     {/each}
@@ -102,7 +115,6 @@
   }
 
   .garden-grid {
-    display: grid;
     border: 1px solid var(--line-color);
     border-radius: 4px;
     min-width: max-content;
