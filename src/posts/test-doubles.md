@@ -618,7 +618,7 @@ The other frequent mistake is using a **fake** when a **stub** would do. Fakes a
 
 All five doubles together in one file, using the same domain.
 
-<CodeTabs langs="python,rust,cpp">
+<CodeTabs langs="python,rust,cpp" playground>
 
 ```python
 from __future__ import annotations

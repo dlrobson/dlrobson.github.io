@@ -209,6 +209,97 @@
   background: var(--bg-surface);
 }
 
+/* ── GardenGrid ────────────────────────────────────── */
+.garden-grid-wrapper {
+  margin: var(--space-lg) 0;
+  font-size: var(--font-sm);
+}
+
+.garden-grid-scroll {
+  overflow-x: auto;
+}
+
+.garden-grid {
+  border: 1px solid var(--line-color);
+  border-radius: 4px;
+  min-width: max-content;
+}
+
+.garden-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.25rem 0.3rem;
+  border: 1px solid var(--line-color);
+  min-height: 3.5rem;
+}
+
+.garden-cell.header-corner,
+.garden-cell.col-header {
+  background: var(--bg-surface);
+  color: var(--secondary-color);
+  font-weight: 600;
+  min-height: 1.75rem;
+}
+
+.garden-cell.row-header {
+  background: var(--bg-surface);
+  color: var(--secondary-color);
+  font-weight: 600;
+  font-size: 0.75em;
+  min-height: 3.5rem;
+}
+
+.garden-cell.border-row-header {
+  min-height: 1.5rem;
+}
+
+.garden-cell.border-cell {
+  min-height: 1.5rem;
+  opacity: 0.85;
+}
+
+.garden-cell.zone-cell {
+  min-height: 3.5rem;
+}
+
+.cell-label {
+  font-size: 0.7em;
+  line-height: 1.2;
+  word-break: break-word;
+  hyphens: auto;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.garden-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem var(--space-lg);
+  margin-top: var(--space-md);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.legend-label {
+  color: var(--text-color);
+  font-size: var(--font-sm);
+}
+
 /* ── CodeTabs ─────────────────────────────────────── */
 
 /* Pre-hydration: hide all but first code block to prevent stacked layout */
@@ -262,4 +353,24 @@
 .code-tabs-bar button.active {
   color: var(--primary-color);
   border-bottom-color: var(--primary-color);
+}
+
+.code-tabs-bar .run-btn {
+  margin-left: auto;
+  border-left: 1px solid var(--line-color);
+  padding-left: var(--space-md);
+  color: var(--secondary-color);
+}
+
+.code-tabs-bar .run-btn:hover:not(:disabled) {
+  color: var(--primary-color);
+}
+
+.code-tabs-bar .run-btn-loading {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.code-tabs-bar .run-btn-error {
+  color: var(--warning-color, #c0392b);
 }
