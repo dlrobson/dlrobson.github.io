@@ -24,8 +24,8 @@ let
     '';
   };
 
-  test = pkgs.writeShellApplication {
-    name = "test";
+  run-tests = pkgs.writeShellApplication {
+    name = "run-tests";
     text = ''
       npm ci --silent
       npm run test
@@ -46,7 +46,7 @@ pkgs.mkShell {
     pkgs.chromium
     check
     fix
-    test
+    run-tests
     build
   ];
 
