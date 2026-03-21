@@ -176,6 +176,8 @@
 
 /* ── Tables ────────────────────────────────────────── */
 .prose table {
+  display: block;
+  overflow-x: auto;
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-lg) 0;
@@ -324,6 +326,7 @@
 
 .code-tabs-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   background: var(--code-bg);
   border-radius: 6px 6px 0 0;
@@ -360,6 +363,9 @@
   border-left: 1px solid var(--line-color);
   padding-left: var(--space-md);
   color: var(--secondary-color);
+  font-size: var(--font-sm);
+  font-family: inherit;
+  text-decoration: none;
 }
 
 .code-tabs-bar .run-btn:hover:not(:disabled) {

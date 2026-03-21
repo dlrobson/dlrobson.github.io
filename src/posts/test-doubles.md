@@ -159,7 +159,7 @@ class DummyEmailService:
 def test_register_raises_for_invalid_email():
     service = UserRegistrationService(DummyUserRepository(), DummyEmailService())
 
-    with pytest.raises(ValueError, match="Invalid email"):
+    with raises(ValueError, match="Invalid email"):
         service.register("not-an-email", "secret")
 ```
 
@@ -246,7 +246,7 @@ class StubUserRepository:
 def test_register_raises_when_email_already_registered():
     service = UserRegistrationService(StubUserRepository(), DummyEmailService())
 
-    with pytest.raises(ValueError, match="already registered"):
+    with raises(ValueError, match="already registered"):
         service.register("alice@example.com", "secret")
 ```
 
@@ -324,7 +324,7 @@ def test_cannot_register_same_email_twice():
     service = UserRegistrationService(repo, NullEmailService())
     service.register("alice@example.com", "first_secret")
 
-    with pytest.raises(ValueError, match="already registered"):
+    with raises(ValueError, match="already registered"):
         service.register("alice@example.com", "second_secret")
 ```
 
@@ -622,8 +622,20 @@ All five doubles together in one file, using the same domain.
 
 ```python
 from __future__ import annotations
+from contextlib import contextmanager
 from typing import Protocol
-import pytest
+import re
+
+
+@contextmanager
+def raises(exc_type, match=None):
+    try:
+        yield
+    except exc_type as e:
+        if match and not re.search(match, str(e)):
+            raise AssertionError(f"Expected pattern {match!r} in {str(e)!r}")
+    else:
+        raise AssertionError(f"Expected {exc_type.__name__} to be raised")
 
 
 # ── Domain ────────────────────────────────────────────────────────────────────
@@ -671,7 +683,7 @@ class DummyEmailService:
 def test_register_raises_for_invalid_email():
     service = UserRegistrationService(DummyUserRepository(), DummyEmailService())
 
-    with pytest.raises(ValueError, match="Invalid email"):
+    with raises(ValueError, match="Invalid email"):
         service.register("not-an-email", "secret")
 
 
@@ -686,7 +698,7 @@ class StubUserRepository:
 def test_register_raises_when_email_already_registered():
     service = UserRegistrationService(StubUserRepository(), DummyEmailService())
 
-    with pytest.raises(ValueError, match="already registered"):
+    with raises(ValueError, match="already registered"):
         service.register("alice@example.com", "secret")
 
 
@@ -711,7 +723,7 @@ def test_cannot_register_same_email_twice():
     service = UserRegistrationService(repo, NullEmailService())
     service.register("alice@example.com", "first_secret")
 
-    with pytest.raises(ValueError, match="already registered"):
+    with raises(ValueError, match="already registered"):
         service.register("alice@example.com", "second_secret")
 
 

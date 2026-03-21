@@ -5,6 +5,9 @@
   interface Props {
     langs?: string // comma-separated, e.g. "python,rust,cpp" — enables SSR tab bar
     playground?: boolean
+    rustUrl?: string
+    cppUrl?: string
+    pythonUrl?: string
     children?: import('svelte').Snippet
   }
 
@@ -18,7 +21,8 @@
     return LANGUAGE_LABELS[lang] ?? lang.charAt(0).toUpperCase() + lang.slice(1)
   }
 
-  let { langs, playground, children }: Props = $props()
+  let { langs, playground, rustUrl, cppUrl, pythonUrl, children }: Props =
+    $props()
 
   // Parse tabs from prop for SSR — the tab bar renders immediately with no JS needed.
   // onMount overrides with DOM-detected tabs once JS runs.
@@ -37,6 +41,10 @@
   let mounted = false
   let running = $state(false)
   let playgroundError = $state(false)
+
+  const activeUrl = $derived(
+    ({ rust: rustUrl, cpp: cppUrl, python: pythonUrl } as Record<string, string | undefined>)[activeTab]
+  )
 
   function getPreElements(): HTMLPreElement[] {
     return Array.from(
@@ -166,24 +174,34 @@
         </button>
       {/each}
       {#if playground}
-        <button
-          class="run-btn"
-          class:run-btn-loading={running}
-          class:run-btn-error={playgroundError}
-          disabled={running}
-          title={activeTab === 'python'
-            ? 'Python playground coming soon'
-            : 'Open in playground'}
-          onclick={runInPlayground}
-        >
-          {#if running}
-            …
-          {:else if playgroundError}
-            ⚠ Try again
-          {:else}
-            ↗ Run
-          {/if}
-        </button>
+        {#if activeUrl}
+          <a
+            href={activeUrl}
+            target="_blank"
+            rel="noopener noreferrer external"
+            class="run-btn"
+            title="Open in playground">↗ Run</a
+          >
+        {:else}
+          <button
+            class="run-btn"
+            class:run-btn-loading={running}
+            class:run-btn-error={playgroundError}
+            disabled={running}
+            title={activeTab === 'python'
+              ? 'Python playground coming soon'
+              : 'Open in playground'}
+            onclick={runInPlayground}
+          >
+            {#if running}
+              …
+            {:else if playgroundError}
+              ⚠ Try again
+            {:else}
+              ↗ Run
+            {/if}
+          </button>
+        {/if}
       {/if}
     </div>
   {/if}
