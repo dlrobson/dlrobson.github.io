@@ -43,7 +43,12 @@
   let playgroundError = $state(false)
 
   const activeUrl = $derived(
-    ({ rust: rustUrl, cpp: cppUrl, python: pythonUrl } as Record<string, string | undefined>)[activeTab]
+    (
+      { rust: rustUrl, cpp: cppUrl, python: pythonUrl } as Record<
+        string,
+        string | undefined
+      >
+    )[activeTab],
   )
 
   function getPreElements(): HTMLPreElement[] {
