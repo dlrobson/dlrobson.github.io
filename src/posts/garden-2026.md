@@ -110,14 +110,14 @@ grid={[
 | Carrots      | Nantes                     | 1-2"                | 18-24"      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/scarlet-nantes-carrot/)      |
 | Trellis Peas | Sugar Snap                 | 4-6″                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/sugar-snap-peas/)            |
 | Bush Peas    | Oregon Sugar Pod           | 1-2"                | 12-18″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/oregon-sugar-pod-snow-pea/)  |
-| Zucchini     | Black Beauty               | 12-24"              | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
+| Zucchini     | Black Beauty               | 12-24"              | 24-36″      | 2           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/black-beauty-zucchini/)      |
 | Radishes     | Cherry Belle               | 1-4"                | 8-12"       |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/cherry-belle-radish/)        |
 | Kale         | Darkibor F1 Kale           | 2-4" – S 12-18" – L | 18-36"      | 6           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/darkibor-f1-kale/)           |
 | Chives       | Common                     | 6"                  | 12"         | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/chives/)                     |
 | Bok Choy     | Bopak F1 Pac Choi          | 6-18″               | 18"         |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/bopak-f1-pac-choi/)          |
-| Calendula    | Pacific Beauty Mix         |                     |             | ?           |            | From last year's Seed                                                             |
-| Nasturtiums  | Dwarf Jewel Nasturtium Mix | 6-12″               | 24-36″      |             |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/dwarf-jewel-nasturtium-mix/) |
-| Chamomile    | German                     | 6-8"                | 18"         | ?           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
+| Calendula    | Pacific Beauty Mix         |                     |             | 7           |            | From last year's Seed                                                             |
+| Nasturtiums  | Dwarf Jewel Nasturtium Mix | 6-12″               | 24-36″      | 8           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/dwarf-jewel-nasturtium-mix/) |
+| Chamomile    | German                     | 6-8"                | 18"         | 7           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/german-chamomile/)           |
 | Jalapeno     | Early Jalapeno Hot Pepper  | 12-18"              | 24-30″      | 4           |            | [Gaia Organic Seeds](https://gaiaorganics.ca/product/early-jalapeno-hot-pepper/)  |
 
 ## Herb Varieties
@@ -125,11 +125,11 @@ grid={[
 | Herb        | Variety Name                   | Plant Spacing | Row Spacing | Plant Count | Origin                                                                                |
 | ----------- | ------------------------------ | ------------- | ----------- | ----------- | ------------------------------------------------------------------------------------- |
 | Dill        | Fernleaf Dill                  | 1"            |             |             | [OSC Seeds](https://www.oscseeds.com/product/fernleaf-dill-seeds-3052/)               |
-| Basil       | Sweet Basil                    |               |             | ?           | [OSC Seeds](https://www.oscseeds.com/product/sweet-organic-basil-seeds-4070/)         |
+| Basil       | Sweet Basil                    |               |             | 2           | [OSC Seeds](https://www.oscseeds.com/product/sweet-organic-basil-seeds-4070/)         |
 | Cilantro    | Santo                          | 2-4"          | 4-6"        |             | [Gaia Organic Seeds](https://gaiaorganics.ca/product/santo-cilantro/)                 |
 | Rosemary    | Common                         | 18-24″        | 24-36″      | 1           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/rosemary/)                       |
-| Thyme       | Common                         | 6-8"          | 12-18"      | 3-4         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
-| Green Onion | Evergreen Hardy White Scallion | 2-3″          | 12-24″      | 4-5         | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
+| Thyme       | Common                         | 6-8"          | 12-18"      | 3           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/thyme/)                          |
+| Green Onion | Evergreen Hardy White Scallion | 2-3″          | 12-24″      | 4           | [Gaia Organic Seeds](https://gaiaorganics.ca/product/evergreen-hardy-white-scallion/) |
 
 ## References
 
