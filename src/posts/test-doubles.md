@@ -8,13 +8,13 @@ description: 'A practical guide to the five Meszaros test double types, with exa
   import CodeTabs from '$lib/components/CodeTabs.svelte'
 </script>
 
-When people say "I'll just mock it out", they usually mean something much more specific than they realise. The umbrella term is **test double** — any object that stands in for a real dependency in a test. Gerard Meszaros catalogued five distinct types in _xUnit Test Patterns_, and Martin Fowler clarified the distinctions in his essay [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html). Each type makes a different trade-off between simplicity, control, and what it can verify.
+When people say "I'll just mock it out", they usually mean something much more specific than they realise. The umbrella term is **test double** - any object that stands in for a real dependency in a test. Gerard Meszaros catalogued five distinct types in _xUnit Test Patterns_, and Martin Fowler clarified the distinctions in his essay [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html). Each type makes a different trade-off between simplicity, control, and what it can verify.
 
 Using the wrong type doesn't break tests, but it does create confusion: a spy masquerading as a mock, or a fake called a stub, muddles what the test is actually checking. Getting the vocabulary right makes tests easier to read and easier to reason about.
 
 ## The Shared Domain
 
-All five examples use the same system under test: `UserRegistrationService`. It depends on two collaborators — an `EmailService` that sends a welcome email, and a `UserRepository` that persists users.
+All five examples use the same system under test: `UserRegistrationService`. It depends on two collaborators - an `EmailService` that sends a welcome email, and a `UserRepository` that persists users.
 
 <CodeTabs langs="python,rust,cpp">
 
@@ -137,7 +137,7 @@ public:
 
 ## Dummy
 
-A dummy is passed to satisfy an interface requirement but is **never actually invoked**. If the code accidentally calls it, the dummy makes the test fail loudly — that is the point.
+A dummy is passed to satisfy an interface requirement but is **never actually invoked**. If the code accidentally calls it, the dummy makes the test fail loudly - that is the point.
 
 The key is identifying what the test is _really_ exercising. Here we are testing email format validation, which is the first thing `register` does. The format check raises immediately if `@` is absent, before the service ever consults the repository or sends an email. Neither collaborator is ever reached, so both are dummies: anything that panics on any call proves the test path never touches them.
 
@@ -218,7 +218,7 @@ void test_register_raises_for_invalid_email() {
         service.register_user("not-an-email", "secret");
         assert(false && "expected exception");
     } catch (const std::invalid_argument&) {
-        // pass — format check fired before reaching either collaborator
+        // pass - format check fired before reaching either collaborator
     }
 }
 ```
@@ -227,7 +227,7 @@ void test_register_raises_for_invalid_email() {
 
 ## Stub
 
-A stub returns **canned responses** to specific calls. It does not care how many times it is called or with what arguments — it simply returns a predetermined value. Stubs are used to put the system under test into a particular state.
+A stub returns **canned responses** to specific calls. It does not care how many times it is called or with what arguments - it simply returns a predetermined value. Stubs are used to put the system under test into a particular state.
 
 Here we want to verify the "duplicate email" path. The stub always reports that an email is already taken, regardless of what email is passed.
 
@@ -296,9 +296,9 @@ void test_register_raises_when_email_already_registered() {
 
 ## Fake
 
-A fake has **real, working logic** — just a simplified version not suitable for production. The canonical example is an in-memory repository in place of a database. It correctly stores and retrieves data, but only lives in process memory.
+A fake has **real, working logic** - just a simplified version not suitable for production. The canonical example is an in-memory repository in place of a database. It correctly stores and retrieves data, but only lives in process memory.
 
-Fakes are heavier to write than stubs, but they enable more realistic multi-step scenarios. Here, we register the same address twice and verify the second attempt fails — a test that requires the repository to actually remember the first registration.
+Fakes are heavier to write than stubs, but they enable more realistic multi-step scenarios. Here, we register the same address twice and verify the second attempt fails - a test that requires the repository to actually remember the first registration.
 
 <CodeTabs langs="python,rust,cpp">
 
@@ -405,7 +405,7 @@ void test_cannot_register_same_email_twice() {
 
 ## Spy
 
-A spy is a test double that **records what happens to it**. It delegates normally (or does nothing), but keeps a log of every call — arguments, call count, order. After the system under test has run, you inspect the spy to verify the interaction occurred.
+A spy is a test double that **records what happens to it**. It delegates normally (or does nothing), but keeps a log of every call - arguments, call count, order. After the system under test has run, you inspect the spy to verify the interaction occurred.
 
 Spies are used when you care about _side effects_: did the email get sent? Was the right recipient used? Notice the structure: arrange the spy, act on the service, then assert against the spy's recorded calls.
 
@@ -489,7 +489,7 @@ void test_welcome_email_is_sent_on_registration() {
 
 ## Mock
 
-A mock looks similar to a spy, but the order of operations is reversed. With a mock, you **declare your expectations before the call**, then verify them after. If the expectation is not met — wrong arguments, called too few or too many times — the test fails at the verification step.
+A mock looks similar to a spy, but the order of operations is reversed. With a mock, you **declare your expectations before the call**, then verify them after. If the expectation is not met - wrong arguments, called too few or too many times - the test fails at the verification step.
 
 This is the distinction Fowler draws most sharply: a spy is used for _after-the-fact_ assertions; a mock asserts _what should happen_ before it happens.
 
@@ -604,13 +604,13 @@ void test_welcome_email_sent_with_correct_subject() {
 
 | Type      | Returns a value? | Has working logic? | Verifies behaviour?       |
 | --------- | ---------------- | ------------------ | ------------------------- |
-| **Dummy** | No               | No                 | No — fails if called      |
+| **Dummy** | No               | No                 | No - fails if called      |
 | **Stub**  | Yes (canned)     | No                 | No                        |
 | **Fake**  | Yes              | Yes (simplified)   | No                        |
 | **Spy**   | Yes              | Optional           | After the call            |
 | **Mock**  | Yes              | Optional           | Before the call (pre-set) |
 
-The most common confusion is between **spy** and **mock**: both record or verify interactions with a collaborator, but a spy records calls and lets you assert afterwards, while a mock states upfront what it expects and fails immediately if those expectations are not met. Neither is better — they suit different testing styles.
+The most common confusion is between **spy** and **mock**: both record or verify interactions with a collaborator, but a spy records calls and lets you assert afterwards, while a mock states upfront what it expects and fails immediately if those expectations are not met. Neither is better - they suit different testing styles.
 
 The other frequent mistake is using a **fake** when a **stub** would do. Fakes are valuable but they are real code that has to be maintained. If you only need to return a fixed value, a stub is simpler and its intent is clearer.
 
@@ -1162,4 +1162,4 @@ void test_welcome_email_sent_with_correct_subject() {
 
 ## Further Reading
 
-Martin Fowler's [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) is the canonical treatment of this topic and explains the classical vs. mockist testing philosophies in depth. The original taxonomy comes from Gerard Meszaros' _xUnit Test Patterns_ (2007).
+Martin Fowler's [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html) covers the classical vs. mockist philosophies in depth. The terms originate from Gerard Meszaros' _xUnit Test Patterns_ (2007).
