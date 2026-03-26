@@ -1,20 +1,20 @@
 ---
-title: 'Test Doubles: Dummies, Stubs, Fakes, Spies, and Mocks'
+title: 'Test Doubles: Dummies, Nulls, Stubs, Fakes, Spies, and Mocks'
 date: '2026-03-20'
-description: 'A practical guide to the five Meszaros test double types, with examples in Python, Rust, and C++.'
+description: 'A practical guide to the six test double types, with examples in Python, Rust, and C++.'
 ---
 
 <script>
   import CodeTabs from '$lib/components/CodeTabs.svelte'
 </script>
 
-When people say "I'll just mock it out", they usually mean something much more specific than they realise. The umbrella term is **test double** - any object that stands in for a real dependency in a test. Gerard Meszaros catalogued five distinct types in _xUnit Test Patterns_, and Martin Fowler clarified the distinctions in his essay [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html). Each type makes a different trade-off between simplicity, control, and what it can verify.
+When people say "I'll just mock it out", they usually mean something much more specific than they realise. The umbrella term is **test double** - any object that stands in for a real dependency in a test. Gerard Meszaros catalogued five distinct types in _xUnit Test Patterns_, and Martin Fowler clarified the distinctions in his essay [Mocks Aren't Stubs](https://martinfowler.com/articles/mocksArentStubs.html). This post adds a sixth — the null object — which sits between dummies and stubs and becomes essential once you start building [null construction](null-construction) patterns. Each type makes a different trade-off between simplicity, control, and what it can verify.
 
 Using the wrong type doesn't break tests, but it does create confusion: a spy masquerading as a mock, or a fake called a stub, muddles what the test is actually checking. Getting the vocabulary right makes tests easier to read and easier to reason about.
 
 ## The Shared Domain
 
-All five examples use the same system under test: `UserRegistrationService`. It depends on two collaborators - an `EmailService` that sends a welcome email, and a `UserRepository` that persists users.
+All examples use the same system under test: `UserRegistrationService`. It depends on two collaborators - an `EmailService` that sends a welcome email, and a `UserRepository` that persists users.
 
 <CodeTabs langs="python,rust,cpp">
 
@@ -220,6 +220,91 @@ void test_register_raises_for_invalid_email() {
     } catch (const std::invalid_argument&) {
         // pass - format check fired before reaching either collaborator
     }
+}
+```
+
+</CodeTabs>
+
+## Null
+
+A null object satisfies the interface and **silently does nothing**. Every method is a no-op — no return value, no side effect, no panic. Where a dummy proves a code path is never reached (by exploding if it is), a null object absorbs calls you know will happen but have no interest in verifying.
+
+A null might look like a minimal fake, but the distinction matters. A fake has real logic — an in-memory store, a state machine — that must be kept in sync with the production type it replaces. A null has no logic to maintain. This makes nulls trivially composable: when a dependency graph is several layers deep (`Manager → Publisher → WebSocket`), each layer can wire itself with null objects through a `new_null()` factory, and the entire graph assembles in one call with zero real connections. Fakes cannot compose this way because each one needs careful wiring. The [Null Construction](null-construction) pattern builds on this idea.
+
+Here we want to test that `register` returns a user with the correct email. The email service _will_ be called — `register` sends a welcome email after saving — but this test does not care about that side effect. A null email service lets the call pass through without noise. The repository still needs real behaviour (return `None` from `find_by_email`, accept `save`), so it uses a stub/fake — the null applies only to the collaborator this test ignores.
+
+<CodeTabs langs="python,rust,cpp">
+
+```python
+class NullEmailService:
+    def send(self, to: str, subject: str, body: str) -> None:
+        pass  # called, but this test doesn't care
+
+class StubUserRepository:
+    def find_by_email(self, email: str) -> None:
+        return None  # email not taken
+    def save(self, user: User) -> None:
+        pass
+
+def test_register_returns_user_with_correct_email():
+    service = UserRegistrationService(StubUserRepository(), NullEmailService())
+
+    user = service.register("alice@example.com", "secret")
+
+    assert user.email == "alice@example.com"
+```
+
+```rust
+struct NullEmailService;
+
+impl EmailService for NullEmailService {
+    fn send(&mut self, _to: &str, _subject: &str, _body: &str) {
+        // called, but this test doesn't care
+    }
+}
+
+struct StubUserRepository;
+
+impl UserRepository for StubUserRepository {
+    fn find_by_email(&self, _email: &str) -> Option<User> {
+        None // email not taken
+    }
+    fn save(&mut self, _user: &User) {}
+}
+
+#[test]
+fn register_returns_user_with_correct_email() {
+    let mut service = UserRegistrationService::new(StubUserRepository, NullEmailService);
+
+    let user = service.register("alice@example.com", "secret").unwrap();
+
+    assert_eq!(user.email, "alice@example.com");
+}
+```
+
+```cpp
+struct NullEmailService : EmailService {
+    void send(const std::string&, const std::string&,
+              const std::string&) override {
+        // called, but this test doesn't care
+    }
+};
+
+struct StubUserRepository : UserRepository {
+    std::optional<User> find_by_email(const std::string&) const override {
+        return std::nullopt; // email not taken
+    }
+    void save(const User&) override {}
+};
+
+void test_register_returns_user_with_correct_email() {
+    StubUserRepository repo;
+    NullEmailService email;
+    UserRegistrationService service{repo, email};
+
+    User user = service.register_user("alice@example.com", "secret");
+
+    assert(user.email == "alice@example.com");
 }
 ```
 
@@ -605,6 +690,7 @@ void test_welcome_email_sent_with_correct_subject() {
 | Type      | Returns a value? | Has working logic? | Verifies behaviour?       |
 | --------- | ---------------- | ------------------ | ------------------------- |
 | **Dummy** | No               | No                 | No - fails if called      |
+| **Null**  | No               | No                 | No - silently succeeds    |
 | **Stub**  | Yes (canned)     | No                 | No                        |
 | **Fake**  | Yes              | Yes (simplified)   | No                        |
 | **Spy**   | Yes              | Optional           | After the call            |
@@ -616,7 +702,7 @@ The other frequent mistake is using a **fake** when a **stub** would do. Fakes a
 
 ## Full Example
 
-All five doubles together in one file, using the same domain.
+All six doubles together in one file, using the same domain.
 
 <CodeTabs langs="python,rust,cpp" playground>
 
@@ -687,6 +773,26 @@ def test_register_raises_for_invalid_email():
         service.register("not-an-email", "secret")
 
 
+# ── Null ──────────────────────────────────────────────────────────────────────
+
+class NullUserRepository:
+    def find_by_email(self, email: str) -> None:
+        return None
+    def save(self, user: User) -> None:
+        pass
+
+class NullEmailService:
+    def send(self, to: str, subject: str, body: str) -> None:
+        pass
+
+def test_register_returns_user_with_correct_email():
+    service = UserRegistrationService(NullUserRepository(), NullEmailService())
+
+    user = service.register("alice@example.com", "secret")
+
+    assert user.email == "alice@example.com"
+
+
 # ── Stub ──────────────────────────────────────────────────────────────────────
 
 class StubUserRepository:
@@ -703,10 +809,6 @@ def test_register_raises_when_email_already_registered():
 
 
 # ── Fake ──────────────────────────────────────────────────────────────────────
-
-class NullEmailService:
-    def send(self, to: str, subject: str, body: str) -> None:
-        pass
 
 class FakeUserRepository:
     def __init__(self) -> None:
@@ -772,6 +874,16 @@ def test_welcome_email_sent_with_correct_subject():
     service.register("alice@example.com", "secret")
 
     mock_email.verify()
+
+
+# ── Run all tests ─────────────────────────────────────────────────────────────
+
+test_register_raises_for_invalid_email();       print("dummy .... passed")
+test_register_returns_user_with_correct_email(); print("null ..... passed")
+test_register_raises_when_email_already_registered(); print("stub ..... passed")
+test_cannot_register_same_email_twice();         print("fake ..... passed")
+test_welcome_email_is_sent_on_registration();    print("spy ...... passed")
+test_welcome_email_sent_with_correct_subject();  print("mock ..... passed")
 ```
 
 ```rust
@@ -850,6 +962,30 @@ fn register_raises_for_invalid_email() {
     assert!(result.unwrap_err().contains("Invalid email"));
 }
 
+// ── Null ──────────────────────────────────────────────────────────────────────
+
+struct NullUserRepository;
+
+impl UserRepository for NullUserRepository {
+    fn find_by_email(&self, _email: &str) -> Option<User> { None }
+    fn save(&mut self, _user: &User) {}
+}
+
+struct NullEmailService;
+
+impl EmailService for NullEmailService {
+    fn send(&mut self, _to: &str, _subject: &str, _body: &str) {}
+}
+
+#[test]
+fn register_returns_user_with_correct_email() {
+    let mut service = UserRegistrationService::new(NullUserRepository, NullEmailService);
+
+    let user = service.register("alice@example.com", "secret").unwrap();
+
+    assert_eq!(user.email, "alice@example.com");
+}
+
 // ── Stub ──────────────────────────────────────────────────────────────────────
 
 struct StubUserRepository;
@@ -871,12 +1007,6 @@ fn register_raises_when_email_already_registered() {
 }
 
 // ── Fake ──────────────────────────────────────────────────────────────────────
-
-struct NullEmailService;
-
-impl EmailService for NullEmailService {
-    fn send(&mut self, _to: &str, _subject: &str, _body: &str) {}
-}
 
 struct FakeUserRepository {
     store: HashMap<String, User>,
@@ -978,6 +1108,7 @@ fn welcome_email_sent_with_correct_subject() {
 
 ```cpp
 #include <cassert>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -1052,6 +1183,29 @@ void test_register_raises_for_invalid_email() {
     } catch (const std::invalid_argument&) {}
 }
 
+// ── Null ──────────────────────────────────────────────────────────────────────
+
+struct NullUserRepository : UserRepository {
+    std::optional<User> find_by_email(const std::string&) const override {
+        return std::nullopt;
+    }
+    void save(const User&) override {}
+};
+
+struct NullEmailService : EmailService {
+    void send(const std::string&, const std::string&, const std::string&) override {}
+};
+
+void test_register_returns_user_with_correct_email() {
+    NullUserRepository repo;
+    NullEmailService email;
+    UserRegistrationService service{repo, email};
+
+    User user = service.register_user("alice@example.com", "secret");
+
+    assert(user.email == "alice@example.com");
+}
+
 // ── Stub ──────────────────────────────────────────────────────────────────────
 
 struct StubUserRepository : UserRepository {
@@ -1073,10 +1227,6 @@ void test_register_raises_when_email_already_registered() {
 }
 
 // ── Fake ──────────────────────────────────────────────────────────────────────
-
-struct NullEmailService : EmailService {
-    void send(const std::string&, const std::string&, const std::string&) override {}
-};
 
 struct FakeUserRepository : UserRepository {
     std::unordered_map<std::string, User> store;
@@ -1158,11 +1308,12 @@ void test_welcome_email_sent_with_correct_subject() {
 }
 
 int main() {
-    test_register_raises_for_invalid_email();
-    test_register_raises_when_email_already_registered();
-    test_cannot_register_same_email_twice();
-    test_welcome_email_is_sent_on_registration();
-    test_welcome_email_sent_with_correct_subject();
+    test_register_raises_for_invalid_email();       std::cout << "dummy .... passed\n";
+    test_register_returns_user_with_correct_email(); std::cout << "null ..... passed\n";
+    test_register_raises_when_email_already_registered(); std::cout << "stub ..... passed\n";
+    test_cannot_register_same_email_twice();         std::cout << "fake ..... passed\n";
+    test_welcome_email_is_sent_on_registration();    std::cout << "spy ...... passed\n";
+    test_welcome_email_sent_with_correct_subject();  std::cout << "mock ..... passed\n";
     return 0;
 }
 ```
