@@ -1,22 +1,22 @@
 import { readFile, writeFile } from 'fs/promises'
 
 /**
- * @param {string} path
+ * @param {string} cachePath
  * @returns {Promise<Record<string, string>>}
  */
-export async function loadCache(path) {
+export async function loadCache(cachePath) {
   try {
-    const text = await readFile(path, 'utf-8')
-    return JSON.parse(text)
+    return JSON.parse(await readFile(cachePath, 'utf-8'))
   } catch {
     return {}
   }
 }
 
 /**
- * @param {string} path
+ * @param {string} cachePath
  * @param {Record<string, string>} cache
+ * @returns {Promise<void>}
  */
-export async function saveCache(path, cache) {
-  await writeFile(path, JSON.stringify(cache, null, 2) + '\n', 'utf-8')
+export async function saveCache(cachePath, cache) {
+  await writeFile(cachePath, JSON.stringify(cache, null, 2) + '\n', 'utf-8')
 }

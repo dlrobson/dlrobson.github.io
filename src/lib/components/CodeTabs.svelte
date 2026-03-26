@@ -39,8 +39,6 @@
   let tabs = $state<string[]>(parsedLangs)
   let activeTab = $state(parsedLangs[0] ?? '')
   let mounted = false
-  let running = $state(false)
-  let playgroundError = $state(false)
 
   const activeUrl = $derived(
     (
@@ -77,76 +75,6 @@
     setSharedLang(lang)
   }
 
-  function getActiveCode(): string {
-    const index = tabs.indexOf(activeTab)
-    const pre = getPreElements()[index]
-    return pre?.querySelector('code')?.textContent ?? ''
-  }
-
-  async function fetchRustUrl(code: string): Promise<string> {
-    const response = await fetch('https://play.rust-lang.org/meta/gist/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    })
-    if (!response.ok)
-      throw new Error(`Rust Playground gist failed: ${response.status}`)
-    const data = await response.json()
-    return `https://play.rust-lang.org/?gist=${data.id}&version=stable&mode=debug&edition=2021`
-  }
-
-  function wrapCppWithMain(code: string): string {
-    const names = [...code.matchAll(/void\s+(test_\w+)\s*\(\)/g)].map(
-      (m) => m[1],
-    )
-    if (names.length === 0) return code
-    const calls = names.map((name) => `    ${name}();`).join('\n')
-    return `${code}\nint main() {\n${calls}\n    return 0;\n}\n`
-  }
-
-  async function fetchGodboltUrl(code: string): Promise<string> {
-    const response = await fetch('https://godbolt.org/api/shortener', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessions: [
-          {
-            id: 1,
-            language: 'c++',
-            source: wrapCppWithMain(code),
-            compilers: [{ id: 'g132', options: '-std=c++17' }],
-          },
-        ],
-      }),
-    })
-    if (!response.ok)
-      throw new Error(`godbolt shortener failed: ${response.status}`)
-    const data = await response.json()
-    return data.url as string
-  }
-
-  async function runInPlayground(): Promise<void> {
-    if (running) return
-    running = true
-    playgroundError = false
-    const code = getActiveCode()
-    try {
-      if (activeTab === 'rust') {
-        const url = await fetchRustUrl(code)
-        window.open(url, '_blank')
-      } else if (activeTab === 'cpp') {
-        const url = await fetchGodboltUrl(code)
-        window.open(url, '_blank')
-      } else {
-        window.open('https://www.online-python.com/', '_blank')
-      }
-    } catch {
-      playgroundError = true
-    } finally {
-      running = false
-    }
-  }
-
   onMount(() => {
     const pres = getPreElements()
     tabs = pres.map(detectLanguage)
@@ -178,35 +106,14 @@
           {labelFromLanguage(lang)}
         </button>
       {/each}
-      {#if playground}
-        {#if activeUrl}
-          <a
-            href={activeUrl}
-            target="_blank"
-            rel="noopener noreferrer external"
-            class="run-btn"
-            title="Open in playground">↗ Run</a
-          >
-        {:else}
-          <button
-            class="run-btn"
-            class:run-btn-loading={running}
-            class:run-btn-error={playgroundError}
-            disabled={running}
-            title={activeTab === 'python'
-              ? 'Python playground coming soon'
-              : 'Open in playground'}
-            onclick={runInPlayground}
-          >
-            {#if running}
-              …
-            {:else if playgroundError}
-              ⚠ Try again
-            {:else}
-              ↗ Run
-            {/if}
-          </button>
-        {/if}
+      {#if playground && activeUrl}
+        <a
+          href={activeUrl}
+          target="_blank"
+          rel="noopener noreferrer external"
+          class="run-btn"
+          title="Open in playground">↗ Run</a
+        >
       {/if}
     </div>
   {/if}

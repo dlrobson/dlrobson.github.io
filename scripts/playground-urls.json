@@ -1,5 +1,5 @@
 {
-  "python:4b4651b3dec0bd03": "https://wandbox.org/permlink/Q9HuTQOCC9mnFKmj",
-  "rust:ec022fe28d870445": "https://play.rust-lang.org/?gist=ebdefb9a6db7fb44b653a380d9be6bdd&version=stable&mode=debug&edition=2021",
-  "cpp:44eec3578d2bd00a": "https://godbolt.org/z/sW34Gs3cr"
+  "python:4b4651b3dec0bd03": "https://godbolt.org/z/sPbG45G1W",
+  "rust:ec022fe28d870445": "https://play.rust-lang.org/?gist=77c79957e6fe83b1120abf3770e76dc4&version=stable&mode=debug&edition=2021",
+  "cpp:3186dbb5157ed0f8": "https://godbolt.org/z/jsT1v8KoK"
 }

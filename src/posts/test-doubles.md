@@ -1156,6 +1156,15 @@ void test_welcome_email_sent_with_correct_subject() {
 
     mock.verify();
 }
+
+int main() {
+    test_register_raises_for_invalid_email();
+    test_register_raises_when_email_already_registered();
+    test_cannot_register_same_email_twice();
+    test_welcome_email_is_sent_on_registration();
+    test_welcome_email_sent_with_correct_subject();
+    return 0;
+}
 ```
 
 </CodeTabs>

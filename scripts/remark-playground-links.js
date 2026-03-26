@@ -1,3 +1,14 @@
+/**
+ * Remark plugin: inject playground URLs into <CodeTabs playground> blocks at build time.
+ *
+ * URLs are resolved via external APIs on cache miss and stored in playground-urls.json,
+ * keyed by SHA-256 hash of the code so rebuilds don't re-fetch unchanged snippets.
+ *
+ * Rust:   play.rust-lang.org gist API  → https://play.rust-lang.org/?gist=<id>
+ * C++:    godbolt.org shortener API    → https://godbolt.org/z/<id>  (Clang 22, -std=c++23)
+ * Python: godbolt.org shortener API   → https://godbolt.org/z/<id>  (CPython 3.14)
+ */
+
 import { createHash } from 'crypto'
 import { fileURLToPath } from 'url'
 import path from 'path'
@@ -16,85 +27,59 @@ function hashCode(code) {
 
 /**
  * @param {string} code
- * @returns {string}
- */
-function wrapCppWithMain(code) {
-  const names = [...code.matchAll(/void\s+(test_\w+)\s*\(\)/g)].map((m) => m[1])
-  if (names.length === 0) return code
-  const calls = names.map((name) => `    ${name}();`).join('\n')
-  return `${code}\nint main() {\n${calls}\n    return 0;\n}\n`
-}
-
-/**
- * @param {string} code
  * @returns {Promise<string | null>}
  */
 async function resolveRustUrl(code) {
   try {
-    const response = await fetch('https://play.rust-lang.org/meta/gist/', {
+    const res = await fetch('https://play.rust-lang.org/meta/gist/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
     })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const data = await response.json()
-    return `https://play.rust-lang.org/?gist=${data.id}&version=stable&mode=debug&edition=2021`
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { id } = await res.json()
+    return `https://play.rust-lang.org/?gist=${id}&version=stable&mode=debug&edition=2021`
   } catch (err) {
-    console.warn('[remark-playground-links] Rust Playground API failed:', err.message)
+    console.warn(
+      '[remark-playground-links] Rust Playground API failed:',
+      err.message,
+    )
     return null
   }
 }
 
-/**
- * @param {string} code
- * @returns {Promise<string | null>}
- */
-async function resolveGodboltUrl(code) {
-  try {
-    const response = await fetch('https://godbolt.org/api/shortener', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessions: [
-          {
-            id: 1,
-            language: 'c++',
-            source: wrapCppWithMain(code),
-            compilers: [{ id: 'g132', options: '-std=c++17' }],
-          },
-        ],
-      }),
-    })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const data = await response.json()
-    return data.url
-  } catch (err) {
-    console.warn('[remark-playground-links] Godbolt API failed:', err.message)
-    return null
-  }
+/** @type {Record<string, { language: string, compilers: { id: string, options: string }[] }>} */
+const GODBOLT_CONFIG = {
+  cpp: {
+    language: 'c++',
+    compilers: [{ id: 'clang2210', options: '-std=c++23' }],
+  },
+  python: { language: 'python', compilers: [{ id: 'python314', options: '' }] },
 }
 
 /**
+ * @param {'cpp' | 'python'} lang
  * @param {string} code
  * @returns {Promise<string | null>}
  */
-async function resolveWandboxUrl(code) {
+async function resolveGodboltUrl(lang, code) {
+  const { language, compilers } = GODBOLT_CONFIG[lang]
   try {
-    const response = await fetch('https://wandbox.org/api/permlink', {
+    const res = await fetch('https://godbolt.org/api/shortener', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        compiler: 'cpython-3.12.7',
-        code,
+        sessions: [{ id: 1, language, source: code, compilers }],
       }),
     })
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const data = await response.json()
-    return data.permlink
-      ? `https://wandbox.org/permlink/${data.permlink}`
-      : null
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const { url } = await res.json()
+    return url
   } catch (err) {
-    console.warn('[remark-playground-links] Wandbox API failed:', err.message)
+    console.warn(
+      `[remark-playground-links] Godbolt API failed (${lang}):`,
+      err.message,
+    )
     return null
   }
 }
@@ -102,7 +87,7 @@ async function resolveWandboxUrl(code) {
 /**
  * Inject pre-computed URL props into a `<CodeTabs ...>` opening tag string.
  *
- * @param {string} htmlValue  - Raw HTML string of the opening tag node
+ * @param {string} htmlValue
  * @param {{ rustUrl?: string, cppUrl?: string, pythonUrl?: string }} urls
  * @returns {string}
  */
@@ -112,14 +97,10 @@ function rewriteCodeTabsTag(htmlValue, urls) {
   if (urls.cppUrl) props.push(`cppUrl="${escapeAttr(urls.cppUrl)}"`)
   if (urls.pythonUrl) props.push(`pythonUrl="${escapeAttr(urls.pythonUrl)}"`)
   if (props.length === 0) return htmlValue
-  // Insert props before the closing `>` of the opening tag
   return htmlValue.replace(/>(\s*)$/, ` ${props.join(' ')}>$1`)
 }
 
-/**
- * @param {string} value
- * @returns {string}
- */
+/** @param {string} value */
 function escapeAttr(value) {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
@@ -127,29 +108,32 @@ function escapeAttr(value) {
 /** @type {import('unified').Plugin} */
 export default function remarkPlaygroundLinks() {
   return async (tree) => {
-    // Collect all <CodeTabs playground> blocks to process
     const blocks = []
-
     const children = tree.children
+
     for (let i = 0; i < children.length; i++) {
       const node = children[i]
       if (node.type !== 'html') continue
-      if (!node.value.includes('<CodeTabs') || !node.value.includes('playground'))
+      if (
+        !node.value.includes('<CodeTabs') ||
+        !node.value.includes('playground')
+      )
         continue
 
-      // Collect sibling code nodes until </CodeTabs>
       const codeNodes = []
       let j = i + 1
       while (j < children.length) {
         const sibling = children[j]
-        if (sibling.type === 'html' && sibling.value.trim().startsWith('</CodeTabs')) break
+        if (
+          sibling.type === 'html' &&
+          sibling.value.trim().startsWith('</CodeTabs')
+        )
+          break
         if (sibling.type === 'code' && sibling.lang) codeNodes.push(sibling)
         j++
       }
 
-      if (codeNodes.length > 0) {
-        blocks.push({ nodeIndex: i, node, codeNodes })
-      }
+      if (codeNodes.length > 0) blocks.push({ nodeIndex: i, node, codeNodes })
     }
 
     if (blocks.length === 0) return
@@ -161,11 +145,8 @@ export default function remarkPlaygroundLinks() {
       /** @type {{ rustUrl?: string, cppUrl?: string, pythonUrl?: string }} */
       const urls = {}
 
-      for (const codeNode of codeNodes) {
-        const lang = codeNode.lang
-        const code = codeNode.value
+      for (const { lang, value: code } of codeNodes) {
         const key = `${lang}:${hashCode(code)}`
-
         if (cache[key]) {
           if (lang === 'rust') urls.rustUrl = cache[key]
           else if (lang === 'cpp') urls.cppUrl = cache[key]
@@ -175,8 +156,8 @@ export default function remarkPlaygroundLinks() {
 
         let url = null
         if (lang === 'rust') url = await resolveRustUrl(code)
-        else if (lang === 'cpp') url = await resolveGodboltUrl(code)
-        else if (lang === 'python') url = await resolveWandboxUrl(code)
+        else if (lang === 'cpp' || lang === 'python')
+          url = await resolveGodboltUrl(lang, code)
 
         if (url) {
           cache[key] = url
@@ -193,8 +174,6 @@ export default function remarkPlaygroundLinks() {
       }
     }
 
-    if (cacheUpdated) {
-      await saveCache(CACHE_PATH, cache)
-    }
+    if (cacheUpdated) await saveCache(CACHE_PATH, cache)
   }
 }
