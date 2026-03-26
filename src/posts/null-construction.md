@@ -666,13 +666,11 @@ class OrderProcessor:
         self._audit_log.record(f"processed:{order.id}")
 
 def test_new_null():
-    """Test that does not care about any dependency."""
     sut = OrderProcessor.new_null()
 
     sut.process(Order("1", 500, "tok_123", "a@b.com"))
 
 def test_selective_override():
-    """Test that cares about one dependency."""
     spy = SpyMailer()
     sut = OrderProcessor(
         gateway=NullGateway(),
@@ -708,7 +706,6 @@ class OrderProcessorBuilder:
         return OrderProcessor(self._gateway, self._mailer, self._audit_log)
 
 def test_builder():
-    """Same intent as selective override, less noise."""
     spy = SpyMailer()
     sut = (OrderProcessorBuilder()
            .with_mailer(spy)
@@ -831,7 +828,6 @@ fn test_order() -> Order {
 
 #[test]
 fn new_null_no_dependencies() {
-    // Test that does not care about any dependency.
     let sut = OrderProcessor::new_null();
 
     sut.process(&test_order());
@@ -839,7 +835,6 @@ fn new_null_no_dependencies() {
 
 #[test]
 fn selective_override() {
-    // Test that cares about one dependency.
     let spy = SpyMailer::new();
     let sut = OrderProcessor::new(
         Box::new(NullGateway),
@@ -885,7 +880,6 @@ impl OrderProcessorBuilder {
 
 #[test]
 fn builder_usage() {
-    // Same intent as selective override, less noise.
     let spy = SpyMailer::new();
     let sut = OrderProcessorBuilder::default()
         .mailer(spy.clone())
@@ -990,16 +984,13 @@ public:
 };
 
 void test_new_null() {
-    // Test that does not care about any dependency.
     auto sut = OrderProcessor::new_null();
-
     Order order{"1", 500, "tok_123", "a@b.com"};
 
     sut.process(order);
 }
 
 void test_selective_override() {
-    // Test that cares about one dependency.
     auto spy = std::make_unique<SpyMailer>();
     auto* spy_ptr = spy.get();
     Order order{"1", 500, "tok_123", "a@b.com"};
@@ -1041,7 +1032,6 @@ public:
 };
 
 void test_builder() {
-    // Same intent as selective override, less noise.
     auto spy = std::make_unique<SpyMailer>();
     auto* spy_ptr = spy.get();
     Order order{"1", 500, "tok_123", "a@b.com"};

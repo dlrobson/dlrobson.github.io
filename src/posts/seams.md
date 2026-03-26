@@ -139,14 +139,14 @@ class OrderProcessor:
         self._mailer.send(order.email, "Order confirmed",
                           f"Order {order.id} received.")
 
-# In a test:
-gateway = FakeGateway()
-mailer  = SpyMailer()
-sut     = OrderProcessor(gateway, mailer)
+def test_constructor_injection() -> None:
+    gateway = FakeGateway()
+    mailer  = SpyMailer()
+    sut     = OrderProcessor(gateway, mailer)
 
-sut.process(test_order)
+    sut.process(test_order)
 
-assert mailer.was_called
+    assert mailer.was_called
 ```
 
 ```rust
@@ -167,13 +167,18 @@ impl OrderProcessor {
     }
 }
 
-// In a test:
-let sut = OrderProcessor::new(
-    Box::new(FakeGateway::new()),
-    Box::new(SpyMailer::new()),
-);
+#[test]
+fn test_constructor_injection() {
+    let spy = std::rc::Rc::new(SpyMailer::new());
+    let sut = OrderProcessor::new(
+        Box::new(FakeGateway::new()),
+        Box::new(spy.clone()),
+    );
 
-sut.process(&test_order);
+    sut.process(&test_order);
+
+    assert!(spy.was_called());
+}
 ```
 
 ```cpp
@@ -191,14 +196,15 @@ public:
     }
 };
 
-// In a test:
-FakeGateway gateway;
-SpyMailer   mailer;
-OrderProcessor sut{gateway, mailer};
+void test_constructor_injection() {
+    FakeGateway gateway;
+    SpyMailer   mailer;
+    OrderProcessor sut{gateway, mailer};
 
-sut.process(test_order);
+    sut.process(test_order);
 
-assert(mailer.was_called());
+    assert(mailer.was_called());
+}
 ```
 
 </CodeTabs>
@@ -226,14 +232,14 @@ class OrderProcessor:
         self.mailer.send(order.email, "Order confirmed",
                          f"Order {order.id} received.")
 
-# In a test — the framework creates the instance, the test patches it:
-sut = OrderProcessor()
-sut.gateway = FakeGateway()
-sut.mailer  = SpyMailer()
+def test_property_injection() -> None:
+    sut = OrderProcessor()
+    sut.gateway = FakeGateway()
+    sut.mailer  = SpyMailer()
 
-sut.process(test_order)
+    sut.process(test_order)
 
-assert sut.mailer.was_called
+    assert sut.mailer.was_called
 ```
 
 ```rust
@@ -264,12 +270,17 @@ impl OrderProcessor {
     }
 }
 
-// In a test:
-let mut sut = OrderProcessor::default();
-sut.set_gateway(Arc::new(FakeGateway::new()));
-sut.set_mailer(Arc::new(SpyMailer::new()));
+#[test]
+fn test_property_injection() {
+    let spy = Arc::new(SpyMailer::new());
+    let mut sut = OrderProcessor::default();
+    sut.set_gateway(Arc::new(FakeGateway::new()));
+    sut.set_mailer(spy.clone());
 
-sut.process(&test_order);
+    sut.process(&test_order);
+
+    assert!(spy.was_called());
+}
 ```
 
 ```cpp
@@ -286,14 +297,15 @@ public:
     }
 };
 
-// In a test — framework creates the instance, test replaces properties:
-OrderProcessor sut;
-sut.gateway = std::make_unique<FakeGateway>();
-sut.mailer  = std::make_unique<SpyMailer>();
+void test_property_injection() {
+    OrderProcessor sut;
+    sut.gateway = std::make_unique<FakeGateway>();
+    sut.mailer  = std::make_unique<SpyMailer>();
 
-sut.process(test_order);
+    sut.process(test_order);
 
-assert(static_cast<SpyMailer*>(sut.mailer.get())->was_called());
+    assert(static_cast<SpyMailer*>(sut.mailer.get())->was_called());
+}
 ```
 
 </CodeTabs>
@@ -319,8 +331,12 @@ class OrderProcessor:
 # In production:
 processor.process(order, StripeGateway(), SmtpMailer("smtp.example.com"))
 
-# In a test:
-processor.process(test_order, FakeGateway(), SpyMailer())
+def test_method_parameter_injection() -> None:
+    spy = SpyMailer()
+
+    OrderProcessor().process(test_order, FakeGateway(), spy)
+
+    assert spy.was_called
 ```
 
 ```rust
@@ -340,8 +356,14 @@ impl OrderProcessor {
 // In production:
 processor.process(&order, &StripeGateway::new(), &SmtpMailer::new("smtp.example.com"));
 
-// In a test:
-processor.process(&test_order, &FakeGateway::new(), &SpyMailer::new());
+#[test]
+fn test_method_parameter_injection() {
+    let spy = SpyMailer::new();
+
+    OrderProcessor.process(&test_order, &FakeGateway::new(), &spy);
+
+    assert!(spy.was_called());
+}
 ```
 
 ```cpp
@@ -361,11 +383,14 @@ StripeGateway gateway;
 SmtpMailer    mailer{"smtp.example.com"};
 processor.process(order, gateway, mailer);
 
-// In a test:
-FakeGateway gateway;
-SpyMailer   mailer;
+void test_method_parameter_injection() {
+    FakeGateway gateway;
+    SpyMailer   mailer;
 
-processor.process(test_order, gateway, mailer);
+    OrderProcessor{}.process(test_order, gateway, mailer);
+
+    assert(mailer.was_called());
+}
 ```
 
 </CodeTabs>
@@ -406,9 +431,12 @@ class TestableOrderProcessor(OrderProcessor):
     def _make_gateway(self) -> PaymentGateway: return self.gateway
     def _make_mailer(self)  -> Mailer:         return self.mailer
 
-sut = TestableOrderProcessor()
-sut.process(test_order)
-assert sut.mailer.was_called
+def test_extract_and_override() -> None:
+    sut = TestableOrderProcessor()
+
+    sut.process(test_order)
+
+    assert sut.mailer.was_called
 ```
 
 ```rust
@@ -440,6 +468,16 @@ struct TestProcessor { gateway: FakeGateway, mailer: SpyMailer }
 impl Processable for TestProcessor {
     fn make_gateway(&self) -> Box<dyn PaymentGateway> { Box::new(self.gateway.clone()) }
     fn make_mailer (&self) -> Box<dyn Mailer>          { Box::new(self.mailer.clone()) }
+}
+
+#[test]
+fn test_extract_and_override() {
+    let spy = SpyMailer::new();
+    let sut = TestProcessor { gateway: FakeGateway::new(), mailer: spy.clone() };
+
+    sut.process(&test_order);
+
+    assert!(spy.was_called());
 }
 ```
 
@@ -483,9 +521,13 @@ protected:
     }
 };
 
-TestableOrderProcessor sut;
-sut.process(test_order);
-assert(sut.mailer_ptr && sut.mailer_ptr->was_called());
+void test_extract_and_override() {
+    TestableOrderProcessor sut;
+
+    sut.process(test_order);
+
+    assert(sut.mailer_ptr && sut.mailer_ptr->was_called());
+}
 ```
 
 </CodeTabs>
@@ -838,7 +880,8 @@ mod extract {
         let sut = TestProc(FakeGateway, ml.clone());
 
         sut.process(&test_order());
-        // SpyMailer uses Cell, clone shares state
+
+        assert!(ml.was_called()); // SpyMailer uses Cell, clone shares state
     }
 }
 
@@ -916,7 +959,8 @@ public:
 };
 
 void test() {
-    FakeGateway gw; SpyMailer ml;
+    FakeGateway gw;
+    SpyMailer ml;
     OrderProcessor sut{gw, ml};
 
     sut.process(test_order);
@@ -964,7 +1008,8 @@ public:
 };
 
 void test() {
-    FakeGateway gw; SpyMailer ml;
+    FakeGateway gw;
+    SpyMailer ml;
     OrderProcessor sut;
 
     sut.process(test_order, gw, ml);
@@ -1011,7 +1056,9 @@ protected:
 
 void test() {
     TestableOrderProcessor sut;
+
     sut.process(test_order);
+
     assert(sut.mailer_ptr && sut.mailer_ptr->was_called());
 }
 } // namespace extract
