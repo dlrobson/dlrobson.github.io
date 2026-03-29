@@ -36,7 +36,7 @@
     "mermaid": "^11.12.3",
     "prettier": "^3.5.0",
     "prettier-plugin-svelte": "^3.5.0",
-    "prism-themes": "^1.9.0",
+    "shiki": "^4.0.2",
     "svelte": "^5.53.1",
     "svelte-check": "^4.4.3",
     "svelte-fa": "^4.0.4",

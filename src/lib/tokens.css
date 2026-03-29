@@ -66,18 +66,18 @@
   }
 }
 
-/* ── Prism: dark theme overrides (one-dark colours) ── */
-[data-theme='dark'] code[class*='language-'],
-[data-theme='dark'] pre[class*='language-'] {
-  background: hsl(220, 13%, 18%);
-  color: hsl(220, 14%, 71%);
+/* ── Shiki: dual-theme token colours ── */
+.shiki span {
+  color: var(--shiki-light);
+}
+
+[data-theme='dark'] .shiki span {
+  color: var(--shiki-dark);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) code[class*='language-'],
-  :root:not([data-theme]) pre[class*='language-'] {
-    background: hsl(220, 13%, 18%);
-    color: hsl(220, 14%, 71%);
+  :root:not([data-theme]) .shiki span {
+    color: var(--shiki-dark);
   }
 }
 

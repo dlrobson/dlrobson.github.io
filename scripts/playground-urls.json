@@ -4,5 +4,13 @@
   "cpp:787c8ba47fc354eb": "https://godbolt.org/z/Y15zvds36",
   "python:cb40d973f7675b6c": "https://godbolt.org/z/T4jvjxesT",
   "rust:66024d1b092b3ac8": "https://play.rust-lang.org/?gist=88207f8e2b2e4d802591dd5d61cc1e80&version=stable&mode=debug&edition=2021",
-  "cpp:9f802041c7de7019": "https://godbolt.org/z/zoo9GrK44"
+  "cpp:9f802041c7de7019": "https://godbolt.org/z/zoo9GrK44",
+  "python:56a9c1652e0cfb38": "https://godbolt.org/z/9aTvabxdP",
+  "rust:35f8825aa85db3de": "https://play.rust-lang.org/?gist=4cba033ab2afabe8101b83ef30ca3335&version=stable&mode=debug&edition=2021",
+  "cpp:b9ae6f13ee9c189b": "https://godbolt.org/z/s1K7WMKhc",
+  "python:d5973c623d6dc208": "https://godbolt.org/z/azTedc9MY",
+  "rust:c40fe2071c5b506f": "https://play.rust-lang.org/?gist=920b1f04e419d2d70939cb692f58b094&version=stable&mode=debug&edition=2021",
+  "cpp:517a2ef94f86b174": "https://godbolt.org/z/45hesdvWT",
+  "rust:180d61d0bb2cc12b": "https://play.rust-lang.org/?gist=dfe10bfee35324bbf4394d406c46bff6&version=stable&mode=debug&edition=2021",
+  "cpp:4508cf2c07b70089": "https://godbolt.org/z/Ynj8eWebT"
 }

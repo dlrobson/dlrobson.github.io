@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 import remarkMermaid from './scripts/remark-mermaid.js'
 import remarkPlaygroundLinks from './scripts/remark-playground-links.js'
+import { highlight } from './src/lib/highlight.ts'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -18,6 +19,7 @@ export default {
       layout: {
         _: path.resolve(__dirname, './src/lib/components/PostLayout.svelte'),
       },
+      highlight: { highlighter: highlight },
     }),
   ],
   kit: {

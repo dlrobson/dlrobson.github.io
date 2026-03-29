@@ -56,6 +56,7 @@
   }
 
   function detectLanguage(pre: HTMLPreElement): string {
+    if (pre.dataset.language) return pre.dataset.language
     const code = pre.querySelector('code')
     const langClass = Array.from(code?.classList ?? []).find((c) =>
       c.startsWith('language-'),
