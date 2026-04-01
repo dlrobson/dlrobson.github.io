@@ -1,7 +1,7 @@
 ---
 title: 'Seams: Where Code Becomes Testable'
 date: '2026-03-25'
-description: 'The four techniques for inserting a test double into existing code — constructor, property, method parameter, and extract-and-override — with examples in Python, Rust, and C++.'
+description: 'Five cross-language seams for inserting test doubles — constructor, property, method parameter, extract-and-override, and closure injection — plus Python module patching and Rust-specific techniques, with examples throughout.'
 ---
 
 <script>
@@ -212,7 +212,7 @@ void test_constructor_injection() {
 This is the default choice. Dependencies are visible in the signature, immutable after construction, and easy to substitute. If you can touch the constructor, start here.
 
 > **Note**
-> Rust has a second flavour: generic type parameters (`OrderProcessor<G: PaymentGateway, M: Mailer>`) give zero-cost monomorphisation but encode the full concrete type into the struct type itself. `Box<dyn Trait>` pays a small runtime cost and keeps the type simple. The trade-off matters most when building deep object graphs — covered in [Null Construction](null-construction).
+> Rust has a second flavour: generic type parameters (`OrderProcessor<G: PaymentGateway, M: Mailer>`) give zero-cost monomorphisation at the cost of encoding the concrete type into the struct type itself. The full trade-off is covered in the Rust: Static Dispatch section below.
 
 ## Property Injection
 
@@ -537,14 +537,262 @@ The test subclass is not production code — it lives entirely in the test file.
 > **Warning**
 > If the base constructor calls a virtual factory method, the override runs before the subclass is fully constructed. This causes confusing failures. Only use this seam when the factory methods are called from a non-constructor method.
 
+## Closure and Function Injection
+
+A single-method interface is structurally equivalent to a function. When a dependency does exactly one thing, there is no need to name and implement a full type — pass a callable instead. This reduces ceremony at the call site and, in tests, allows an inline lambda to replace a purpose-built double.
+
+<CodeTabs langs="python,rust,cpp">
+
+```python
+from typing import Callable
+
+class OrderProcessor:
+    def process(self,
+                order:  Order,
+                charge: Callable[[int, str], None],
+                send:   Callable[[str, str, str], None]) -> None:
+        charge(order.amount_cents, order.card_token)
+        send(order.email, "Order confirmed",
+             f"Order {order.id} received.")
+
+# In production:
+processor.process(
+    order,
+    lambda amt, tok: StripeGateway().charge(amt, tok),
+    lambda to, subj, body: SmtpMailer("smtp.example.com").send(to, subj, body),
+)
+
+def test_closure_injection() -> None:
+    sent: list[str] = []
+
+    OrderProcessor().process(
+        test_order,
+        lambda amt, tok: None,
+        lambda to, subj, body: sent.append(to),
+    )
+
+    assert sent == ["a@b.com"]
+```
+
+```rust
+impl OrderProcessor {
+    pub fn process(
+        &self,
+        order:  &Order,
+        charge: impl Fn(u32, &str),
+        send:   impl Fn(&str, &str, &str),
+    ) {
+        charge(order.amount_cents, &order.card_token);
+        send(&order.email, "Order confirmed",
+             &format!("Order {} received.", order.id));
+    }
+}
+
+// In production:
+let gw = StripeGateway::new();
+let ml = SmtpMailer::new("smtp.example.com");
+processor.process(&order, |amt, tok| gw.charge(amt, tok), |to, s, b| ml.send(to, s, b));
+
+#[test]
+fn test_closure_injection() {
+    let sent = std::cell::Cell::new(false);
+
+    OrderProcessor.process(
+        &test_order(),
+        |_, _| {},
+        |_, _, _| sent.set(true),
+    );
+
+    assert!(sent.get());
+}
+```
+
+```cpp
+class OrderProcessor {
+    using ChargeFn = std::function<void(int, const std::string&)>;
+    using SendFn   = std::function<void(const std::string&, const std::string&, const std::string&)>;
+public:
+    void process(const Order& order, ChargeFn charge, SendFn send) {
+        charge(order.amount_cents, order.card_token);
+        send(order.email, "Order confirmed",
+             "Order " + order.id + " received.");
+    }
+};
+
+void test_closure_injection() {
+    bool sent = false;
+    OrderProcessor sut;
+
+    sut.process(
+        test_order,
+        [](int, const std::string&) {},
+        [&sent](const std::string&, const std::string&, const std::string&) { sent = true; }
+    );
+
+    assert(sent);
+}
+```
+
+</CodeTabs>
+
+This is method parameter injection reduced to its minimum surface area. When the callable is simple enough to fit in a lambda, prefer this over a full interface. If it grows — needs configuration, internal state, or multiple operations — extract it back to an interface and use constructor injection.
+
+## Python: Module Seam
+
+Python resolves names at runtime through each module's own namespace. When `order_processor.py` imports a module, the name becomes an entry in `order_processor.__dict__`. Any code that calls through that name looks it up in that dictionary at the moment of the call — not at import time, not at definition time.
+
+This means you can replace the binding in a module's namespace and any subsequent calls in that module will hit your replacement. `unittest.mock.patch` is the standard tool for this.
+
+<CodeTabs langs="python">
+
+```python
+# order_processor.py — no injection; dependencies called directly via module names
+import stripe as _stripe
+import mailer as _mailer
+
+def process(order: Order) -> None:
+    _stripe.charge(order.amount_cents, order.card_token)
+    _mailer.send(order.email, "Order confirmed",
+                 f"Order {order.id} received.")
+
+# ── test ────────────────────────────────────────────────────
+from unittest.mock import patch, MagicMock
+
+def test_module_seam() -> None:
+    spy_mailer = MagicMock()
+
+    with patch("order_processor._stripe"), \
+         patch("order_processor._mailer", spy_mailer):
+        process(test_order)
+
+    spy_mailer.send.assert_called_once()
+```
+
+</CodeTabs>
+
+> **Warning**
+> Patch the name where it is **used**, not where it is **defined**. `patch("order_processor._stripe")` works because it replaces the binding in `order_processor`'s namespace. Patching `"stripe.charge"` targets the original module — but `order_processor` already holds its own reference, so the patch never intercepts the call. Getting this wrong silently does nothing.
+
+This seam requires no changes to production code at all. The cost is that the test is coupled to the module's import structure rather than its public interface, and the substitution is invisible from the call site.
+
+## Rust: Static Dispatch
+
+Constructor injection in Rust defaults to `Box<dyn Trait>` — the concrete type is selected at construction and erased from the struct's type. The alternative is a generic type parameter: the concrete type is encoded into the struct type at compile time and the compiler generates a specialised implementation for each combination. This is zero-cost — no vtable, no heap allocation — but the full concrete type appears in the type signature everywhere the struct is used.
+
+<CodeTabs langs="rust">
+
+```rust
+pub struct OrderProcessor<G: PaymentGateway, M: Mailer> {
+    gateway: G,
+    mailer:  M,
+}
+
+impl<G: PaymentGateway, M: Mailer> OrderProcessor<G, M> {
+    pub fn new(gateway: G, mailer: M) -> Self {
+        Self { gateway, mailer }
+    }
+
+    pub fn process(&self, order: &Order) {
+        self.gateway.charge(order.amount_cents, &order.card_token);
+        self.mailer.send(&order.email, "Order confirmed",
+                         &format!("Order {} received.", order.id));
+    }
+}
+
+// Production type is fully visible: OrderProcessor<StripeGateway, SmtpMailer>
+let sut = OrderProcessor::new(StripeGateway::new(), SmtpMailer::new("smtp.example.com"));
+
+#[test]
+fn test_static_dispatch() {
+    let ml = SpyMailer::new();
+    // Type is inferred as OrderProcessor<FakeGateway, SpyMailer>
+    let sut = OrderProcessor::new(FakeGateway, ml.clone());
+
+    sut.process(&test_order());
+
+    assert!(ml.was_called());
+}
+```
+
+</CodeTabs>
+
+Use `Box<dyn Trait>` when the concrete type varies at runtime, when you are building a deep object graph where encoding every type parameter becomes unwieldy, or when the overhead is immaterial. Use generics when you need zero-cost dispatch and the caller always knows the concrete type at compile time. The seam itself — the trait boundary — is identical in both cases.
+
+## Rust: Additive `#[cfg(test)]`
+
+`#[cfg(test)]` can open a test entry point into a type without changing its production interface. The key distinction is **additive** versus **substitutive**:
+
+- **Additive**: add methods, constructors, or derives that only exist in test builds.
+- **Substitutive**: provide an entirely different `impl Trait for Type` under `#[cfg(test)]`.
+
+The additive form is safe. The substitutive form creates two divergent implementations of the same type that can drift independently — the type system will not warn you.
+
+<CodeTabs langs="rust">
+
+```rust
+// #[cfg_attr] adds derives only in test builds
+#[cfg_attr(test, derive(Clone, PartialEq, Debug))]
+pub struct Order {
+    pub id:           String,
+    pub amount_cents: u32,
+    pub card_token:   String,
+    pub email:        String,
+}
+
+pub struct OrderProcessor {
+    gateway: Box<dyn PaymentGateway>,
+    mailer:  Box<dyn Mailer>,
+}
+
+impl OrderProcessor {
+    pub fn new(gateway: Box<dyn PaymentGateway>, mailer: Box<dyn Mailer>) -> Self {
+        Self { gateway, mailer }
+    }
+
+    // Test-only constructor — erased from production binary
+    #[cfg(test)]
+    pub fn new_test(
+        gateway: impl PaymentGateway + 'static,
+        mailer:  impl Mailer + 'static,
+    ) -> Self {
+        Self { gateway: Box::new(gateway), mailer: Box::new(mailer) }
+    }
+
+    pub fn process(&self, order: &Order) {
+        self.gateway.charge(order.amount_cents, &order.card_token);
+        self.mailer.send(&order.email, "Order confirmed",
+                         &format!("Order {} received.", order.id));
+    }
+}
+
+#[test]
+fn test_additive_cfg_test() {
+    let ml = SpyMailer::new();
+    let sut = OrderProcessor::new_test(FakeGateway, ml.clone());
+
+    sut.process(&test_order());
+
+    assert!(ml.was_called());
+}
+```
+
+</CodeTabs>
+
+> **Warning**
+> Do not provide two different `impl Trait for Type` blocks separated by `#[cfg(not(test))]` and `#[cfg(test)]`. The implementations can drift independently — a change to the production impl does not force a corresponding update to the test impl, and the type system cannot detect the divergence. Use the seams above and inject the double at the boundary instead.
+
 ## Which Seam to Use
 
-| Seam                       | Best when                                                   |
-| -------------------------- | ----------------------------------------------------------- |
-| Constructor injection      | Starting fresh, or you can touch the constructor            |
-| Method parameter injection | Only one method uses the dependency                         |
-| Property injection         | Constructor is off-limits; framework controls instantiation |
-| Extract and override       | None of the above; public interface cannot change           |
+| Seam                       | Best when                                                        | Languages     |
+| -------------------------- | ---------------------------------------------------------------- | ------------- |
+| Constructor injection      | Starting fresh, or you can touch the constructor                 | All           |
+| Method parameter injection | Only one method uses the dependency                              | All           |
+| Property injection         | Constructor is off-limits; framework controls instantiation      | All           |
+| Extract and override       | None of the above; public interface cannot change                | All           |
+| Closure/function injection | Single-behaviour dependency; a lambda fits at the call site      | All           |
+| Module seam                | Cannot change the call site at all                               | Python        |
+| Static dispatch            | Zero-cost dispatch; concrete type is always known at compile time | Rust, C++    |
+| Additive `#[cfg(test)]`    | Need a test entry point without changing the production API      | Rust          |
 
 ## Full Solution
 
@@ -553,7 +801,7 @@ Below is every `OrderProcessor` variant and a test for each seam type, collected
 <CodeTabs langs="python,rust,cpp" playground>
 
 ```python
-from typing import Protocol
+from typing import Callable, Protocol
 from dataclasses import dataclass
 
 # ── Domain ──────────────────────────────────────────────────
@@ -682,12 +930,58 @@ def test_extract() -> None:
 
     assert sut.mailer.was_called
 
+# ── 5. Closure/Function Injection ──────────────────────────
+
+class ClosureOrderProcessor:
+    def process(self, order: Order,
+                charge: Callable[[int, str], None],
+                send:   Callable[[str, str, str], None]) -> None:
+        charge(order.amount_cents, order.card_token)
+        send(order.email, "Order confirmed",
+             f"Order {order.id} received.")
+
+def test_closure() -> None:
+    sent: list[str] = []
+
+    ClosureOrderProcessor().process(
+        test_order,
+        lambda amt, tok: None,
+        lambda to, subj, body: sent.append(to),
+    )
+
+    assert sent == ["a@b.com"]
+
+# ── 6. Module Seam (Python only) ───────────────────────────
+# Module-level names are looked up at call time. Replacing them in
+# the module's __dict__ intercepts calls without touching the function.
+
+from unittest.mock import MagicMock, patch
+
+_gateway: PaymentGateway = StripeGateway()   # module-level — no injection
+_mailer:  Mailer         = SmtpMailer("smtp.ex.com")
+
+def flat_process(order: Order) -> None:
+    _gateway.charge(order.amount_cents, order.card_token)
+    _mailer.send(order.email, "Order confirmed",
+                 f"Order {order.id} received.")
+
+def test_module() -> None:
+    spy = MagicMock()
+
+    with patch("__main__._gateway"), \
+         patch("__main__._mailer", spy):
+        flat_process(test_order)
+
+    spy.send.assert_called_once()
+
 # ── Run all tests ──────────────────────────────────────────
 
-test_ctor();    print("ctor .......... passed")
-test_prop();    print("prop .......... passed")
-test_param();   print("param ......... passed")
-test_extract(); print("extract ....... passed")
+test_ctor();     print("ctor .......... passed")
+test_prop();     print("prop .......... passed")
+test_param();    print("param ......... passed")
+test_extract();  print("extract ....... passed")
+test_closure();  print("closure ....... passed")
+test_module();   print("module ........ passed")
 ```
 
 ```rust
@@ -734,9 +1028,9 @@ impl PaymentGateway for FakeGateway {
 }
 
 #[derive(Clone)]
-struct SpyMailer { called: std::cell::Cell<bool> }
+struct SpyMailer { called: std::rc::Rc<std::cell::Cell<bool>> }
 impl SpyMailer {
-    fn new() -> Self { Self { called: std::cell::Cell::new(false) } }
+    fn new() -> Self { Self { called: std::rc::Rc::new(std::cell::Cell::new(false)) } }
     fn was_called(&self) -> bool { self.called.get() }
 }
 impl Mailer for SpyMailer {
@@ -770,7 +1064,7 @@ mod ctor {
 
     #[test]
     fn test() {
-        let ml = std::rc::Rc::new(SpyMailer::new());
+        let ml = SpyMailer::new();
         let sut = OrderProcessor::new(
             Box::new(FakeGateway), Box::new(ml.clone()));
 
@@ -862,6 +1156,7 @@ mod extract {
         }
     }
 
+    #[expect(dead_code, reason = "represents the production type; tests use TestProc instead")]
     pub struct OrderProcessor;
     impl Processable for OrderProcessor {}
 
@@ -881,7 +1176,106 @@ mod extract {
 
         sut.process(&test_order());
 
-        assert!(ml.was_called()); // SpyMailer uses Cell, clone shares state
+        assert!(ml.was_called()); // clone shares the Rc<Cell<bool>>, so this sees the call
+    }
+}
+
+// ── 5. Closure/Function Injection ──────────────────────────
+
+mod closure {
+    use super::*;
+    pub struct OrderProcessor;
+    impl OrderProcessor {
+        pub fn process(
+            &self,
+            order:  &Order,
+            charge: impl Fn(u32, &str),
+            send:   impl Fn(&str, &str, &str),
+        ) {
+            charge(order.amount_cents, &order.card_token);
+            send(&order.email, "Order confirmed",
+                 &format!("Order {} received.", order.id));
+        }
+    }
+
+    #[test]
+    fn test() {
+        let sent = std::cell::Cell::new(false);
+        let sut = OrderProcessor;
+
+        sut.process(
+            &test_order(),
+            |_, _| {},
+            |_, _, _| sent.set(true),
+        );
+
+        assert!(sent.get());
+    }
+}
+
+// ── 6. Static Dispatch (Generic Type Parameters) ───────────
+
+mod static_dispatch {
+    use super::*;
+    pub struct OrderProcessor<G: PaymentGateway, M: Mailer> {
+        gateway: G,
+        mailer:  M,
+    }
+    impl<G: PaymentGateway, M: Mailer> OrderProcessor<G, M> {
+        pub fn new(gateway: G, mailer: M) -> Self { Self { gateway, mailer } }
+        pub fn process(&self, order: &Order) {
+            self.gateway.charge(order.amount_cents, &order.card_token);
+            self.mailer.send(&order.email, "Order confirmed",
+                             &format!("Order {} received.", order.id));
+        }
+    }
+
+    #[test]
+    fn test() {
+        let ml = SpyMailer::new();
+        let sut = OrderProcessor::new(FakeGateway, ml.clone());
+
+        sut.process(&test_order());
+
+        assert!(ml.was_called());
+    }
+}
+
+// ── 7. Additive #[cfg(test)] ────────────────────────────────
+
+mod cfg_test {
+    use super::*;
+    pub struct OrderProcessor {
+        gateway: Box<dyn PaymentGateway>,
+        mailer:  Box<dyn Mailer>,
+    }
+    impl OrderProcessor {
+        #[expect(unused, reason = "represents the production constructor; tests use new_test")]
+        pub fn new(gateway: Box<dyn PaymentGateway>, mailer: Box<dyn Mailer>) -> Self {
+            Self { gateway, mailer }
+        }
+        #[cfg(test)]
+        pub fn new_test(
+            gateway: impl PaymentGateway + 'static,
+            mailer:  impl Mailer + 'static,
+        ) -> Self {
+            Self { gateway: Box::new(gateway), mailer: Box::new(mailer) }
+        }
+        pub fn process(&self, order: &Order) {
+            self.gateway.charge(order.amount_cents, &order.card_token);
+            self.mailer.send(&order.email, "Order confirmed",
+                             &format!("Order {} received.", order.id));
+        }
+    }
+
+    #[test]
+    fn test() {
+        let ml = SpyMailer::new();
+        let sut = OrderProcessor::new_test(FakeGateway, ml.clone());
+
+        sut.process(&test_order());
+
+        assert!(ml.was_called());
     }
 }
 
@@ -889,6 +1283,7 @@ fn main() {}
 ```
 
 ```cpp
+#include <functional>
 #include <memory>
 #include <string>
 #include <cassert>
@@ -1063,11 +1458,40 @@ void test() {
 }
 } // namespace extract
 
+// ── 5. Closure/Function Injection ──────────────────────────
+
+namespace closure {
+class OrderProcessor {
+    using ChargeFn = std::function<void(int, const std::string&)>;
+    using SendFn   = std::function<void(const std::string&, const std::string&, const std::string&)>;
+public:
+    void process(const Order& o, ChargeFn charge, SendFn send) {
+        charge(o.amount_cents, o.card_token);
+        send(o.email, "Order confirmed",
+             "Order " + o.id + " received.");
+    }
+};
+
+void test() {
+    bool sent = false;
+    OrderProcessor sut;
+
+    sut.process(
+        test_order,
+        [](int, const std::string&) {},
+        [&sent](const std::string&, const std::string&, const std::string&) { sent = true; }
+    );
+
+    assert(sent);
+}
+} // namespace closure
+
 int main() {
-    ctor::test();    std::cout << "ctor .......... passed\n";
-    prop::test();    std::cout << "prop .......... passed\n";
-    param::test();   std::cout << "param ......... passed\n";
-    extract::test(); std::cout << "extract ....... passed\n";
+    ctor::test();     std::cout << "ctor .......... passed\n";
+    prop::test();     std::cout << "prop .......... passed\n";
+    param::test();    std::cout << "param ......... passed\n";
+    extract::test();  std::cout << "extract ....... passed\n";
+    closure::test();  std::cout << "closure ....... passed\n";
     return 0;
 }
 ```
