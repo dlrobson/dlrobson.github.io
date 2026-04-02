@@ -1,0 +1,25 @@
+schema: spec-driven
+
+context: |
+  Repo: Standalone Forgejo repo for the dlrobson.github.io personal GitHub Pages site.
+  Tech Stack: Svelte 5 (Kit), TypeScript, mdsvex, Bulma.
+  Frontend Patterns: Use Svelte 5 runes ($state, $derived, $effect, $props) for reactivity.
+  Core Principles: KISS, DRY, SOLID, Boy Scout Rule (leave code cleaner).
+  Code Style: Descriptive names (no abbreviations), self-documenting, composition over inheritance.
+  Testing Strategy:
+    - Pattern: Arrange-Act-Assert (no comment labels).
+    - Determinism: 100% deterministic tests; mock Time/IO/Network; avoid hidden global state.
+    - Scope: Test through public APIs, one specific behavior per test.
+    - Format: test_method_name_state_under_test_expected_behavior.
+
+rules:
+  spec:
+    - Ask for clarification if requirements are ambiguous.
+  proposal:
+    - Point out edge cases, security concerns, and architectural gaps.
+    - Prefer smaller, reviewable changes over large, multi-purpose changes.
+  design:
+    - Enforce Single Responsibility (one reason to change per unit).
+    - Prioritize high cohesion and low coupling.
+  tasks:
+    - Ensure implementation includes deterministic tests following the project format.

@@ -1,0 +1,18 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: nixos-server
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check
+        run: nix-shell shell.nix --run "check"
+      - name: Test
+        run: nix-shell shell.nix --run "run-tests"
+      - name: Build
+        run: nix-shell shell.nix --run "build"
