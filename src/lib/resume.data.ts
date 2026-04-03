@@ -106,7 +106,7 @@ export const RESUME_DATA = {
           tags: ['Rust'],
         },
         tbb: {
-          text: 'Evaluated, validated, and integrated Intel TBB into the perception product to parallelize previously serial processing stages, achieving a 10x throughput improvement in many cases.',
+          text: 'Profiled the perception system with Linux perf to identify network and kernel bottlenecks. Evaluated, validated, and integrated Intel TBB to parallelize previously serial processing stages, achieving a 10x throughput improvement in many cases.',
           tags: ['C++', 'Performance'],
         },
         devcontainers: {
