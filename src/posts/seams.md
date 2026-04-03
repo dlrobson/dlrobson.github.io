@@ -783,16 +783,16 @@ fn test_additive_cfg_test() {
 
 ## Which Seam to Use
 
-| Seam                       | Best when                                                        | Languages     |
-| -------------------------- | ---------------------------------------------------------------- | ------------- |
-| Constructor injection      | Starting fresh, or you can touch the constructor                 | All           |
-| Method parameter injection | Only one method uses the dependency                              | All           |
-| Property injection         | Constructor is off-limits; framework controls instantiation      | All           |
-| Extract and override       | None of the above; public interface cannot change                | All           |
-| Closure/function injection | Single-behaviour dependency; a lambda fits at the call site      | All           |
-| Module seam                | Cannot change the call site at all                               | Python        |
-| Static dispatch            | Zero-cost dispatch; concrete type is always known at compile time | Rust, C++    |
-| Additive `#[cfg(test)]`    | Need a test entry point without changing the production API      | Rust          |
+| Seam                       | Best when                                                         | Languages |
+| -------------------------- | ----------------------------------------------------------------- | --------- |
+| Constructor injection      | Starting fresh, or you can touch the constructor                  | All       |
+| Method parameter injection | Only one method uses the dependency                               | All       |
+| Property injection         | Constructor is off-limits; framework controls instantiation       | All       |
+| Extract and override       | None of the above; public interface cannot change                 | All       |
+| Closure/function injection | Single-behaviour dependency; a lambda fits at the call site       | All       |
+| Module seam                | Cannot change the call site at all                                | Python    |
+| Static dispatch            | Zero-cost dispatch; concrete type is always known at compile time | Rust, C++ |
+| Additive `#[cfg(test)]`    | Need a test entry point without changing the production API       | Rust      |
 
 ## Full Solution
 

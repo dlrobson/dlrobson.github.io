@@ -13,13 +13,21 @@ function getHighlighter(): Promise<Highlighter> {
   return highlighterPromise
 }
 
-export async function highlight(code: string, lang: string | undefined): Promise<string> {
+export async function highlight(
+  code: string,
+  lang: string | undefined,
+): Promise<string> {
   const highlighter = await getHighlighter()
   const normalizedLang = lang ?? 'text'
 
-  if (normalizedLang !== 'text' && !highlighter.getLoadedLanguages().includes(normalizedLang)) {
+  if (
+    normalizedLang !== 'text' &&
+    !highlighter.getLoadedLanguages().includes(normalizedLang)
+  ) {
     try {
-      await highlighter.loadLanguage(normalizedLang as Parameters<Highlighter['loadLanguage']>[0])
+      await highlighter.loadLanguage(
+        normalizedLang as Parameters<Highlighter['loadLanguage']>[0],
+      )
     } catch {
       return `<pre><code>${code}</code></pre>`
     }

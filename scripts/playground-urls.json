@@ -4,5 +4,8 @@
   "cpp:b9ae6f13ee9c189b": "https://godbolt.org/z/s1K7WMKhc",
   "python:88b87d9cf3778241": "https://godbolt.org/z/fxhMWx5ss",
   "rust:68ffbce51a0f4e83": "https://play.rust-lang.org/?gist=da07f12f48c0ec68d1117e8b84ee6c5a&version=stable&mode=debug&edition=2021",
-  "cpp:fd91badf351d318f": "https://godbolt.org/z/ddWbsvqxW"
+  "cpp:fd91badf351d318f": "https://godbolt.org/z/ddWbsvqxW",
+  "python:d5973c623d6dc208": "https://godbolt.org/z/azTedc9MY",
+  "rust:c40fe2071c5b506f": "https://play.rust-lang.org/?gist=dd09d05ffb3908141c82ff20afee5fc4&version=stable&mode=debug&edition=2021",
+  "cpp:517a2ef94f86b174": "https://godbolt.org/z/45hesdvWT"
 }
