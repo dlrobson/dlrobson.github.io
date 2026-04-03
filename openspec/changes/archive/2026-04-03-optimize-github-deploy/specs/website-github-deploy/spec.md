@@ -1,10 +1,4 @@
-# website-github-deploy
-
-## Purpose
-
-TBD
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: GitHub Actions workflow builds and deploys to Pages
 
@@ -53,13 +47,3 @@ The Forgejo CI workflow for the website SHALL only run the `ci` job (check/test/
 - **WHEN** a commit touching `dlrobson.github.io/**` is pushed to the Forgejo main branch
 - **THEN** Forgejo CI runs only the `ci` job (check/test/build)
 - **AND** the GitHub deploy is handled separately by the mirror trigger
-
-### Requirement: GitHub Pages is configured to deploy via GitHub Actions
-
-The `dlrobson/dlrobson.github.io` GitHub repository SHALL have GitHub Pages configured with "GitHub Actions" as the source (not a branch). This is a one-time manual configuration in repository settings.
-
-#### Scenario: Pages source is set correctly
-
-- **WHEN** GitHub Pages settings are viewed for `dlrobson/dlrobson.github.io`
-- **THEN** the source is shown as "GitHub Actions" (not "Deploy from a branch")
-
