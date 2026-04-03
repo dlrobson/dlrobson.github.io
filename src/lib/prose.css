@@ -1,6 +1,6 @@
 /* ── Post layout ───────────────────────────────────── */
 .post {
-  max-width: 65ch;
+  max-width: 75ch;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
   color: var(--text-color);
