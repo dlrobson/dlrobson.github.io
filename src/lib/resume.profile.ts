@@ -1,4 +1,9 @@
-import type { JobKey, PointKey, SkillKey } from './resume.data'
+import {
+  RESUME_DATA,
+  type JobKey,
+  type PointKey,
+  type SkillKey,
+} from './resume.data'
 
 // Strict per-job type — used by selectJob to enforce correct point keys at authorship.
 export interface ExperienceSelectionFor<K extends JobKey> {
@@ -11,11 +16,15 @@ export type ExperienceSelection = {
   [K in JobKey]: ExperienceSelectionFor<K>
 }[JobKey]
 
-function selectJob<K extends JobKey>(
+export function selectJob<K extends JobKey>(
   id: K,
-  points: readonly PointKey<K>[],
+  points: readonly PointKey<K>[] = [],
 ): ExperienceSelectionFor<K> {
-  return { id, points }
+  const resolved =
+    points.length > 0
+      ? points
+      : (Object.keys(RESUME_DATA.experience[id].points) as PointKey<K>[])
+  return { id, points: resolved }
 }
 
 export const ACTIVE_PROFILE = {
@@ -25,28 +34,7 @@ export const ACTIVE_PROFILE = {
     'systems',
   ] as const satisfies readonly SkillKey[],
   experience: [
-    selectJob('ouster', [
-      'zone_filtering',
-      'ekf_tracking',
-      'clustering',
-      'classification',
-      'bbox_alignment',
-      'eval_framework',
-      'testing',
-      'multi_instance',
-      'auth',
-      'installation',
-      'code_quality',
-      'dl_scaffolding',
-      'multi_gpu',
-      'event_system',
-      'tbb',
-      'devcontainers',
-      'gcp_infra',
-      'jenkins',
-      'rust_testing',
-      'argo_workflows',
-    ]),
+    selectJob('ouster'),
     selectJob('untether', ['throughput', 'multichip', 'tools']),
     selectJob('cepton', [
       'perception_sensor_fusion',

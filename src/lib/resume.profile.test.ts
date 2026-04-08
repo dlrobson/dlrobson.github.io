@@ -1,6 +1,24 @@
 import { describe, it, expect } from 'vitest'
-import { ACTIVE_PROFILE } from './resume.profile'
+import { ACTIVE_PROFILE, selectJob } from './resume.profile'
 import { RESUME_DATA } from './resume.data'
+
+describe('selectJob', () => {
+  it('selectJob_noPointsArg_returnsAllPointKeys', () => {
+    const allKeys = Object.keys(RESUME_DATA.experience.untether.points)
+
+    const selection = selectJob('untether')
+
+    expect([...selection.points]).toEqual(allKeys)
+  })
+
+  it('selectJob_emptyPointsArg_returnsAllPointKeys', () => {
+    const allKeys = Object.keys(RESUME_DATA.experience.untether.points)
+
+    const selection = selectJob('untether', [])
+
+    expect([...selection.points]).toEqual(allKeys)
+  })
+})
 
 describe('ACTIVE_PROFILE', () => {
   describe('skillGroups', () => {
