@@ -38,9 +38,14 @@ export const RESUME_DATA = {
       location: 'Ottawa, ON',
       periods: [
         {
+          title: 'Senior Software Developer',
+          start: new ResumeDate('2026-05'),
+          end: new ResumeDate(null),
+        },
+        {
           title: 'Software Developer',
           start: new ResumeDate('2022-05'),
-          end: new ResumeDate(null),
+          end: new ResumeDate('2026-04'),
         },
         {
           title: 'Software Developer Intern',
