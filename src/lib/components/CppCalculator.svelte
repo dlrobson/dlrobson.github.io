@@ -283,7 +283,7 @@
             type="button"
             onclick={() => stepClaim(-1)}
             disabled={model.claim <= 60}
-            aria-label="One year earlier">−</button
+            aria-label="One year earlier">&minus;</button
           >
           <output for="claim-age">{model.claim}</output>
           <button
@@ -308,11 +308,12 @@
       <summary>
         Assumptions and time off
         <span class="summary-value">
-          {model.cpiPercent}% inflation · {model.growthPercent}% wage growth
+          {model.cpiPercent}% inflation &middot; {model.growthPercent}% wage
+          growth
           {#if model.periods.length === 1}
-            · {model.periods[0][0]}–{model.periods[0][1]}
+            &middot; {model.periods[0][0]}&ndash;{model.periods[0][1]}
           {:else if model.periods.length > 1}
-            · {model.periods.length} periods
+            &middot; {model.periods.length} periods
           {/if}
         </span>
       </summary>

@@ -8,7 +8,7 @@ description: 'Estimate your Canada Pension Plan retirement pension from your bir
   import CppCalculator from '$lib/components/CppCalculator.svelte'
 </script>
 
-The Canada Pension Plan retirement pension is three pieces added together: a base amount worth 25% of your career-average pensionable earnings, plus two enhanced pieces introduced in 2019 and 2024. The age you start it adjusts the total — 0.6% less for each month before 65, and 0.7% more for each month after.
+The Canada Pension Plan retirement pension is three pieces added together: a base amount worth 25% of your career-average pensionable earnings, plus two enhanced pieces introduced in 2019 and 2024. The age you start it adjusts the total &mdash; 0.6% less for each month before 65, and 0.7% more for each month after.
 
 This calculator applies those rules to a steady salary. Change the age you start CPP, the growth assumptions, or the child-rearing years and the amount updates; open the chart to compare every start age from 60 to 70.
 
@@ -18,7 +18,7 @@ This calculator applies those rules to a steady salary. Change the age you start
 
 - **A steady salary.** You earn the same amount, in today's purchasing power, from the age you started working to the age you stop. Raises and promotions are not modelled; time off is handled by the optional child-rearing entries.
 - **Published ceilings.** The calculator uses the published YMPE and YAMPE amounts; later years grow at the wage-growth rate. Amounts are deflated to today's dollars at the inflation rate.
-- **The 2019–2022 contribution ramp.** A 2019 contribution buys a quarter of a full year's enhanced credit, 2020 half, 2021 three-quarters, and 2022 onward all of it. The model applies those shares rather than crediting every enhanced year equally.
+- **The 2019&ndash;2022 contribution ramp.** A 2019 contribution buys a quarter of a full year's enhanced credit, 2020 half, 2021 three-quarters, and 2022 onward all of it. The model applies those shares rather than crediting every enhanced year equally.
 - **CPP, not QPP.** If you contributed to the Quebec Pension Plan, the rules and amounts are different.
 - **Eligibility is not checked.** The estimate assumes you qualify for a retirement pension. It does not test residency or the minimum contribution requirement.
 - **CPP only.** OAS, the survivor's pension, disability, and post-retirement benefits are separate and not included.
