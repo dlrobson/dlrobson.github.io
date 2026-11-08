@@ -15,6 +15,7 @@ import {
   formatPercent,
   inRange,
   nextEarningPeriod,
+  numbersToStored,
   optionalYear,
   parseStoredState,
   parseWhole,
@@ -22,6 +23,7 @@ import {
   readInputs,
   restoreEarningPeriods,
   storedNumber,
+  storedToNumbers,
 } from './inputs'
 
 const EARNING = { fromAge: 22, toAge: 65, salary: 70000 }
@@ -596,5 +598,58 @@ describe('read inputs', () => {
       'Annual wage growth must be -5% to 15%.',
     ])
     expect(inputs.oasProblems).toHaveLength(2)
+  })
+})
+
+describe('the stored form', () => {
+  const FIELDS = {
+    birthYear: 1985,
+    claimAge: 67,
+    oasYears: 30,
+    oasStartAge: 68,
+  }
+
+  it('writes a cleared field as a null key rather than dropping it', () => {
+    const saved = numbersToStored({ ...FIELDS, oasYears: undefined })
+    expect('oasYears' in saved).toBe(true)
+    expect(saved.oasYears).toBeNull()
+  })
+
+  it('keeps a cleared field cleared across a JSON round trip', () => {
+    const written = JSON.stringify(
+      numbersToStored({ ...FIELDS, birthYear: undefined }),
+    )
+    const restored = storedToNumbers(JSON.parse(written))
+    expect('birthYear' in restored).toBe(true)
+    expect(restored.birthYear).toBeUndefined()
+  })
+
+  it('reports a cleared field instead of falling back to the default', () => {
+    const written = JSON.stringify(
+      numbersToStored({ ...FIELDS, birthYear: undefined }),
+    )
+    const inputs = readInputs(storedToNumbers(JSON.parse(written)))
+    expect(inputs.problems).toContain(
+      `Year you were born must be ${MIN_BIRTH_YEAR} to ${MAX_BIRTH_YEAR}.`,
+    )
+  })
+
+  it('leaves the key out for a record that never had the field', () => {
+    expect('birthYear' in storedToNumbers({})).toBe(false)
+  })
+
+  it('passes an out-of-range value through so readInputs reports it', () => {
+    const restored = storedToNumbers({ birthYear: 1800 })
+    expect(restored.birthYear).toBe(1800)
+    expect(readInputs(restored).problems).not.toEqual([])
+  })
+
+  it('floors a residence count the way the field does', () => {
+    expect(storedToNumbers({ oasYears: 39.9 }).oasYears).toBe(39)
+  })
+
+  it('keeps every field a usable record holds', () => {
+    const written = JSON.stringify(numbersToStored(FIELDS))
+    expect(storedToNumbers(JSON.parse(written))).toEqual(FIELDS)
   })
 })

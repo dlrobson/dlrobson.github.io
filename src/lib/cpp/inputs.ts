@@ -86,6 +86,43 @@ export interface StoredState {
   periods?: StoredCarePeriod[] | null
 }
 
+/** The whole-number fields the form keeps: absent when the reader cleared one. */
+export interface WholeFields {
+  birthYear?: number
+  claimAge?: number
+  oasYears?: number
+  oasStartAge?: number
+}
+
+/**
+ * The record to write for those fields. A cleared field becomes `null` rather
+ * than `undefined`, because `JSON.stringify` drops an undefined property and a
+ * reload could then not tell an emptied field from one never set.
+ */
+export function numbersToStored(fields: WholeFields): StoredState {
+  return {
+    birthYear: fields.birthYear ?? null,
+    claimAge: fields.claimAge ?? null,
+    oasYears: fields.oasYears ?? null,
+    oasStartAge: fields.oasStartAge ?? null,
+  }
+}
+
+/**
+ * The whole-number fields a saved record holds. A key that is present stays
+ * present even when its value is unusable, so a caller can tell a record with
+ * nothing saved from one where the reader cleared the field: it keeps its own
+ * default for the first and lets `readInputs` report the second.
+ */
+export function storedToNumbers(saved: StoredState): WholeFields {
+  const fields: WholeFields = {}
+  if ('birthYear' in saved) fields.birthYear = parseWhole(saved.birthYear)
+  if ('claimAge' in saved) fields.claimAge = parseWhole(saved.claimAge)
+  if ('oasYears' in saved) fields.oasYears = optionalYear(saved.oasYears)
+  if ('oasStartAge' in saved) fields.oasStartAge = parseWhole(saved.oasStartAge)
+  return fields
+}
+
 /** A saved payload, or the fact that what was there could not be read. */
 export type StoredResult =
   | { readonly ok: true; readonly saved: StoredState | null }

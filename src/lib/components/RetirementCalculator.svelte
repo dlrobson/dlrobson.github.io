@@ -40,12 +40,13 @@
     clamp,
     formatPercent,
     nextEarningPeriod,
-    optionalYear,
+    numbersToStored,
     parseStoredState,
     parseWhole,
     readInputs,
     restoreEarningPeriods,
     storedNumber,
+    storedToNumbers,
     type EarningPeriodFields,
     type StoredResult,
     type StoredState,
@@ -128,10 +129,11 @@
     // A record without the key keeps the default. A key that is there wins even
     // when its value is unusable, so `readInputs` reports it instead of a default
     // standing in for a value the reader never entered.
-    if ('birthYear' in saved) birthYear = parseWhole(saved.birthYear)
-    if ('claimAge' in saved) claimAge = parseWhole(saved.claimAge)
-    if ('oasYears' in saved) oasYears = optionalYear(saved.oasYears)
-    if ('oasStartAge' in saved) oasStartAge = parseWhole(saved.oasStartAge)
+    const restored = storedToNumbers(saved)
+    if ('birthYear' in restored) birthYear = restored.birthYear
+    if ('claimAge' in restored) claimAge = restored.claimAge
+    if ('oasYears' in restored) oasYears = restored.oasYears
+    if ('oasStartAge' in restored) oasStartAge = restored.oasStartAge
     if (typeof saved.inflationText === 'string') {
       inflationText = saved.inflationText
     }
@@ -171,10 +173,7 @@
   $effect(() => {
     if (!hydrated) return
     const saved: StoredState = {
-      birthYear: birthYear ?? null,
-      claimAge: claimAge ?? null,
-      oasYears: oasYears ?? null,
-      oasStartAge: oasStartAge ?? null,
+      ...numbersToStored({ birthYear, claimAge, oasYears, oasStartAge }),
       inflationText,
       wageGrowthText,
       earningPeriods: earningPeriods.map(({ fromAge, toAge, salary }) => ({
@@ -358,7 +357,6 @@
       const inRange =
         Number.isFinite(age) && age >= MIN_CLAIM_AGE && age <= CHART_END_AGE
       return {
-        key: `${a}-${b}`,
         a,
         b,
         age,

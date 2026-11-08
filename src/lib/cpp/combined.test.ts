@@ -29,6 +29,9 @@ describe('combine', () => {
     expect(combine({ ...BOTH, cppAge: 60, oasAge: 70 }).label).toBe(
       'From age 70, once both are paying',
     )
+    expect(combine({ ...BOTH, cppAge: 70, oasAge: 65 }).label).toBe(
+      'From age 70, once both are paying',
+    )
   })
 
   it('names the pension that is paying alone', () => {

@@ -102,13 +102,10 @@ describe('crossing', () => {
     expect(oasCrossing(5, 95).age).toBeCloseTo(oasCrossing(40, 95).age, 9)
   })
 
-  it('carries the total received from sixty-five by the crossing', () => {
+  it('places the dot at the total the sixty-five line has reached by then', () => {
     const crossing = oasCrossing(40, 95)
     expect(crossing.inRange).toBe(true)
-    expect(crossing.total).toBeCloseTo(
-      12 * OAS_MAX_MONTHLY * (crossing.age - 65),
-      2,
-    )
+    expect(crossing.total).toBeCloseTo(172_833.33, 1)
   })
 
   it('has no crossing when no residence earns a pension', () => {
