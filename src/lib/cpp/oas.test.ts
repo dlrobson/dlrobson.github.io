@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   OAS_MAX_MONTHLY,
+  OAS_START_AGES,
   deferralFactor,
   oasMonthly,
   residenceShare,
@@ -51,6 +52,10 @@ describe('deferral factor', () => {
   it('does not apply before sixty-five', () => {
     expect(deferralFactor(64)).toBe(1)
   })
+
+  it('pays nothing for a start age that is not a number', () => {
+    expect(deferralFactor(Number.NaN)).toBe(0)
+  })
 })
 
 describe('monthly OAS', () => {
@@ -72,5 +77,17 @@ describe('monthly OAS', () => {
 
   it('pays nothing without residence', () => {
     expect(oasMonthly(0, 70)).toBe(0)
+  })
+})
+
+describe('published amounts', () => {
+  it('keeps the maximum at the published fourth-quarter 2026 figure', () => {
+    expect(OAS_MAX_MONTHLY).toBe(762.5)
+  })
+})
+
+describe('start ages', () => {
+  it('covers every whole start age from sixty-five to seventy', () => {
+    expect(OAS_START_AGES).toEqual([65, 66, 67, 68, 69, 70])
   })
 })

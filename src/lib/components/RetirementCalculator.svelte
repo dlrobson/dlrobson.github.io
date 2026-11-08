@@ -8,6 +8,7 @@
     OAS_MAX_START_AGE,
     OAS_MIN_START_AGE,
     OAS_START_AGES,
+    deferralFactor,
     oasMonthly,
   } from '$lib/cpp/oas'
   import {
@@ -520,10 +521,26 @@
       return 'Enter years in Canada after 18 to see an OAS estimate.'
     }
     if (!oasCrossing.inRange) {
-      return 'With these inputs, starting at 70 does not pull ahead before age 95.'
+      return `With these inputs, starting at ${OAS_MAX_START_AGE} does not pull ahead before age ${OAS_TOTALS_END}.`
     }
-    return `Starting at 70 pays 36% more each month but gives up five years of payments. It pulls ahead of 65 at about ${Math.round(oasCrossing.age)}.`
+    const increase = Math.round((deferralFactor(OAS_MAX_START_AGE) - 1) * 100)
+    const deferral = OAS_MAX_START_AGE - OAS_MIN_START_AGE
+    return `Starting at ${OAS_MAX_START_AGE} pays ${increase}% more each month but gives up ${deferral} years of payments. It pulls ahead of ${OAS_MIN_START_AGE} at about ${Math.round(oasCrossing.age)}.`
   })
+
+  function combinedLabel(
+    cpp: number,
+    oas: number,
+    claimAge: number,
+    oasAge: number,
+  ): string {
+    if (cpp > 0 && oas > 0) {
+      return `From age ${Math.max(claimAge, oasAge)}, once both are paying`
+    }
+    if (cpp > 0) return `CPP only, from age ${claimAge}`
+    if (oas > 0) return `OAS only, from age ${oasAge}`
+    return 'Neither pension pays with these inputs'
+  }
 
   const combined = $derived.by(() => {
     const hasCpp = inputs.problems.length === 0
@@ -536,7 +553,7 @@
       oas,
       monthly,
       annual: monthly * 12,
-      bothAge: Math.max(model.claim, oasModel.start),
+      label: combinedLabel(cpp, oas, model.claim, oasModel.start),
       cppShare: monthly > 0 ? (cpp / monthly) * 100 : 0,
       oasShare: monthly > 0 ? (oas / monthly) * 100 : 0,
       hasCpp,
@@ -632,14 +649,14 @@
             type="button"
             onclick={() => stepClaim(-1)}
             disabled={model.claim <= MIN_CLAIM_AGE}
-            aria-label="One year earlier">&minus;</button
+            aria-label="One year earlier, CPP start age">&minus;</button
           >
           <output for="claim-age">{model.claim}</output>
           <button
             type="button"
             onclick={() => stepClaim(1)}
             disabled={model.claim >= MAX_CLAIM_AGE}
-            aria-label="One year later">+</button
+            aria-label="One year later, CPP start age">+</button
           >
         </div>
       </div>
@@ -941,14 +958,14 @@
             type="button"
             onclick={() => stepOasStart(-1)}
             disabled={oasModel.start <= OAS_MIN_START_AGE}
-            aria-label="One year earlier">&minus;</button
+            aria-label="One year earlier, OAS start age">&minus;</button
           >
           <output for="oas-start-age">{oasModel.start}</output>
           <button
             type="button"
             onclick={() => stepOasStart(1)}
             disabled={oasModel.start >= OAS_MAX_START_AGE}
-            aria-label="One year later">+</button
+            aria-label="One year later, OAS start age">+</button
           >
         </div>
       </div>
@@ -1112,7 +1129,7 @@
 
     {#if combined.hasCpp && combined.hasOas}
       <section class="total">
-        <p class="label">From age {combined.bothAge}, once both are paying</p>
+        <p class="label">{combined.label}</p>
         <p class="amount">
           {format(combined.monthly)}<span>/month</span>
         </p>

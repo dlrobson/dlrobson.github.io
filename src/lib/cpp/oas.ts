@@ -40,10 +40,11 @@ export function residenceShare(years: number): number {
 
 /**
  * Multiplier for the start age: 1 at 65, rising by 0.6% for each month the
- * pension is deferred, and 1.36 at 70.
+ * pension is deferred, and 1.36 at 70. A start age that is not a number pays
+ * nothing, the way an unusable residence count does.
  */
 export function deferralFactor(startAge: number): number {
-  if (!Number.isFinite(startAge)) return 1
+  if (!Number.isFinite(startAge)) return 0
   const months = Math.round(
     Math.min(
       (OAS_MAX_START_AGE - OAS_MIN_START_AGE) * 12,
@@ -55,7 +56,8 @@ export function deferralFactor(startAge: number): number {
 
 /**
  * Monthly pension at a start age, in today's dollars. Eligibility is not
- * checked, so any positive residence period scales the full amount.
+ * checked, so the full amount is scaled by residence alone; residence under a
+ * whole year earns nothing, because the partial year is floored away.
  */
 export function oasMonthly(years: number, startAge: number): number {
   return OAS_MAX_MONTHLY * residenceShare(years) * deferralFactor(startAge)
