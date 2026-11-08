@@ -194,12 +194,15 @@ export function isEarningPeriod(row: {
 
 /**
  * The row "+ Add earning period" starts: after the latest period's end age and
- * five years long, or with blank ages when the latest period already ends at
- * `MAX_WORK_AGE`. The latest period is the one with the greatest end age, and a
- * period with no end is treated as ending just before the youngest working age.
+ * five years long, or with blank ages when that would run past the years the
+ * estimate counts — the pension stops at `claimAge - 1` and never past
+ * `MAX_WORK_AGE - 1`, so a row placed beyond that adds nothing. The latest
+ * period is the one with the greatest end age, and a period with no end is
+ * treated as ending just before the youngest working age.
  */
 export function nextEarningPeriod(
   rows: readonly RawEarningPeriod[],
+  claimAge: number,
 ): EarningPeriodFields {
   if (rows.length === 0) return { ...DEFAULT_EARNING_PERIOD }
 
@@ -221,9 +224,10 @@ export function nextEarningPeriod(
     MAX_WORK_AGE,
   )
   const salary = last.salary ?? DEFAULT_EARNING_PERIOD.salary
+  const lastCounted = Math.min(claimAge - 1, MAX_WORK_AGE - 1)
 
-  return to < MAX_WORK_AGE
-    ? { fromAge: to + 1, toAge: Math.min(MAX_WORK_AGE, to + 5), salary }
+  return to < lastCounted
+    ? { fromAge: to + 1, toAge: Math.min(lastCounted, to + 5), salary }
     : { fromAge: undefined, toAge: undefined, salary }
 }
 

@@ -145,33 +145,51 @@ describe('formatPercent', () => {
 describe('next earning period', () => {
   it('starts five years after the latest period ends', () => {
     expect(
-      nextEarningPeriod([{ fromAge: 22, toAge: 40, salary: 50000 }]),
+      nextEarningPeriod([{ fromAge: 22, toAge: 40, salary: 50000 }], 65),
     ).toEqual({ fromAge: 41, toAge: 45, salary: 50000 })
   })
 
   it('finds the latest period whatever order the rows are in', () => {
     expect(
-      nextEarningPeriod([
-        { fromAge: 45, toAge: 65, salary: 50000 },
-        { fromAge: 22, toAge: 40, salary: 70000 },
-      ]),
-    ).toEqual({ fromAge: 66, toAge: 70, salary: 50000 })
+      nextEarningPeriod(
+        [
+          { fromAge: 45, toAge: 55, salary: 50000 },
+          { fromAge: 22, toAge: 40, salary: 70000 },
+        ],
+        65,
+      ),
+    ).toEqual({ fromAge: 56, toAge: 60, salary: 50000 })
   })
 
-  it('caps the new period at the oldest working age', () => {
+  it('stops the new period at the last year the estimate counts', () => {
     expect(
-      nextEarningPeriod([{ fromAge: 60, toAge: 66, salary: 70000 }]),
-    ).toEqual({ fromAge: 67, toAge: 70, salary: 70000 })
+      nextEarningPeriod([{ fromAge: 22, toAge: 60, salary: 70000 }], 65),
+    ).toEqual({ fromAge: 61, toAge: 64, salary: 70000 })
+    expect(
+      nextEarningPeriod([{ fromAge: 60, toAge: 66, salary: 70000 }], 70),
+    ).toEqual({ fromAge: 67, toAge: 69, salary: 70000 })
   })
 
-  it('leaves the ages blank when the latest period reaches the cap', () => {
+  it('starts where the pension stops counting, not past it', () => {
     expect(
-      nextEarningPeriod([{ fromAge: 22, toAge: 70, salary: 90000 }]),
+      nextEarningPeriod([{ fromAge: 22, toAge: 65, salary: 70000 }], 70),
+    ).toEqual({ fromAge: 66, toAge: 69, salary: 70000 })
+  })
+
+  it('leaves the ages blank when the latest period already ends at the cap', () => {
+    expect(
+      nextEarningPeriod([{ fromAge: 22, toAge: 70, salary: 90000 }], 70),
     ).toEqual({ fromAge: undefined, toAge: undefined, salary: 90000 })
   })
 
+  it('leaves the ages blank when no counted year follows the latest period', () => {
+    expect(
+      nextEarningPeriod([{ fromAge: 22, toAge: 65, salary: 70000 }], 65),
+    ).toEqual({ fromAge: undefined, toAge: undefined, salary: 70000 })
+  })
+
   it('falls back to the start age when the latest period has no end', () => {
-    expect(nextEarningPeriod([{ fromAge: 30, salary: 70000 }])).toEqual({
+    expect(nextEarningPeriod([{ fromAge: 30, salary: 70000 }], 65)).toEqual({
       fromAge: 31,
       toAge: 35,
       salary: 70000,
@@ -179,7 +197,7 @@ describe('next earning period', () => {
   })
 
   it('starts from the default period when the form holds none', () => {
-    expect(nextEarningPeriod([])).toEqual({
+    expect(nextEarningPeriod([], 65)).toEqual({
       fromAge: 22,
       toAge: 65,
       salary: 70000,

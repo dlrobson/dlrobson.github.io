@@ -195,7 +195,10 @@
   function addEarningPeriod() {
     earningPeriods = [
       ...earningPeriods,
-      { id: nextEarningId++, ...nextEarningPeriod(earningPeriods) },
+      {
+        id: nextEarningId++,
+        ...nextEarningPeriod(earningPeriods, model.claim),
+      },
     ]
   }
 
@@ -455,7 +458,8 @@
       <p class="hint">
         Each row covers the calendar years in which you turn the start through
         end ages. Leave a gap for years without earnings. New rows start after
-        your latest period; adjust the ages to place them.
+        your latest period, or with the ages blank when the pension no longer
+        counts those years; adjust the ages to place them.
       </p>
       {#if inputs.earningProblems.length > 0}
         <ul class="problems">
