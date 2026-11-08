@@ -14,9 +14,9 @@ import {
   inRange,
   nextEarningPeriod,
   optionalYear,
+  parseStoredState,
   parseWhole,
   percentFraction,
-  pickStoredState,
   readInputs,
   restoreEarningPeriods,
   storedNumber,
@@ -234,71 +234,29 @@ describe('stored earning periods', () => {
     ).toEqual([{ fromAge: undefined, toAge: 65, salary: 0 }])
   })
 
-  it('turns the legacy salary and working span into one period', () => {
-    expect(
-      restoreEarningPeriods({ salary: 55000, startedAge: 25, stoppedAge: 60 }),
-    ).toEqual([{ fromAge: 25, toAge: 60, salary: 55000 }])
-  })
-
-  it('fills a legacy field the old form left empty with the defaults', () => {
-    expect(restoreEarningPeriods({ salary: 55000 })).toEqual([
-      { fromAge: 22, toAge: 65, salary: 55000 },
-    ])
-  })
-
-  it('prefers the stored array over the legacy fields', () => {
-    expect(
-      restoreEarningPeriods({
-        earningPeriods: [{ fromAge: 30, toAge: 40, salary: 1000 }],
-        salary: 55000,
-        startedAge: 25,
-        stoppedAge: 60,
-      }),
-    ).toEqual([{ fromAge: 30, toAge: 40, salary: 1000 }])
-  })
-
   it('reports nothing to restore when the payload holds no earning period', () => {
     expect(restoreEarningPeriods({})).toBeUndefined()
   })
 })
 
-describe('picking the saved form', () => {
+describe('parsing the saved form', () => {
   const SAVED = { birthYear: 1990, claimAge: 65 }
 
-  it('reports nothing saved when both keys are empty', () => {
-    expect(pickStoredState(null, null)).toEqual({ ok: true, saved: null })
+  it('reports nothing saved when the key is empty', () => {
+    expect(parseStoredState(null)).toEqual({ ok: true, saved: null })
   })
 
-  it('reads the current key', () => {
-    expect(pickStoredState(JSON.stringify(SAVED), null)).toEqual({
+  it('reads the saved form', () => {
+    expect(parseStoredState(JSON.stringify(SAVED))).toEqual({
       ok: true,
       saved: SAVED,
     })
   })
 
-  it('reads the legacy key when the current one is empty', () => {
-    expect(pickStoredState(null, JSON.stringify(SAVED))).toEqual({
-      ok: true,
-      saved: SAVED,
-    })
-  })
-
-  it('prefers the current key when both hold a value', () => {
-    expect(
-      pickStoredState(JSON.stringify({ claimAge: 60 }), JSON.stringify(SAVED)),
-    ).toEqual({ ok: true, saved: { claimAge: 60 } })
-  })
-
-  it('falls back to the legacy key when the current value does not parse', () => {
-    expect(pickStoredState('{"claimAge":', JSON.stringify(SAVED))).toEqual({
-      ok: true,
-      saved: SAVED,
-    })
-  })
-
-  it('reports an unreadable value when nothing parses', () => {
-    expect(pickStoredState('not json', null)).toEqual({ ok: false })
-    expect(pickStoredState('null', '5')).toEqual({ ok: false })
+  it('reports an unreadable value when none of it parses', () => {
+    expect(parseStoredState('not json')).toEqual({ ok: false })
+    expect(parseStoredState('null')).toEqual({ ok: false })
+    expect(parseStoredState('5')).toEqual({ ok: false })
   })
 })
 

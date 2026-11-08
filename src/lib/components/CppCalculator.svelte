@@ -29,8 +29,8 @@
     clamp,
     formatPercent,
     nextEarningPeriod,
+    parseStoredState,
     parseWhole,
-    pickStoredState,
     readInputs,
     restoreEarningPeriods,
     storedNumber,
@@ -74,8 +74,7 @@
     wageGrowthText: (DEFAULT_WAGE_GROWTH * 100).toFixed(2),
   }
 
-  const STORAGE_KEY = 'cpp-calculator:v2'
-  const LEGACY_STORAGE_KEY = 'cpp-calculator:v1'
+  const STORAGE_KEY = 'cpp-calculator:v1'
 
   interface PeriodRow {
     id: number
@@ -105,10 +104,7 @@
 
   function readStored(): StoredResult {
     try {
-      return pickStoredState(
-        localStorage.getItem(STORAGE_KEY),
-        localStorage.getItem(LEGACY_STORAGE_KEY),
-      )
+      return parseStoredState(localStorage.getItem(STORAGE_KEY))
     } catch {
       return { ok: false }
     }

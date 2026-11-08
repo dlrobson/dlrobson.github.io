@@ -77,9 +77,6 @@ export interface StoredState {
   wageGrowthText?: unknown
   earningPeriods?: StoredEarningPeriod[] | null
   periods?: StoredCarePeriod[] | null
-  salary?: unknown
-  startedAge?: unknown
-  stoppedAge?: unknown
 }
 
 /** A saved payload, or the fact that what was there could not be read. */
@@ -232,67 +229,36 @@ export function nextEarningPeriod(
 }
 
 /**
- * The saved form from the current key, or from the legacy key when the current
- * one holds nothing usable. `ok: false` means a value was there but none of it
- * parsed, which the caller leaves on the device rather than overwrite.
+ * The saved form in `raw`, or `ok: false` when a value was there but none of it
+ * parsed — the caller then leaves it on the device rather than overwrite it.
  */
-export function pickStoredState(
-  current: string | null,
-  legacy: string | null,
-): StoredResult {
-  let unreadable = false
-  for (const raw of [current, legacy]) {
-    if (!raw) continue
-    try {
-      const saved = JSON.parse(raw) as unknown
-      if (saved && typeof saved === 'object') {
-        return { ok: true, saved: saved as StoredState }
-      }
-      unreadable = true
-    } catch {
-      unreadable = true
-    }
+export function parseStoredState(raw: string | null): StoredResult {
+  if (!raw) return { ok: true, saved: null }
+  try {
+    const saved = JSON.parse(raw) as unknown
+    return saved && typeof saved === 'object'
+      ? { ok: true, saved: saved as StoredState }
+      : { ok: false }
+  } catch {
+    return { ok: false }
   }
-  return unreadable ? { ok: false } : { ok: true, saved: null }
 }
 
 /**
- * The earning periods a saved form holds: the array the current key stores, or
- * the single salary and working span the legacy key stored. `undefined` when
- * the payload has neither, so the caller keeps the rows the form already shows.
+ * The earning periods a saved form holds, with any value outside the range the
+ * form accepts left blank so `readInputs` gates the estimate. `undefined` when
+ * the payload has no array at all, so the caller keeps the rows already shown.
  */
 export function restoreEarningPeriods(
   saved: StoredState,
 ): readonly EarningPeriodFields[] | undefined {
-  if (Array.isArray(saved.earningPeriods)) {
-    return saved.earningPeriods.map((period) => ({
-      fromAge: storedNumber(period?.fromAge, MIN_WORK_AGE, MAX_WORK_AGE),
-      toAge: storedNumber(period?.toAge, MIN_WORK_AGE, MAX_WORK_AGE),
-      salary: storedNumber(period?.salary, 0, Number.POSITIVE_INFINITY),
-    }))
-  }
+  if (!Array.isArray(saved.earningPeriods)) return undefined
 
-  if (
-    saved.salary === undefined &&
-    saved.startedAge === undefined &&
-    saved.stoppedAge === undefined
-  ) {
-    return undefined
-  }
-
-  return [
-    {
-      fromAge:
-        storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
-        DEFAULT_EARNING_PERIOD.fromAge,
-      toAge:
-        storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
-        DEFAULT_EARNING_PERIOD.toAge,
-      salary:
-        storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ??
-        DEFAULT_EARNING_PERIOD.salary,
-    },
-  ]
+  return saved.earningPeriods.map((period) => ({
+    fromAge: storedNumber(period?.fromAge, MIN_WORK_AGE, MAX_WORK_AGE),
+    toAge: storedNumber(period?.toAge, MIN_WORK_AGE, MAX_WORK_AGE),
+    salary: storedNumber(period?.salary, 0, Number.POSITIVE_INFINITY),
+  }))
 }
 
 export function readInputs(raw: RawInputs): Inputs {
