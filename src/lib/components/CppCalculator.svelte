@@ -254,69 +254,33 @@
       const periodTo = parseWhole(period.toAge) ?? MIN_WORK_AGE - 1
       return periodTo >= latestTo ? period : latest
     })
+    const parsedFrom = parseWhole(last.fromAge)
     const from = clamp(
-      parseWhole(last.fromAge) ?? DEFAULT_EARNING_PERIOD.fromAge,
+      parsedFrom ?? DEFAULT_EARNING_PERIOD.fromAge,
       MIN_WORK_AGE,
       MAX_WORK_AGE,
     )
     const to = clamp(
-      parseWhole(last.toAge) ?? DEFAULT_EARNING_PERIOD.toAge,
+      parseWhole(last.toAge) ?? parsedFrom ?? DEFAULT_EARNING_PERIOD.toAge,
       from,
       MAX_WORK_AGE,
     )
 
-    if (to > from) {
-      const split = Math.floor((from + to) / 2)
-      earningPeriods = earningPeriods.map((period) =>
-        period.id === last.id ? { ...period, toAge: split } : period,
-      )
-      earningPeriods = [
-        ...earningPeriods,
-        {
-          id: nextEarningId++,
-          fromAge: split + 1,
-          toAge: to,
-          salary: last.salary,
-        },
-      ]
-      return
-    }
-
-    if (to < MAX_WORK_AGE) {
-      earningPeriods = [
-        ...earningPeriods,
-        {
-          id: nextEarningId++,
-          fromAge: to + 1,
-          toAge: Math.min(MAX_WORK_AGE, to + 5),
-          salary: last.salary,
-        },
-      ]
-      return
-    }
-
-    if (from > MIN_WORK_AGE) {
-      const start = Math.max(MIN_WORK_AGE, from - 5)
-      earningPeriods = [
-        ...earningPeriods,
-        {
-          id: nextEarningId++,
-          fromAge: start,
-          toAge: from - 1,
-          salary: last.salary,
-        },
-      ]
-      return
-    }
-
     earningPeriods = [
       ...earningPeriods,
-      {
-        id: nextEarningId++,
-        fromAge: undefined,
-        toAge: undefined,
-        salary: last.salary,
-      },
+      to < MAX_WORK_AGE
+        ? {
+            id: nextEarningId++,
+            fromAge: to + 1,
+            toAge: Math.min(MAX_WORK_AGE, to + 5),
+            salary: last.salary ?? DEFAULT_EARNING_PERIOD.salary,
+          }
+        : {
+            id: nextEarningId++,
+            fromAge: undefined,
+            toAge: undefined,
+            salary: last.salary ?? DEFAULT_EARNING_PERIOD.salary,
+          },
     ]
   }
 
@@ -575,8 +539,8 @@
       </button>
       <p class="hint">
         Each row covers the calendar years in which you turn the start through
-        end ages. Leave a gap for years without earnings. Adding a row splits
-        the latest period so you can give the new stretch a different salary.
+        end ages. Leave a gap for years without earnings. New rows start after
+        your latest period; adjust the ages to place them.
       </p>
       {#if inputs.earningProblems.length > 0}
         <ul class="problems">
