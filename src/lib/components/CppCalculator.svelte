@@ -538,9 +538,39 @@
       </p>
     </div>
 
-    <figure class="totals">
-      <details>
-        <summary>Total received by age</summary>
+    <details>
+      <summary>Every start age</summary>
+      <figure class="chart">
+        <figcaption>
+          Monthly pension by start age; each row also shows the annual amount.
+        </figcaption>
+        {#each chart as row (row.age)}
+          <button
+            type="button"
+            class="bar-row"
+            class:selected={row.age === model.claim}
+            aria-pressed={row.age === model.claim}
+            aria-label="Start at {row.age}: {format(
+              row.monthly,
+            )} per month, {format(row.annual)} per year"
+            onclick={() => (claimAge = row.age)}
+          >
+            <span class="bar-age">{row.age}</span>
+            <span class="bar-track">
+              <span class="bar" style:width="{row.width}%"></span>
+            </span>
+            <span class="bar-value">
+              <span>{format(row.monthly)}/mo</span>
+              <span class="bar-annual">{format(row.annual)}/yr</span>
+            </span>
+          </button>
+        {/each}
+      </figure>
+    </details>
+
+    <details class="totals">
+      <summary>Total received by age</summary>
+      <figure>
         <svg
           class="totals-svg"
           viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
@@ -629,9 +659,9 @@
             {/each}
           {/if}
         </svg>
-      </details>
-      <figcaption>{crossingText}</figcaption>
-    </figure>
+        <figcaption>{crossingText}</figcaption>
+      </figure>
+    </details>
 
     <details
       ontoggle={(event) =>
@@ -651,36 +681,6 @@
           childRearing={carePeriods}
         />
       {/if}
-    </details>
-
-    <details>
-      <summary>Every start age</summary>
-      <figure class="chart">
-        <figcaption>
-          Monthly pension by start age; each row also shows the annual amount.
-        </figcaption>
-        {#each chart as row (row.age)}
-          <button
-            type="button"
-            class="bar-row"
-            class:selected={row.age === model.claim}
-            aria-pressed={row.age === model.claim}
-            aria-label="Start at {row.age}: {format(
-              row.monthly,
-            )} per month, {format(row.annual)} per year"
-            onclick={() => (claimAge = row.age)}
-          >
-            <span class="bar-age">{row.age}</span>
-            <span class="bar-track">
-              <span class="bar" style:width="{row.width}%"></span>
-            </span>
-            <span class="bar-value">
-              <span>{format(row.monthly)}/mo</span>
-              <span class="bar-annual">{format(row.annual)}/yr</span>
-            </span>
-          </button>
-        {/each}
-      </figure>
     </details>
   </div>
 </div>
@@ -868,10 +868,6 @@
 
   .totals {
     margin: var(--space-lg) 0 0;
-  }
-
-  .totals details {
-    margin-top: 0;
   }
 
   .totals-svg {
