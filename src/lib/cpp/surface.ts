@@ -5,7 +5,8 @@
  * ceiling moves with the birth year and the wage-growth assumption, so a share
  * holds the first and second ceilings in one place on the chart; `ceiling`
  * converts a share back to today's dollars. Only the last earning period's
- * salary varies; earlier periods stay at their entered amounts.
+ * salary varies; earlier periods keep their entered salaries, and every period
+ * is cut off at the age work stops.
  *
  * Amounts are in today's dollars, indexed [stop age][salary share].
  */

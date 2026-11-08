@@ -226,7 +226,7 @@
     const flat = `Working past ${claimAge} does not change the estimate, because the pension counts earnings only up to the year you start.`
     const periodNote =
       earningPeriods.length > 1
-        ? ' The chart varies only your final earning period.'
+        ? " The chart varies only the final earning period's salary."
         : ''
     if (saturation === undefined) return `${flat}${periodNote}`
     return `Extra salary adds nothing above about ${format(
