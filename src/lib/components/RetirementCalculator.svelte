@@ -185,7 +185,7 @@
     const saved: StoredState = {
       birthYear,
       claimAge,
-      oasYears,
+      oasYears: oasYears ?? null,
       oasStartAge,
       inflationText,
       wageGrowthText,
