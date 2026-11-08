@@ -9,6 +9,8 @@
  * All amounts are in today's dollars.
  */
 
+import { breakEvenAge, totalReceived } from './break-even'
+
 /** Q4 2026 maximum monthly pension for ages 65 to 74. */
 export const OAS_MAX_MONTHLY = 762.5
 
@@ -61,4 +63,37 @@ export function deferralFactor(startAge: number): number {
  */
 export function oasMonthly(years: number, startAge: number): number {
   return OAS_MAX_MONTHLY * residenceShare(years) * deferralFactor(startAge)
+}
+
+/** Where deferring from 65 to 70 pulls ahead, and the total at that point. */
+export interface OasCrossing {
+  /** The age the two totals meet, or `Infinity` when OAS pays nothing. */
+  readonly age: number
+  /** Whether that age falls inside the range a chart draws. */
+  readonly inRange: boolean
+  /** Total received from 65 by the crossing, which places the dot. */
+  readonly total: number
+}
+
+/**
+ * The 65-versus-70 break-even for a residence period. Both start ages scale the
+ * same residence share, so the crossing age does not move with residence; only
+ * whether OAS pays at all, and the total at the crossing, do.
+ */
+export function oasCrossing(years: number, endAge: number): OasCrossing {
+  const monthly65 = oasMonthly(years, OAS_MIN_START_AGE)
+  const monthly70 = oasMonthly(years, OAS_MAX_START_AGE)
+  const age = breakEvenAge(
+    OAS_MIN_START_AGE,
+    OAS_MAX_START_AGE,
+    monthly65,
+    monthly70,
+  )
+  const inRange =
+    Number.isFinite(age) && age >= OAS_MIN_START_AGE && age <= endAge
+  return {
+    age,
+    inRange,
+    total: inRange ? totalReceived(monthly65, OAS_MIN_START_AGE, age) : 0,
+  }
 }

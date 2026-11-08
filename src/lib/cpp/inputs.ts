@@ -5,8 +5,8 @@
  *
  * A cleared number input binds `null` rather than `undefined`, so every field
  * arrives as `unknown` and is parsed before anything reads it. The model falls
- * back to its own defaults whatever the parse produced; `problems` is what
- * decides whether the result is shown.
+ * back to its own defaults whatever the parse produced; `problems` gates the
+ * CPP estimate and `oasProblems` the OAS one.
  */
 
 import {

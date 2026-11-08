@@ -1,14 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import CppSurface from '$lib/components/CppSurface.svelte'
+  import TotalsChart from '$lib/components/TotalsChart.svelte'
   import { CEILINGS, LAST_PUBLISHED_YEAR } from '$lib/cpp/params'
   import { breakEvenAge, totalReceived } from '$lib/cpp/break-even'
+  import { combine } from '$lib/cpp/combined'
   import {
     OAS_FULL_RESIDENCE_YEARS,
     OAS_MAX_START_AGE,
     OAS_MIN_START_AGE,
     OAS_START_AGES,
     deferralFactor,
+    oasCrossing,
     oasMonthly,
   } from '$lib/cpp/oas'
   import {
@@ -58,28 +61,20 @@
     currency: 'CAD',
     maximumFractionDigits: 0,
   })
-  const compactMoney = new Intl.NumberFormat('en-CA', {
-    notation: 'compact',
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 1,
-  })
-
-  const TOTALS_START = 60
-  const TOTALS_END = 95
-  const TOTALS_WIDTH = 300
-  const TOTALS_HEIGHT = 230
-  const PLOT_LEFT = 52
-  const PLOT_RIGHT = 272
-  const PLOT_TOP = 18
-  const PLOT_BOTTOM = 200
-  const AGE_TICKS = [60, 65, 70, 75, 80, 85, 90, 95]
+  const CHART_END_AGE = 95
+  const CHART_TICK_STEP = 5
   const EMPHASIS_AGES = [60, 65, 70]
-
-  const OAS_TOTALS_START = OAS_MIN_START_AGE
-  const OAS_TOTALS_END = 95
-  const OAS_AGE_TICKS = [65, 70, 75, 80, 85, 90, 95]
   const OAS_EMPHASIS_AGES = [OAS_MIN_START_AGE, OAS_MAX_START_AGE]
+
+  function ageTicks(start: number): readonly number[] {
+    return Array.from(
+      { length: (CHART_END_AGE - start) / CHART_TICK_STEP + 1 },
+      (_, index) => start + index * CHART_TICK_STEP,
+    )
+  }
+
+  const CPP_AGE_TICKS = ageTicks(MIN_CLAIM_AGE)
+  const OAS_AGE_TICKS = ageTicks(OAS_MIN_START_AGE)
 
   const DEFAULTS = {
     birthYear: 1990,
@@ -134,16 +129,11 @@
       storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
     claimAge =
       storedNumber(saved.claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE) ?? claimAge
-    // A record without the key keeps the default; a cleared field is stored as
-    // null and has to come back cleared, so the reader sees the problem again.
-    if (saved.oasYears === null) {
-      oasYears = undefined
-    } else if (saved.oasYears !== undefined) {
-      oasYears = optionalYear(saved.oasYears) ?? oasYears
-    }
-    oasStartAge =
-      storedNumber(saved.oasStartAge, OAS_MIN_START_AGE, OAS_MAX_START_AGE) ??
-      oasStartAge
+    // A record without the key keeps the default. A key that is there wins even
+    // when its value is unusable, so `readInputs` reports it instead of a default
+    // standing in for a pension the reader never entered.
+    if ('oasYears' in saved) oasYears = optionalYear(saved.oasYears)
+    if ('oasStartAge' in saved) oasStartAge = parseWhole(saved.oasStartAge)
     if (typeof saved.inflationText === 'string') {
       inflationText = saved.inflationText
     }
@@ -329,7 +319,7 @@
       const monthly = result.monthlyIn(BASE_YEAR, model.cpi)
       return {
         age: result.claimAge,
-        total: totalReceived(monthly, result.claimAge, TOTALS_END),
+        total: totalReceived(monthly, result.claimAge, CHART_END_AGE),
       }
     })
     const max = Math.max(0, ...rows.map((row) => row.total))
@@ -346,35 +336,9 @@
       .sort((a, b) => a.emphasis - b.emphasis),
   )
 
-  function totalsX(age: number): number {
-    return (
-      PLOT_LEFT +
-      ((age - TOTALS_START) / (TOTALS_END - TOTALS_START)) *
-        (PLOT_RIGHT - PLOT_LEFT)
-    )
-  }
-
-  function totalsY(value: number): number {
-    if (!(totals.max > 0)) return PLOT_BOTTOM
-    return PLOT_BOTTOM - (value / totals.max) * (PLOT_BOTTOM - PLOT_TOP)
-  }
-
-  function niceStep(value: number): number {
-    if (!(value > 0) || !Number.isFinite(value)) return 1
-    const power = 10 ** Math.floor(Math.log10(value))
-    const scaled = value / power
-    const steps = [1, 2, 2.5, 5, 10]
-    return (steps.find((step) => scaled <= step) ?? 10) * power
-  }
-
-  const yTicks = $derived.by(() => {
-    if (!(totals.max > 0)) return [0]
-    const step = niceStep(totals.max / 4)
-    return Array.from(
-      { length: Math.floor(totals.max / step) + 1 },
-      (_, index) => index * step,
-    )
-  })
+  const totalsLabels = $derived(
+    totalsRows.filter((row) => EMPHASIS_AGES.includes(row.age)),
+  )
 
   const ANCHOR_PAIRS: readonly (readonly [number, number])[] = [
     [60, 65],
@@ -394,7 +358,7 @@
       )
       const age = breakEvenAge(a, b, monthlyA, monthlyB)
       const inRange =
-        Number.isFinite(age) && age >= TOTALS_START && age <= TOTALS_END
+        Number.isFinite(age) && age >= MIN_CLAIM_AGE && age <= CHART_END_AGE
       return {
         key: `${a}-${b}`,
         a,
@@ -409,7 +373,7 @@
   const crossingText = $derived.by(() => {
     const shown = anchorCrossings.filter((point) => point.inRange)
     if (shown.length === 0) {
-      return 'With these inputs the later start does not pull ahead before age 95.'
+      return `With these inputs the later start does not pull ahead before age ${CHART_END_AGE}.`
     }
     const parts = shown.map(
       (point) =>
@@ -460,13 +424,13 @@
   const oasTotals = $derived.by(() => {
     const rows = oasModel.rows.map((row) => ({
       age: row.age,
-      total: totalReceived(row.monthly, row.age, OAS_TOTALS_END),
+      total: totalReceived(row.monthly, row.age, CHART_END_AGE),
     }))
     const max = Math.max(0, ...rows.map((row) => row.total))
     return { rows, max }
   })
 
-  const oasTotalsRows = $derived.by(() =>
+  const oasTotalsRows = $derived(
     oasTotals.rows
       .filter((row) => OAS_EMPHASIS_AGES.includes(row.age))
       .map((row) => ({
@@ -476,95 +440,101 @@
       .sort((a, b) => a.emphasis - b.emphasis),
   )
 
-  function oasTotalsX(age: number): number {
-    return (
-      PLOT_LEFT +
-      ((age - OAS_TOTALS_START) / (OAS_TOTALS_END - OAS_TOTALS_START)) *
-        (PLOT_RIGHT - PLOT_LEFT)
-    )
-  }
-
-  function oasTotalsY(value: number): number {
-    if (!(oasTotals.max > 0)) return PLOT_BOTTOM
-    return PLOT_BOTTOM - (value / oasTotals.max) * (PLOT_BOTTOM - PLOT_TOP)
-  }
-
-  const oasYTicks = $derived.by(() => {
-    if (!(oasTotals.max > 0)) return [0]
-    const step = niceStep(oasTotals.max / 4)
-    return Array.from(
-      { length: Math.floor(oasTotals.max / step) + 1 },
-      (_, index) => index * step,
-    )
-  })
-
-  const oasCrossing = $derived.by(() => {
-    const monthly65 = oasMonthly(oasModel.years, OAS_MIN_START_AGE)
-    const monthly70 = oasMonthly(oasModel.years, OAS_MAX_START_AGE)
-    const age = breakEvenAge(
-      OAS_MIN_START_AGE,
-      OAS_MAX_START_AGE,
-      monthly65,
-      monthly70,
-    )
-    const inRange =
-      Number.isFinite(age) && age >= OAS_TOTALS_START && age <= OAS_TOTALS_END
-    return {
-      age,
-      inRange,
-      total: inRange ? totalReceived(monthly65, OAS_MIN_START_AGE, age) : 0,
-    }
-  })
+  const oasBreakEven = $derived(oasCrossing(oasModel.years, CHART_END_AGE))
 
   const oasCrossingText = $derived.by(() => {
     if (!(oasModel.monthly > 0)) {
-      return 'Enter years in Canada after 18 to see an OAS estimate.'
+      return 'Zero years of residence in Canada earns no OAS, so there is nothing to compare.'
     }
-    if (!oasCrossing.inRange) {
-      return `With these inputs, starting at ${OAS_MAX_START_AGE} does not pull ahead before age ${OAS_TOTALS_END}.`
+    if (!oasBreakEven.inRange) {
+      return `With these inputs, starting at ${OAS_MAX_START_AGE} does not pull ahead before age ${CHART_END_AGE}.`
     }
     const increase = Math.round((deferralFactor(OAS_MAX_START_AGE) - 1) * 100)
     const deferral = OAS_MAX_START_AGE - OAS_MIN_START_AGE
-    return `Starting at ${OAS_MAX_START_AGE} pays ${increase}% more each month but gives up ${deferral} years of payments. It pulls ahead of ${OAS_MIN_START_AGE} at about ${Math.round(oasCrossing.age)}.`
+    return `Starting at ${OAS_MAX_START_AGE} pays ${increase}% more each month but gives up ${deferral} years of payments. It pulls ahead of ${OAS_MIN_START_AGE} at about ${Math.round(oasBreakEven.age)}.`
   })
 
-  function combinedLabel(
-    cpp: number,
-    oas: number,
-    claimAge: number,
-    oasAge: number,
-  ): string {
-    if (cpp > 0 && oas > 0) {
-      return `From age ${Math.max(claimAge, oasAge)}, once both are paying`
-    }
-    if (cpp > 0) return `CPP only, from age ${claimAge}`
-    if (oas > 0) return `OAS only, from age ${oasAge}`
-    return 'Neither pension pays with these inputs'
-  }
-
-  const combined = $derived.by(() => {
-    const hasCpp = inputs.problems.length === 0
-    const hasOas = inputs.oasProblems.length === 0
-    const cpp = hasCpp ? model.selected.monthlyIn(BASE_YEAR, model.cpi) : 0
-    const oas = hasOas ? oasModel.monthly : 0
-    const monthly = cpp + oas
-    return {
-      cpp,
-      oas,
-      monthly,
-      annual: monthly * 12,
-      label: combinedLabel(cpp, oas, model.claim, oasModel.start),
-      cppShare: monthly > 0 ? (cpp / monthly) * 100 : 0,
-      oasShare: monthly > 0 ? (oas / monthly) * 100 : 0,
-      hasCpp,
-      hasOas,
-      missing: !hasCpp && !hasOas ? 'CPP and OAS' : !hasCpp ? 'CPP' : 'OAS',
-    }
-  })
+  const combined = $derived(
+    combine({
+      cppMonthly: model.selected.monthlyIn(BASE_YEAR, model.cpi),
+      oasMonthly: oasModel.monthly,
+      cppAge: model.claim,
+      oasAge: oasModel.start,
+      cppAvailable: inputs.problems.length === 0,
+      oasAvailable: inputs.oasProblems.length === 0,
+    }),
+  )
 </script>
 
 <div class="retirement-calculator">
   <div class="content" class:ready={hydrated}>
+    {#snippet noEstimate(problems: readonly string[])}
+      <div class="result" aria-live="polite">
+        <p class="label">No estimate yet</p>
+        <ul class="problems">
+          {#each problems as problem (problem)}
+            <li>{problem}</li>
+          {/each}
+        </ul>
+      </div>
+    {/snippet}
+
+    {#snippet pensionResult(
+      label: string,
+      monthly: number,
+      annual: number,
+      note: string,
+    )}
+      <div class="result" aria-live="polite">
+        <p class="label">{label}</p>
+        <p class="amount">{format(monthly)}<span>/month</span></p>
+        <p class="annual">{format(annual)} a year, {note}</p>
+      </div>
+    {/snippet}
+
+    {#snippet startAgeChart(
+      rows: readonly {
+        age: number
+        monthly: number
+        annual: number
+        width: number
+      }[],
+      selected: number,
+      noun: string,
+      heading: string,
+      caption: string,
+      onSelect: (age: number) => void,
+    )}
+      <details>
+        <summary>{heading}</summary>
+        <figure class="chart">
+          <figcaption>{caption}</figcaption>
+          {#each rows as row (row.age)}
+            <button
+              type="button"
+              class="bar-row"
+              class:selected={row.age === selected}
+              aria-pressed={row.age === selected}
+              aria-label="Start {noun} at {row.age}: {format(
+                row.monthly,
+              )} per month, {format(row.annual)} per year"
+              onclick={() => onSelect(row.age)}
+            >
+              <span class="bar-age">{row.age}</span>
+              <span class="bar-track">
+                <span class="bar" style:width="{row.width}%"></span>
+              </span>
+              <span class="bar-value">
+                <span>{format(row.monthly)}/mo</span>
+                <span class="bar-annual">{format(row.annual)}/yr</span>
+              </span>
+            </button>
+          {/each}
+        </figure>
+      </details>
+    {/snippet}
+
+    <h2 class="part-title">Canada Pension Plan</h2>
     <h2 class="part-title">Canada Pension Plan</h2>
 
     <div class="fields">
@@ -764,152 +734,37 @@
     {/if}
 
     {#if inputs.problems.length > 0}
-      <div class="result" aria-live="polite">
-        <p class="label">No estimate yet</p>
-        <ul class="problems">
-          {#each inputs.problems as problem (problem)}
-            <li>{problem}</li>
-          {/each}
-        </ul>
-      </div>
+      {@render noEstimate(inputs.problems)}
     {:else}
-      <div class="result" aria-live="polite">
-        <p class="label">Estimated CPP pension at {model.claim}</p>
-        <p class="amount">
-          {format(model.selected.monthlyIn(BASE_YEAR, model.cpi))}<span
-            >/month</span
-          >
-        </p>
-        <p class="annual">
-          {format(model.selected.annualIn(BASE_YEAR, model.cpi))} a year, in today's
-          dollars
-        </p>
-      </div>
+      {@render pensionResult(
+        `Estimated CPP pension at ${model.claim}`,
+        model.selected.monthlyIn(BASE_YEAR, model.cpi),
+        model.selected.annualIn(BASE_YEAR, model.cpi),
+        "in today's dollars",
+      )}
 
-      <details>
-        <summary>Every CPP start age</summary>
-        <figure class="chart">
-          <figcaption>
-            Monthly CPP by start age; each row also shows the annual amount.
-          </figcaption>
-          {#each chart as row (row.age)}
-            <button
-              type="button"
-              class="bar-row"
-              class:selected={row.age === model.claim}
-              aria-pressed={row.age === model.claim}
-              aria-label="Start CPP at {row.age}: {format(
-                row.monthly,
-              )} per month, {format(row.annual)} per year"
-              onclick={() => (claimAge = row.age)}
-            >
-              <span class="bar-age">{row.age}</span>
-              <span class="bar-track">
-                <span class="bar" style:width="{row.width}%"></span>
-              </span>
-              <span class="bar-value">
-                <span>{format(row.monthly)}/mo</span>
-                <span class="bar-annual">{format(row.annual)}/yr</span>
-              </span>
-            </button>
-          {/each}
-        </figure>
-      </details>
+      {@render startAgeChart(
+        chart,
+        model.claim,
+        'CPP',
+        'Every CPP start age',
+        'Monthly CPP by start age; each row also shows the annual amount.',
+        (age) => (claimAge = age),
+      )}
 
-      <details class="totals">
-        <summary>Total CPP received by age</summary>
-        <figure>
-          <svg
-            class="totals-svg"
-            viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
-            role="img"
-            aria-labelledby="totals-title totals-desc"
-          >
-            <title id="totals-title">Total CPP received by age</title>
-            <desc id="totals-desc">
-              A later start pays more each month but for fewer years. {crossingText}
-            </desc>
-
-            {#each yTicks as tick (tick)}
-              {#if tick > 0}
-                <line
-                  class="grid"
-                  x1={PLOT_LEFT}
-                  x2={PLOT_RIGHT}
-                  y1={totalsY(tick)}
-                  y2={totalsY(tick)}
-                />
-              {/if}
-              <text
-                class="tick"
-                x={PLOT_LEFT - 6}
-                y={totalsY(tick) + 4}
-                text-anchor="end">{compactMoney.format(tick)}</text
-              >
-            {/each}
-
-            <line
-              class="axis"
-              x1={PLOT_LEFT}
-              x2={PLOT_RIGHT}
-              y1={PLOT_BOTTOM}
-              y2={PLOT_BOTTOM}
-            />
-            <line
-              class="axis"
-              x1={PLOT_LEFT}
-              x2={PLOT_LEFT}
-              y1={PLOT_TOP}
-              y2={PLOT_BOTTOM}
-            />
-
-            {#each AGE_TICKS as age (age)}
-              <text
-                class="tick"
-                x={totalsX(age)}
-                y={PLOT_BOTTOM + 16}
-                text-anchor="middle">{age}</text
-              >
-            {/each}
-
-            {#if totals.max > 0}
-              {#each totalsRows as row (row.age)}
-                <line
-                  class="line"
-                  class:prominent={row.emphasis === 1}
-                  class:selected={row.emphasis === 2}
-                  x1={totalsX(row.age)}
-                  y1={PLOT_BOTTOM}
-                  x2={totalsX(TOTALS_END)}
-                  y2={totalsY(row.total)}
-                />
-              {/each}
-
-              {#each totalsRows.filter( (row) => EMPHASIS_AGES.includes(row.age), ) as row (row.age)}
-                <text
-                  class="line-label"
-                  class:selected={row.emphasis === 2}
-                  x={PLOT_RIGHT + 4}
-                  y={totalsY(row.total) + 4}>{row.age}</text
-                >
-              {/each}
-
-              {#each anchorCrossings.filter((point) => point.inRange) as point (point.key)}
-                {@const x = totalsX(point.age)}
-                {@const y = totalsY(point.total)}
-                <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
-                <text
-                  class="break-even-label"
-                  {x}
-                  y={Math.max(y - 7, PLOT_TOP + 4)}
-                  text-anchor="middle">{Math.round(point.age)}</text
-                >
-              {/each}
-            {/if}
-          </svg>
-          <figcaption>{crossingText}</figcaption>
-        </figure>
-      </details>
+      <TotalsChart
+        heading="Total CPP received by age"
+        title="Total CPP received by age"
+        description="A later start pays more each month but for fewer years. {crossingText}"
+        caption={crossingText}
+        rows={totalsRows}
+        labelRows={totalsLabels}
+        crossings={anchorCrossings.filter((point) => point.inRange)}
+        start={MIN_CLAIM_AGE}
+        end={CHART_END_AGE}
+        ageTicks={CPP_AGE_TICKS}
+        max={totals.max}
+      />
 
       <details
         ontoggle={(event) =>
@@ -983,151 +838,40 @@
     </p>
 
     {#if inputs.oasProblems.length > 0}
-      <div class="result" aria-live="polite">
-        <p class="label">No estimate yet</p>
-        <ul class="problems">
-          {#each inputs.oasProblems as problem (problem)}
-            <li>{problem}</li>
-          {/each}
-        </ul>
-      </div>
+      {@render noEstimate(inputs.oasProblems)}
     {:else}
-      <div class="result" aria-live="polite">
-        <p class="label">Estimated OAS at {oasModel.start}</p>
-        <p class="amount">
-          {format(oasModel.monthly)}<span>/month</span>
-        </p>
-        <p class="annual">
-          {format(oasModel.annual)} a year, in today's dollars, before tax and recovery
-          tax
-        </p>
-      </div>
+      {@render pensionResult(
+        `Estimated OAS at ${oasModel.start}`,
+        oasModel.monthly,
+        oasModel.annual,
+        "in today's dollars, before tax and recovery tax",
+      )}
 
-      <details>
-        <summary>Every OAS start age</summary>
-        <figure class="chart">
-          <figcaption>
-            Monthly OAS by start age; each row also shows the annual amount.
-          </figcaption>
-          {#each oasModel.rows as row (row.age)}
-            <button
-              type="button"
-              class="bar-row"
-              class:selected={row.age === oasModel.start}
-              aria-pressed={row.age === oasModel.start}
-              aria-label="Start OAS at {row.age}: {format(
-                row.monthly,
-              )} per month, {format(row.annual)} per year"
-              onclick={() => (oasStartAge = row.age)}
-            >
-              <span class="bar-age">{row.age}</span>
-              <span class="bar-track">
-                <span class="bar" style:width="{row.width}%"></span>
-              </span>
-              <span class="bar-value">
-                <span>{format(row.monthly)}/mo</span>
-                <span class="bar-annual">{format(row.annual)}/yr</span>
-              </span>
-            </button>
-          {/each}
-        </figure>
-      </details>
+      {@render startAgeChart(
+        oasModel.rows,
+        oasModel.start,
+        'OAS',
+        'Every OAS start age',
+        'Monthly OAS by start age; each row also shows the annual amount.',
+        (age) => (oasStartAge = age),
+      )}
 
-      <details class="totals">
-        <summary>Total OAS received by age: 65 vs 70</summary>
-        <figure>
-          <svg
-            class="totals-svg"
-            viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
-            role="img"
-            aria-labelledby="oas-totals-title oas-totals-desc"
-          >
-            <title id="oas-totals-title">Total OAS received by age</title>
-            <desc id="oas-totals-desc">{oasCrossingText}</desc>
-
-            {#each oasYTicks as tick (tick)}
-              {#if tick > 0}
-                <line
-                  class="grid"
-                  x1={PLOT_LEFT}
-                  x2={PLOT_RIGHT}
-                  y1={oasTotalsY(tick)}
-                  y2={oasTotalsY(tick)}
-                />
-              {/if}
-              <text
-                class="tick"
-                x={PLOT_LEFT - 6}
-                y={oasTotalsY(tick) + 4}
-                text-anchor="end">{compactMoney.format(tick)}</text
-              >
-            {/each}
-
-            <line
-              class="axis"
-              x1={PLOT_LEFT}
-              x2={PLOT_RIGHT}
-              y1={PLOT_BOTTOM}
-              y2={PLOT_BOTTOM}
-            />
-            <line
-              class="axis"
-              x1={PLOT_LEFT}
-              x2={PLOT_LEFT}
-              y1={PLOT_TOP}
-              y2={PLOT_BOTTOM}
-            />
-
-            {#each OAS_AGE_TICKS as age (age)}
-              <text
-                class="tick"
-                x={oasTotalsX(age)}
-                y={PLOT_BOTTOM + 16}
-                text-anchor="middle">{age}</text
-              >
-            {/each}
-
-            {#if oasTotals.max > 0}
-              {#each oasTotalsRows as row (row.age)}
-                <line
-                  class="line"
-                  class:prominent={row.emphasis === 1}
-                  class:selected={row.emphasis === 2}
-                  x1={oasTotalsX(row.age)}
-                  y1={PLOT_BOTTOM}
-                  x2={oasTotalsX(OAS_TOTALS_END)}
-                  y2={oasTotalsY(row.total)}
-                />
-              {/each}
-
-              {#each oasTotalsRows as row (row.age)}
-                <text
-                  class="line-label"
-                  class:selected={row.emphasis === 2}
-                  x={PLOT_RIGHT + 4}
-                  y={oasTotalsY(row.total) + 4}>{row.age}</text
-                >
-              {/each}
-
-              {#if oasCrossing.inRange}
-                {@const x = oasTotalsX(oasCrossing.age)}
-                {@const y = oasTotalsY(oasCrossing.total)}
-                <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
-                <text
-                  class="break-even-label"
-                  {x}
-                  y={Math.max(y - 7, PLOT_TOP + 4)}
-                  text-anchor="middle">{Math.round(oasCrossing.age)}</text
-                >
-              {/if}
-            {/if}
-          </svg>
-          <figcaption>{oasCrossingText}</figcaption>
-        </figure>
-      </details>
+      <TotalsChart
+        heading="Total OAS received by age: {OAS_MIN_START_AGE} vs {OAS_MAX_START_AGE}"
+        title="Total OAS received by age"
+        description={oasCrossingText}
+        caption={oasCrossingText}
+        rows={oasTotalsRows}
+        labelRows={oasTotalsRows}
+        crossings={oasBreakEven.inRange ? [oasBreakEven] : []}
+        start={OAS_MIN_START_AGE}
+        end={CHART_END_AGE}
+        ageTicks={OAS_AGE_TICKS}
+        max={oasTotals.max}
+      />
     {/if}
 
-    {#if combined.hasCpp && combined.hasOas}
+    {#if combined.available}
       <section class="total">
         <p class="label">{combined.label}</p>
         <p class="amount">
@@ -1388,84 +1132,6 @@
     margin: 0 0 var(--space-sm);
     color: var(--secondary-color);
     font-size: var(--font-sm);
-  }
-
-  .totals {
-    margin: var(--space-lg) 0 0;
-  }
-
-  .totals-svg {
-    display: block;
-    width: 100%;
-    max-width: 440px;
-    height: auto;
-    margin: var(--space-md) auto 0;
-  }
-
-  .totals-svg text {
-    fill: var(--secondary-color);
-    font-size: 12px;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .totals-svg .line-label {
-    fill: var(--text-color);
-    font-weight: 600;
-  }
-
-  .totals-svg .line-label.selected {
-    fill: var(--primary-color);
-  }
-
-  .totals-svg .grid {
-    stroke: var(--line-color);
-    stroke-width: 1;
-    stroke-opacity: 0.6;
-  }
-
-  .totals-svg .axis {
-    stroke: var(--line-color);
-    stroke-width: 1;
-  }
-
-  .totals-svg .line {
-    stroke: var(--secondary-color);
-    stroke-width: 1;
-    stroke-opacity: 0.35;
-    stroke-linecap: round;
-  }
-
-  .totals-svg .line.prominent {
-    stroke-width: 2;
-    stroke-opacity: 1;
-  }
-
-  .totals-svg .line.selected {
-    stroke: var(--primary-color);
-    stroke-width: 2.5;
-    stroke-opacity: 1;
-  }
-
-  .totals-svg .break-even-dot {
-    fill: var(--bg-surface);
-    stroke: var(--primary-color);
-    stroke-width: 2;
-  }
-
-  .totals-svg .break-even-label {
-    fill: var(--primary-color);
-    font-weight: 600;
-    paint-order: stroke;
-    stroke: var(--bg-surface);
-    stroke-width: 3px;
-    stroke-linejoin: round;
-  }
-
-  .totals figcaption {
-    margin-top: var(--space-sm);
-    color: var(--secondary-color);
-    font-size: var(--font-sm);
-    line-height: 1.45;
   }
 
   .problems {

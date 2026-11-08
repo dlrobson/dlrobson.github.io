@@ -504,6 +504,7 @@ describe('read inputs', () => {
     ])
     expect(readInputs({ ...FILLED, oasStartAge: 65 }).oasProblems).toEqual([])
     expect(readInputs({ ...FILLED, oasStartAge: 70 }).oasProblems).toEqual([])
+    expect(readInputs({ ...FILLED, oasStartAge: 70 }).oasStartAge).toBe(70)
   })
 
   it('names the ranges in the OAS problems', () => {

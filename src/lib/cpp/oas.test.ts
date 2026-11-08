@@ -3,6 +3,7 @@ import {
   OAS_MAX_MONTHLY,
   OAS_START_AGES,
   deferralFactor,
+  oasCrossing,
   oasMonthly,
   residenceShare,
 } from './oas'
@@ -89,5 +90,35 @@ describe('published amounts', () => {
 describe('start ages', () => {
   it('covers every whole start age from sixty-five to seventy', () => {
     expect(OAS_START_AGES).toEqual([65, 66, 67, 68, 69, 70])
+  })
+})
+
+describe('crossing', () => {
+  it('puts the sixty-five versus seventy break-even at about eighty-four', () => {
+    expect(oasCrossing(40, 95).age).toBeCloseTo(83.9, 1)
+  })
+
+  it('does not move the crossing with the residence period', () => {
+    expect(oasCrossing(5, 95).age).toBeCloseTo(oasCrossing(40, 95).age, 9)
+  })
+
+  it('carries the total received from sixty-five by the crossing', () => {
+    const crossing = oasCrossing(40, 95)
+    expect(crossing.inRange).toBe(true)
+    expect(crossing.total).toBeCloseTo(
+      12 * OAS_MAX_MONTHLY * (crossing.age - 65),
+      2,
+    )
+  })
+
+  it('has no crossing when no residence earns a pension', () => {
+    const crossing = oasCrossing(0, 95)
+    expect(crossing.inRange).toBe(false)
+    expect(crossing.age).toBe(Number.POSITIVE_INFINITY)
+    expect(crossing.total).toBe(0)
+  })
+
+  it('drops a crossing past the age the chart draws', () => {
+    expect(oasCrossing(40, 80).inRange).toBe(false)
   })
 })
