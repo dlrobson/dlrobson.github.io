@@ -15,7 +15,6 @@ import {
   GENERAL_DROPOUT,
   project,
   SECOND_ADDITIONAL_RATE,
-  steadySalaryEarnings,
   ympeAverage,
   type Earnings,
 } from './estimator'
@@ -174,9 +173,7 @@ describe('drop-outs', () => {
   })
 
   it('keeps the deferral drop-out after child-rearing months come out', () => {
-    const earnings: Record<number, number> = {
-      ...fillEarnings(1999, 70, 'ympe'),
-    }
+    const earnings = { ...fillEarnings(1999, 70, 'ympe') }
     for (let year = 2019; year <= 2023; year++) earnings[year] = 0
 
     const plain = estimate(1999, 70, earnings, PROJECTED)
@@ -360,10 +357,10 @@ describe('earning periods', () => {
     )
     expect(earnings[2026]).toBe(70000)
     for (const year of years(2012, 2030)) {
-      expect(earnings[year] / 1.025 ** (year - 2026)).toBeCloseTo(70000, 6)
+      expect(earnings[year]).toBeCloseTo(70000 * 1.025 ** (year - 2026), 6)
     }
     for (const year of years(2035, 2055)) {
-      expect(earnings[year] / 1.025 ** (year - 2026)).toBeCloseTo(50000, 6)
+      expect(earnings[year]).toBeCloseTo(50000 * 1.025 ** (year - 2026), 6)
     }
   })
 
@@ -389,29 +386,20 @@ describe('earning periods', () => {
       2026,
       0.025,
     )
+    expect(earnings[2011]).toBeUndefined()
+    expect(earnings[2026]).toBe(70000)
     expect(earnings[2030]).toBeDefined()
     expect(earnings[2031]).toBeUndefined()
   })
 })
 
-describe('steady salary', () => {
-  it('holds the salary flat in real terms', () => {
-    const earnings = steadySalaryEarnings(70000, 22, 65, 1990, 2026, 0.025)
-    expect(earnings[2026]).toBe(70000)
-    for (const year of years(2012, 2055)) {
-      expect(earnings[year] / 1.025 ** (year - 2026)).toBeCloseTo(70000, 6)
-    }
-  })
-
-  it('leaves the years outside the working span empty', () => {
-    const earnings = steadySalaryEarnings(70000, 22, 65, 1990, 2026, 0.025)
-    expect(earnings[2011]).toBeUndefined()
-    expect(earnings[2056]).toBeUndefined()
-  })
-})
-
 describe('child-rearing periods', () => {
-  const salary = steadySalaryEarnings(70000, 22, 65, 1990, 2026, DEFAULT_CPI)
+  const salary = earningPeriodsEarnings(
+    [{ fromAge: 22, toAge: 65, salary: 70000 }],
+    1990,
+    2026,
+    DEFAULT_CPI,
+  )
 
   it('defaults a new period to age 30 for five years', () => {
     expect(defaultChildRearingPeriod(1990)).toEqual({ from: 2020, to: 2024 })

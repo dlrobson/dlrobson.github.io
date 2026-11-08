@@ -21,10 +21,15 @@
 
 import type { Ceilings } from './params'
 
+/**
+ * Earnings by calendar year. A year with no entry had no earnings: a gap in an
+ * earning period, or a year outside the working span.
+ */
 export interface Earnings {
-  readonly [year: number]: number
+  readonly [year: number]: number | undefined
 }
 
+/** One age-bounded salary. Periods in one set must not overlap. */
 export interface EarningPeriod {
   readonly fromAge: number
   readonly toAge: number
@@ -333,6 +338,8 @@ export function estimate(
  * Earnings for one or more salary periods held flat in real terms: each amount
  * is given in `baseYear` dollars and grows with `cpi` in every later year.
  * Ages are inclusive, and a gap between periods is a year with no earnings.
+ * The periods must not overlap: a year covered twice takes the salary of the
+ * period later in the list, so `readInputs` rejects an overlapping set first.
  */
 export function earningPeriodsEarnings(
   periods: readonly EarningPeriod[],
@@ -351,26 +358,6 @@ export function earningPeriodsEarnings(
     }
   }
   return earnings
-}
-
-/**
- * Earnings for a salary held flat in real terms: the amount is given in
- * `baseYear` dollars and grows with `cpi` in every later year.
- */
-export function steadySalaryEarnings(
-  salary: number,
-  startedAge: number,
-  stoppedAge: number,
-  birthYear: number,
-  baseYear: number,
-  cpi: number,
-): Earnings {
-  return earningPeriodsEarnings(
-    [{ fromAge: startedAge, toAge: stoppedAge, salary }],
-    birthYear,
-    baseYear,
-    cpi,
-  )
 }
 
 export interface ChildRearingPeriod {
@@ -408,7 +395,7 @@ export function applyChildRearing(
   earnings: Earnings,
   periods: readonly ChildRearingPeriod[],
 ): Earnings {
-  const result: Record<number, number> = { ...earnings }
+  const result: Record<number, number | undefined> = { ...earnings }
   for (const [firstYear, lastYear] of childRearingWindows(periods)) {
     for (let year = firstYear; year <= lastYear; year++) result[year] = 0
   }
