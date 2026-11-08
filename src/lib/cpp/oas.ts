@@ -97,3 +97,23 @@ export function oasCrossing(years: number, endAge: number): OasCrossing {
     total: inRange ? totalReceived(monthly65, OAS_MIN_START_AGE, age) : 0,
   }
 }
+
+/**
+ * The sentence under the OAS totals chart. `monthly` is what the reader's start
+ * age pays, which is zero only when no residence earns a pension.
+ */
+export function oasCrossingText(
+  monthly: number,
+  crossing: OasCrossing,
+  endAge: number,
+): string {
+  if (!(monthly > 0)) {
+    return 'Zero years of residence in Canada earns no OAS, so there is nothing to compare.'
+  }
+  if (!crossing.inRange) {
+    return `With these inputs, starting at ${OAS_MAX_START_AGE} does not pull ahead before age ${endAge}.`
+  }
+  const increase = Math.round((deferralFactor(OAS_MAX_START_AGE) - 1) * 100)
+  const deferral = OAS_MAX_START_AGE - OAS_MIN_START_AGE
+  return `Starting at ${OAS_MAX_START_AGE} pays ${increase}% more each month but gives up ${deferral} years of payments. It pulls ahead of ${OAS_MIN_START_AGE} at about ${Math.round(crossing.age)}.`
+}

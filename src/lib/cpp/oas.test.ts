@@ -4,6 +4,7 @@ import {
   OAS_START_AGES,
   deferralFactor,
   oasCrossing,
+  oasCrossingText,
   oasMonthly,
   residenceShare,
 } from './oas'
@@ -117,5 +118,31 @@ describe('crossing', () => {
 
   it('drops a crossing past the age the chart draws', () => {
     expect(oasCrossing(40, 80).inRange).toBe(false)
+  })
+})
+
+describe('oasCrossingText', () => {
+  it('names the increase, the years given up and the crossing', () => {
+    expect(oasCrossingText(OAS_MAX_MONTHLY, oasCrossing(40, 95), 95)).toBe(
+      'Starting at 70 pays 36% more each month but gives up 5 years of payments. It pulls ahead of 65 at about 84.',
+    )
+  })
+
+  it('says there is nothing to compare when no residence earns a pension', () => {
+    expect(oasCrossingText(0, oasCrossing(0, 95), 95)).toBe(
+      'Zero years of residence in Canada earns no OAS, so there is nothing to compare.',
+    )
+  })
+
+  it('says the later start does not pull ahead when the crossing is off the chart', () => {
+    expect(
+      oasCrossingText(
+        OAS_MAX_MONTHLY,
+        { age: 120, inRange: false, total: 0 },
+        95,
+      ),
+    ).toBe(
+      'With these inputs, starting at 70 does not pull ahead before age 95.',
+    )
   })
 })

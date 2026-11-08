@@ -1,10 +1,5 @@
 <script lang="ts">
-  interface Row {
-    readonly age: number
-    readonly total: number
-    /** 2 for the reader's start age, 1 for a labelled anchor, 0 for the rest. */
-    readonly emphasis: number
-  }
+  import type { TotalsRow } from '$lib/cpp/totals'
 
   interface Crossing {
     readonly age: number
@@ -12,29 +7,25 @@
   }
 
   let {
-    heading,
     title,
-    description,
+    heading = title,
     caption,
+    description = caption,
     rows,
-    labelRows,
+    labelRows = rows,
     crossings,
     start,
     end,
-    ageTicks,
-    max,
   }: {
-    heading: string
     title: string
-    description: string
+    heading?: string
     caption: string
-    rows: readonly Row[]
-    labelRows: readonly Row[]
+    description?: string
+    rows: readonly TotalsRow[]
+    labelRows?: readonly TotalsRow[]
     crossings: readonly Crossing[]
     start: number
     end: number
-    ageTicks: readonly number[]
-    max: number
   } = $props()
 
   const WIDTH = 300
@@ -43,8 +34,18 @@
   const RIGHT = 272
   const TOP = 18
   const BOTTOM = 200
+  const TICK_STEP = 5
 
   const uid = $props.id()
+
+  const max = $derived(Math.max(0, ...rows.map((row) => row.total)))
+
+  const ageTicks = $derived.by(() =>
+    Array.from(
+      { length: (end - start) / TICK_STEP + 1 },
+      (_, index) => start + index * TICK_STEP,
+    ),
+  )
 
   const compactMoney = new Intl.NumberFormat('en-CA', {
     notation: 'compact',

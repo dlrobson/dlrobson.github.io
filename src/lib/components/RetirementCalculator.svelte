@@ -5,13 +5,14 @@
   import { CEILINGS, LAST_PUBLISHED_YEAR } from '$lib/cpp/params'
   import { breakEvenAge, totalReceived } from '$lib/cpp/break-even'
   import { combine } from '$lib/cpp/combined'
+  import { crossingText, startAgeRows, totalsRows } from '$lib/cpp/totals'
   import {
     OAS_FULL_RESIDENCE_YEARS,
     OAS_MAX_START_AGE,
     OAS_MIN_START_AGE,
     OAS_START_AGES,
-    deferralFactor,
     oasCrossing,
+    oasCrossingText,
     oasMonthly,
   } from '$lib/cpp/oas'
   import {
@@ -63,19 +64,8 @@
     maximumFractionDigits: 0,
   })
   const CHART_END_AGE = 95
-  const CHART_TICK_STEP = 5
   const EMPHASIS_AGES = [60, 65, 70]
   const OAS_EMPHASIS_AGES = [OAS_MIN_START_AGE, OAS_MAX_START_AGE]
-
-  function ageTicks(start: number): readonly number[] {
-    return Array.from(
-      { length: (CHART_END_AGE - start) / CHART_TICK_STEP + 1 },
-      (_, index) => start + index * CHART_TICK_STEP,
-    )
-  }
-
-  const CPP_AGE_TICKS = ageTicks(MIN_CLAIM_AGE)
-  const OAS_AGE_TICKS = ageTicks(OAS_MIN_START_AGE)
 
   const DEFAULTS = {
     birthYear: 1990,
@@ -296,45 +286,32 @@
     }
   })
 
-  const chart = $derived.by(() => {
-    const rows = model.results.map((result) => ({
-      age: result.claimAge,
-      monthly: result.monthlyIn(BASE_YEAR, model.cpi),
-      annual: result.annualIn(BASE_YEAR, model.cpi),
-    }))
-    const max = Math.max(...rows.map((row) => row.monthly), 0)
-    return rows.map((row) => ({
-      ...row,
-      width: max > 0 ? (row.monthly / max) * 100 : 0,
-    }))
-  })
+  const chart = $derived(
+    startAgeRows(
+      model.results.map((result) => ({
+        age: result.claimAge,
+        monthly: result.monthlyIn(BASE_YEAR, model.cpi),
+        annual: result.annualIn(BASE_YEAR, model.cpi),
+      })),
+    ),
+  )
 
   const format = (amount: number) => money.format(amount)
 
-  const totals = $derived.by(() => {
-    const rows = model.results.map((result) => {
-      const monthly = result.monthlyIn(BASE_YEAR, model.cpi)
-      return {
+  const cppTotalsRows = $derived(
+    totalsRows(
+      model.results.map((result) => ({
         age: result.claimAge,
-        total: totalReceived(monthly, result.claimAge, CHART_END_AGE),
-      }
-    })
-    const max = Math.max(0, ...rows.map((row) => row.total))
-    return { rows, max }
-  })
-
-  const totalsRows = $derived.by(() =>
-    totals.rows
-      .map((row) => ({
-        ...row,
-        emphasis:
-          row.age === model.claim ? 2 : EMPHASIS_AGES.includes(row.age) ? 1 : 0,
-      }))
-      .sort((a, b) => a.emphasis - b.emphasis),
+        monthly: result.monthlyIn(BASE_YEAR, model.cpi),
+      })),
+      CHART_END_AGE,
+      EMPHASIS_AGES,
+      model.claim,
+    ),
   )
 
-  const totalsLabels = $derived(
-    totalsRows.filter((row) => EMPHASIS_AGES.includes(row.age)),
+  const cppTotalsLabels = $derived(
+    cppTotalsRows.filter((row) => EMPHASIS_AGES.includes(row.age)),
   )
 
   const ANCHOR_PAIRS: readonly (readonly [number, number])[] = [
@@ -366,23 +343,7 @@
     }),
   )
 
-  const crossingText = $derived.by(() => {
-    const shown = anchorCrossings.filter((point) => point.inRange)
-    if (shown.length === 0) {
-      return `With these inputs the later start does not pull ahead before age ${CHART_END_AGE}.`
-    }
-    const parts = shown.map(
-      (point) =>
-        `${point.b} pulls ahead of ${point.a} at about ${Math.round(point.age)}`,
-    )
-    const list =
-      parts.length === 1
-        ? parts[0]
-        : parts.length === 2
-          ? `${parts[0]} and ${parts[1]}`
-          : `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`
-    return `With these inputs, ${list}.`
-  })
+  const cppCaption = $derived(crossingText(anchorCrossings, CHART_END_AGE))
 
   const oasModel = $derived.by(() => {
     const years = clamp(
@@ -404,51 +365,29 @@
         annual: rowMonthly * 12,
       }
     })
-    const max = Math.max(0, ...rows.map((row) => row.monthly))
     return {
       years,
       start,
       monthly,
       annual: monthly * 12,
-      rows: rows.map((row) => ({
-        ...row,
-        width: max > 0 ? (row.monthly / max) * 100 : 0,
-      })),
+      rows: startAgeRows(rows),
     }
   })
 
-  const oasTotals = $derived.by(() => {
-    const rows = oasModel.rows.map((row) => ({
-      age: row.age,
-      total: totalReceived(row.monthly, row.age, CHART_END_AGE),
-    }))
-    const max = Math.max(0, ...rows.map((row) => row.total))
-    return { rows, max }
-  })
-
   const oasTotalsRows = $derived(
-    oasTotals.rows
-      .filter((row) => OAS_EMPHASIS_AGES.includes(row.age))
-      .map((row) => ({
-        ...row,
-        emphasis: row.age === oasModel.start ? 2 : 1,
-      }))
-      .sort((a, b) => a.emphasis - b.emphasis),
+    totalsRows(
+      oasModel.rows.filter((row) => OAS_EMPHASIS_AGES.includes(row.age)),
+      CHART_END_AGE,
+      OAS_EMPHASIS_AGES,
+      oasModel.start,
+    ),
   )
 
   const oasBreakEven = $derived(oasCrossing(oasModel.years, CHART_END_AGE))
 
-  const oasCrossingText = $derived.by(() => {
-    if (!(oasModel.monthly > 0)) {
-      return 'Zero years of residence in Canada earns no OAS, so there is nothing to compare.'
-    }
-    if (!oasBreakEven.inRange) {
-      return `With these inputs, starting at ${OAS_MAX_START_AGE} does not pull ahead before age ${CHART_END_AGE}.`
-    }
-    const increase = Math.round((deferralFactor(OAS_MAX_START_AGE) - 1) * 100)
-    const deferral = OAS_MAX_START_AGE - OAS_MIN_START_AGE
-    return `Starting at ${OAS_MAX_START_AGE} pays ${increase}% more each month but gives up ${deferral} years of payments. It pulls ahead of ${OAS_MIN_START_AGE} at about ${Math.round(oasBreakEven.age)}.`
-  })
+  const oasCaption = $derived(
+    oasCrossingText(oasModel.monthly, oasBreakEven, CHART_END_AGE),
+  )
 
   const combined = $derived(
     combine({
@@ -748,17 +687,14 @@
       )}
 
       <TotalsChart
-        heading="Total CPP received by age"
         title="Total CPP received by age"
-        description="A later start pays more each month but for fewer years. {crossingText}"
-        caption={crossingText}
-        rows={totalsRows}
-        labelRows={totalsLabels}
+        description="A later start pays more each month but for fewer years. {cppCaption}"
+        caption={cppCaption}
+        rows={cppTotalsRows}
+        labelRows={cppTotalsLabels}
         crossings={anchorCrossings.filter((point) => point.inRange)}
         start={MIN_CLAIM_AGE}
         end={CHART_END_AGE}
-        ageTicks={CPP_AGE_TICKS}
-        max={totals.max}
       />
 
       <details
@@ -852,17 +788,13 @@
       )}
 
       <TotalsChart
-        heading="Total OAS received by age: {OAS_MIN_START_AGE} vs {OAS_MAX_START_AGE}"
         title="Total OAS received by age"
-        description={oasCrossingText}
-        caption={oasCrossingText}
+        heading="Total OAS received by age: {OAS_MIN_START_AGE} vs {OAS_MAX_START_AGE}"
+        caption={oasCaption}
         rows={oasTotalsRows}
-        labelRows={oasTotalsRows}
         crossings={oasBreakEven.inRange ? [oasBreakEven] : []}
         start={OAS_MIN_START_AGE}
         end={CHART_END_AGE}
-        ageTicks={OAS_AGE_TICKS}
-        max={oasTotals.max}
       />
     {/if}
 
