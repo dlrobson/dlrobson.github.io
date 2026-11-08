@@ -14,6 +14,8 @@ This calculator applies those rules to a steady salary. Change the age you start
 
 Open **Total received by age** under the estimate to see the total collected by any age from 60 to 95, in today's dollars, for each start age. Because the figures are already normalised to today's dollars, each start age's monthly amount is flat in real terms and its total grows as a straight line from the age it begins. The chart assumes the money is spent as it arrives, not invested, so a later start only comes out ahead once its larger payments have made up for the years it went without.
 
+Open **Salary and working years** for the same estimate across two variables at once: salary across the bottom, the age you stop working down the side. The dashed line is the first earnings ceiling, with the dollar amount under each percentage tick. Two edges are visible. Earnings above the second ceiling add nothing, so the right side flattens out; and years worked after the age you start CPP are not counted, so the bottom rows repeat. The ring marks your own inputs.
+
 <CppCalculator />
 
 ## What it assumes

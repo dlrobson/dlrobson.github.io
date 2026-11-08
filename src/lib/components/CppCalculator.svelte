@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import CppSurface from '$lib/components/CppSurface.svelte'
   import { CEILINGS, LAST_PUBLISHED_YEAR } from '$lib/cpp/params'
   import { breakEvenAge, totalReceived } from '$lib/cpp/break-even'
   import {
@@ -13,6 +14,7 @@
     estimate,
     project,
     steadySalaryEarnings,
+    type ChildRearingPeriod,
   } from '$lib/cpp/estimator'
 
   const BASE_YEAR = LAST_PUBLISHED_YEAR
@@ -85,6 +87,7 @@
   let wageGrowthText = $state(DEFAULTS.wageGrowthText)
   let periods = $state<PeriodRow[]>([])
   let hydrated = $state(false)
+  let surfaceOpen = $state(false)
 
   onMount(() => {
     try {
@@ -187,6 +190,18 @@
     periods = periods.filter((period) => period.id !== id)
   }
 
+  const carePeriods = $derived(
+    periods
+      .map((period) => ({
+        from: optionalYear(period.from),
+        to: optionalYear(period.to),
+      }))
+      .filter(
+        (period): period is ChildRearingPeriod =>
+          period.from !== undefined && period.to !== undefined,
+      ),
+  )
+
   const model = $derived.by(() => {
     const birth = Math.min(2010, Math.max(1930, whole(birthYear, 1990)))
     const started = Math.min(70, Math.max(18, whole(startedAge, 22)))
@@ -201,15 +216,6 @@
     // The ceilings grow at the wage rate; the salary and the result deflator
     // use inflation, so the salary stays level in real terms.
     const ceilings = project(CEILINGS, birth + 71, growth)
-    const carePeriods = periods
-      .map((period) => ({
-        from: optionalYear(period.from),
-        to: optionalYear(period.to),
-      }))
-      .filter(
-        (period): period is { from: number; to: number } =>
-          period.from !== undefined && period.to !== undefined,
-      )
     const windows = childRearingWindows(carePeriods)
     const periodError = carePeriods.some((period) => period.to < period.from)
 
@@ -230,7 +236,11 @@
       results,
       selected: results[claim - 60],
       claim,
+      birth,
+      started,
+      stopped,
       cpi,
+      growth,
       cpiPercent: (cpi * 100).toFixed(2),
       growthPercent: (growth * 100).toFixed(2),
       periods: windows,
@@ -622,6 +632,26 @@
       </details>
       <figcaption>{crossingText}</figcaption>
     </figure>
+
+    <details
+      ontoggle={(event) =>
+        (surfaceOpen = (event.currentTarget as HTMLDetailsElement).open)}
+    >
+      <summary>Salary and working years</summary>
+      {#if surfaceOpen}
+        <CppSurface
+          birthYear={model.birth}
+          startedAge={model.started}
+          stoppedAge={model.stopped}
+          claimAge={model.claim}
+          cpi={model.cpi}
+          wageGrowth={model.growth}
+          baseYear={BASE_YEAR}
+          salary={Math.max(0, salary ?? 0)}
+          childRearing={carePeriods}
+        />
+      {/if}
+    </details>
 
     <details>
       <summary>Every start age</summary>
