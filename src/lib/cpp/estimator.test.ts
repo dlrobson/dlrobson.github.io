@@ -171,6 +171,19 @@ describe('drop-outs', () => {
     )
   })
 
+  it('keeps the deferral drop-out after child-rearing months come out', () => {
+    const earnings: Record<number, number> = {
+      ...fillEarnings(1999, 70, 'ympe'),
+    }
+    for (let year = 2019; year <= 2023; year++) earnings[year] = 0
+
+    const plain = estimate(1999, 70, earnings, PROJECTED)
+    const helped = estimate(1999, 70, earnings, PROJECTED, [[2019, 2023]])
+    expect(plain.monthsDroppedAfter65).toBe(59)
+    expect(helped.monthsDroppedChildRearing).toBe(60)
+    expect(helped.monthsDroppedAfter65).toBe(59)
+  })
+
   it('counts the deferral drop-out month by month', () => {
     const earnings = fillEarnings(1999, 70, 'ympe')
     const counts = years(61, 70).map(

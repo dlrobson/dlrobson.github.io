@@ -235,14 +235,13 @@ export function estimate(
 
   // Months after the 65th birthday come out before the general drop-out, so
   // deferral does not dilute the average it is about to multiply. Only the
-  // lowest of those months go, never months from before 65.
-  const firstAfter65 = 12 * (birthYear + 65 - startYear) + 1
+  // lowest of those months go, never months from before 65. The split counts
+  // the months that survived the child-rearing drop, which has already
+  // shortened the period.
+  const firstAfter65 =
+    months.filter((month) => month.year < birthYear + 65).length + 1
   let droppedAfter65 = 0
-  if (
-    firstAfter65 >= 0 &&
-    firstAfter65 < months.length &&
-    months.length > MIN_CONTRIBUTORY_MONTHS
-  ) {
+  if (firstAfter65 < months.length && months.length > MIN_CONTRIBUTORY_MONTHS) {
     const before = months.slice(0, firstAfter65)
     const after = months.slice(firstAfter65)
     const wanted = Math.min(
