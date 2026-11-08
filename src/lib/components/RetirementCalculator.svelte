@@ -125,13 +125,11 @@
 
   function restore(saved: StoredState | null) {
     if (!saved) return
-    birthYear =
-      storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
-    claimAge =
-      storedNumber(saved.claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE) ?? claimAge
     // A record without the key keeps the default. A key that is there wins even
     // when its value is unusable, so `readInputs` reports it instead of a default
-    // standing in for a pension the reader never entered.
+    // standing in for a value the reader never entered.
+    if ('birthYear' in saved) birthYear = parseWhole(saved.birthYear)
+    if ('claimAge' in saved) claimAge = parseWhole(saved.claimAge)
     if ('oasYears' in saved) oasYears = optionalYear(saved.oasYears)
     if ('oasStartAge' in saved) oasStartAge = parseWhole(saved.oasStartAge)
     if (typeof saved.inflationText === 'string') {
@@ -173,10 +171,10 @@
   $effect(() => {
     if (!hydrated) return
     const saved: StoredState = {
-      birthYear,
-      claimAge,
+      birthYear: birthYear ?? null,
+      claimAge: claimAge ?? null,
       oasYears: oasYears ?? null,
-      oasStartAge,
+      oasStartAge: oasStartAge ?? null,
       inflationText,
       wageGrowthText,
       earningPeriods: earningPeriods.map(({ fromAge, toAge, salary }) => ({
