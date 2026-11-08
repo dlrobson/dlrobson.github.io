@@ -533,7 +533,6 @@
     {/snippet}
 
     <h2 class="part-title">Canada Pension Plan</h2>
-    <h2 class="part-title">Canada Pension Plan</h2>
 
     <div class="fields">
       <label>
