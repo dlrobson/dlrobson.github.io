@@ -177,6 +177,44 @@ describe('read inputs', () => {
     ).toEqual([])
   })
 
+  it('reports a start age outside 18 to 70', () => {
+    expect(readInputs({ ...FILLED, startedAge: 17 }).problems).toEqual([
+      'Age you started working must be 18 to 70.',
+    ])
+    expect(
+      readInputs({ ...FILLED, startedAge: 71, stoppedAge: 71 }).problems,
+    ).toEqual([
+      'Age you started working must be 18 to 70.',
+      'Age you stop working must be 18 to 70.',
+    ])
+  })
+
+  it('reports a stop age outside 18 to 70', () => {
+    expect(
+      readInputs({ ...FILLED, startedAge: 18, stoppedAge: 71 }).problems,
+    ).toEqual(['Age you stop working must be 18 to 70.'])
+  })
+
+  it('accepts the ends of the working age range', () => {
+    expect(
+      readInputs({ ...FILLED, startedAge: 18, stoppedAge: 18 }).problems,
+    ).toEqual([])
+    expect(
+      readInputs({ ...FILLED, startedAge: 70, stoppedAge: 70 }).problems,
+    ).toEqual([])
+  })
+
+  it('reports a claim age outside 60 to 70', () => {
+    expect(readInputs({ ...FILLED, claimAge: 59 }).problems).toEqual([
+      'Age you start CPP must be 60 to 70.',
+    ])
+    expect(readInputs({ ...FILLED, claimAge: 71 }).problems).toEqual([
+      'Age you start CPP must be 60 to 70.',
+    ])
+    expect(readInputs({ ...FILLED, claimAge: 60 }).problems).toEqual([])
+    expect(readInputs({ ...FILLED, claimAge: 70 }).problems).toEqual([])
+  })
+
   it('reports an inflation entry that is not a number', () => {
     const inputs = readInputs({ ...FILLED, inflationText: 'abc' })
     expect(inputs.inflation).toBeUndefined()
