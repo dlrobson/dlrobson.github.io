@@ -16,16 +16,23 @@
     estimate,
     project,
     steadySalaryEarnings,
-    type ChildRearingPeriod,
   } from '$lib/cpp/estimator'
+  import {
+    MAX_BIRTH_YEAR,
+    MAX_CARE_YEAR,
+    MAX_WORK_AGE,
+    MIN_BIRTH_YEAR,
+    MIN_CARE_YEAR,
+    MIN_WORK_AGE,
+    PERIOD_PROBLEM,
+    clamp,
+    formatPercent,
+    parseWhole,
+    readInputs,
+    storedNumber,
+  } from '$lib/cpp/inputs'
 
   const BASE_YEAR = LAST_PUBLISHED_YEAR
-  const MIN_BIRTH_YEAR = 1930
-  const MAX_BIRTH_YEAR = 2010
-  const MIN_WORK_AGE = 18
-  const MAX_WORK_AGE = 70
-  const MIN_CARE_YEAR = 1930
-  const MAX_CARE_YEAR = 2100
   const CLAIM_AGES = Array.from(
     { length: MAX_CLAIM_AGE - MIN_CLAIM_AGE + 1 },
     (_, index) => MIN_CLAIM_AGE + index,
@@ -62,9 +69,6 @@
     inflationText: (DEFAULT_CPI * 100).toFixed(2),
     wageGrowthText: (DEFAULT_WAGE_GROWTH * 100).toFixed(2),
   }
-
-  const PERIOD_PROBLEM =
-    'Each child-rearing period needs a start year and an end year on or after it.'
 
   const STORAGE_KEY = 'cpp-calculator:v1'
 
@@ -168,11 +172,8 @@
       startedAge,
       stoppedAge,
       claimAge,
-      inflationText: normalizePercent(inflationText, DEFAULT_CPI * 100),
-      wageGrowthText: normalizePercent(
-        wageGrowthText,
-        DEFAULT_WAGE_GROWTH * 100,
-      ),
+      inflationText,
+      wageGrowthText,
       periods: periods.map(({ from, to }) => ({ from, to })),
     }
     if (skipNextSave) {
@@ -187,61 +188,6 @@
         'This browser will not store the inputs, so they are not remembered on this device.'
     }
   })
-
-  function parseWhole(value: number | undefined): number | undefined {
-    return typeof value === 'number' && Number.isFinite(value)
-      ? Math.round(value)
-      : undefined
-  }
-
-  function storedNumber(
-    value: unknown,
-    min: number,
-    max: number,
-  ): number | undefined {
-    return typeof value === 'number' &&
-      Number.isFinite(value) &&
-      value >= min &&
-      value <= max
-      ? value
-      : undefined
-  }
-
-  function inRange(
-    value: number | undefined,
-    min: number,
-    max: number,
-  ): value is number {
-    return value !== undefined && value >= min && value <= max
-  }
-
-  function clamp(value: number, min: number, max: number): number {
-    return Math.min(max, Math.max(min, value))
-  }
-
-  function clampRate(value: number): number {
-    return clamp(value, -0.05, 0.15)
-  }
-
-  function percentValue(text: string | undefined, fallback: number): number {
-    const parsed = Number.parseFloat(
-      (text ?? '').replace('%', '').replace(',', '.').trim(),
-    )
-    return Number.isFinite(parsed) ? parsed : fallback
-  }
-
-  function normalizePercent(
-    text: string | undefined,
-    fallback: number,
-  ): string {
-    return (clampRate(percentValue(text, fallback) / 100) * 100).toFixed(2)
-  }
-
-  function optionalYear(value: number | undefined): number | undefined {
-    return value === undefined || !Number.isFinite(value)
-      ? undefined
-      : Math.round(value)
-  }
 
   function stepClaim(delta: number) {
     claimAge = clamp(
@@ -267,101 +213,48 @@
     periods = periods.filter((period) => period.id !== id)
   }
 
-  const careRows = $derived(
-    periods.map((period) => ({
-      from: optionalYear(period.from),
-      to: optionalYear(period.to),
-    })),
+  const inputs = $derived(
+    readInputs({
+      birthYear,
+      salary,
+      startedAge,
+      stoppedAge,
+      claimAge,
+      inflationText,
+      wageGrowthText,
+      periods,
+    }),
   )
-
-  const periodProblem = $derived(
-    careRows.some(
-      (row) =>
-        row.from === undefined || row.to === undefined || row.to < row.from,
-    ),
-  )
-
-  const carePeriods = $derived.by(() =>
-    careRows.filter(
-      (row): row is ChildRearingPeriod =>
-        row.from !== undefined && row.to !== undefined && row.to >= row.from,
-    ),
-  )
-
-  const parsed = $derived({
-    birth: parseWhole(birthYear),
-    salary: parseWhole(salary),
-    started: parseWhole(startedAge),
-    stopped: parseWhole(stoppedAge),
-    claim: parseWhole(claimAge),
-  })
-
-  /** What the reader still has to fix before an estimate means anything. */
-  const problems = $derived.by(() => {
-    const list: string[] = []
-    if (!inRange(parsed.birth, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR)) {
-      list.push(
-        `Year you were born must be ${MIN_BIRTH_YEAR} to ${MAX_BIRTH_YEAR}.`,
-      )
-    }
-    if (parsed.salary === undefined || parsed.salary < 0) {
-      list.push('Annual salary must be zero or more.')
-    }
-    if (!inRange(parsed.started, MIN_WORK_AGE, MAX_WORK_AGE)) {
-      list.push(
-        `Age you started working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
-      )
-    }
-    if (!inRange(parsed.stopped, MIN_WORK_AGE, MAX_WORK_AGE)) {
-      list.push(
-        `Age you stop working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
-      )
-    } else if (
-      parsed.started !== undefined &&
-      parsed.stopped < parsed.started
-    ) {
-      list.push('Age you stop working must be on or after the age you started.')
-    }
-    if (!inRange(parsed.claim, MIN_CLAIM_AGE, MAX_CLAIM_AGE)) {
-      list.push(
-        `Age you start CPP must be ${MIN_CLAIM_AGE} to ${MAX_CLAIM_AGE}.`,
-      )
-    }
-    if (periodProblem) list.push(PERIOD_PROBLEM)
-    return list
-  })
 
   const model = $derived.by(() => {
     const birth = clamp(
-      parsed.birth ?? DEFAULTS.birthYear,
+      inputs.birthYear ?? DEFAULTS.birthYear,
       MIN_BIRTH_YEAR,
       MAX_BIRTH_YEAR,
     )
     const started = clamp(
-      parsed.started ?? DEFAULTS.startedAge,
+      inputs.startedAge ?? DEFAULTS.startedAge,
       MIN_WORK_AGE,
       MAX_WORK_AGE,
     )
     const stopped = clamp(
-      parsed.stopped ?? DEFAULTS.stoppedAge,
+      inputs.stoppedAge ?? DEFAULTS.stoppedAge,
       started,
       MAX_WORK_AGE,
     )
-    const pay = Math.max(0, parsed.salary ?? 0)
+    const pay = Math.max(0, inputs.salary ?? 0)
     const claim = clamp(
-      parsed.claim ?? DEFAULTS.claimAge,
+      inputs.claimAge ?? DEFAULTS.claimAge,
       MIN_CLAIM_AGE,
       MAX_CLAIM_AGE,
     )
-    const cpi = clampRate(percentValue(inflationText, DEFAULT_CPI * 100) / 100)
-    const growth = clampRate(
-      percentValue(wageGrowthText, DEFAULT_WAGE_GROWTH * 100) / 100,
-    )
+    const cpi = inputs.inflation ?? DEFAULT_CPI
+    const growth = inputs.wageGrowth ?? DEFAULT_WAGE_GROWTH
 
     // The ceilings grow at the wage rate; the salary and the result deflator
     // use inflation, so the salary stays level in real terms.
     const ceilings = project(CEILINGS, birth + 71, growth)
-    const windows = childRearingWindows(carePeriods)
+    const windows = childRearingWindows(inputs.carePeriods)
 
     const salaryEarnings = steadySalaryEarnings(
       pay,
@@ -371,14 +264,14 @@
       BASE_YEAR,
       cpi,
     )
-    const earnings = applyChildRearing(salaryEarnings, carePeriods)
+    const earnings = applyChildRearing(salaryEarnings, inputs.carePeriods)
     const results = CLAIM_AGES.map((age) =>
       estimate(birth, age, earnings, ceilings, windows),
     )
 
     return {
       results,
-      selected: results[claim - 60],
+      selected: results[claim - MIN_CLAIM_AGE],
       claim,
       birth,
       started,
@@ -466,8 +359,14 @@
 
   const anchorCrossings = $derived.by(() =>
     ANCHOR_PAIRS.map(([a, b]) => {
-      const monthlyA = model.results[a - 60].monthlyIn(BASE_YEAR, model.cpi)
-      const monthlyB = model.results[b - 60].monthlyIn(BASE_YEAR, model.cpi)
+      const monthlyA = model.results[a - MIN_CLAIM_AGE].monthlyIn(
+        BASE_YEAR,
+        model.cpi,
+      )
+      const monthlyB = model.results[b - MIN_CLAIM_AGE].monthlyIn(
+        BASE_YEAR,
+        model.cpi,
+      )
       const age = breakEvenAge(a, b, monthlyA, monthlyB)
       const inRange =
         Number.isFinite(age) && age >= TOTALS_START && age <= TOTALS_END
@@ -593,11 +492,7 @@
               autocomplete="off"
               spellcheck="false"
               bind:value={inflationText}
-              onblur={() =>
-                (inflationText = normalizePercent(
-                  inflationText,
-                  DEFAULT_CPI * 100,
-                ))}
+              onblur={() => (inflationText = formatPercent(inflationText))}
             />
           </label>
           <label>
@@ -608,11 +503,7 @@
               autocomplete="off"
               spellcheck="false"
               bind:value={wageGrowthText}
-              onblur={() =>
-                (wageGrowthText = normalizePercent(
-                  wageGrowthText,
-                  DEFAULT_WAGE_GROWTH * 100,
-                ))}
+              onblur={() => (wageGrowthText = formatPercent(wageGrowthText))}
             />
           </label>
         </div>
@@ -659,7 +550,7 @@
             {CHILD_REARING_DEFAULT_YEARS} years. The estimate assumes no earnings
             during these years and applies the child-rearing provision.
           </p>
-          {#if periodProblem}
+          {#if inputs.careProblem}
             <p class="hint error">{PERIOD_PROBLEM}</p>
           {/if}
         </div>
@@ -670,11 +561,11 @@
       <p class="hint error">{storageNote}</p>
     {/if}
 
-    {#if problems.length > 0}
+    {#if inputs.problems.length > 0}
       <div class="result" aria-live="polite">
         <p class="label">No estimate yet</p>
         <ul class="problems">
-          {#each problems as problem (problem)}
+          {#each inputs.problems as problem (problem)}
             <li>{problem}</li>
           {/each}
         </ul>
@@ -833,7 +724,7 @@
             wageGrowth={model.growth}
             baseYear={BASE_YEAR}
             salary={Math.max(0, salary ?? 0)}
-            childRearing={carePeriods}
+            childRearing={inputs.carePeriods}
           />
         {/if}
       </details>
