@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   MAX_BIRTH_YEAR,
+  MAX_CARE_YEAR,
   MIN_BIRTH_YEAR,
+  MIN_CARE_YEAR,
   PERIOD_PROBLEM,
   clamp,
   formatPercent,
@@ -192,6 +194,35 @@ describe('read inputs', () => {
     expect(inputs.carePeriods).toEqual([{ from: 2015, to: 2019 }])
     expect(inputs.careProblem).toBe(true)
     expect(inputs.problems).toEqual([PERIOD_PROBLEM])
+  })
+
+  it('reports a child-rearing year outside the range the input allows', () => {
+    const cases = [
+      { from: 1800, to: 1950 },
+      { from: 2020, to: 2200 },
+      { from: 1900, to: 1910 },
+    ]
+    for (const period of cases) {
+      const inputs = readInputs({ ...FILLED, periods: [period] })
+      expect(inputs.carePeriods).toEqual([])
+      expect(inputs.careProblem).toBe(true)
+      expect(inputs.problems).toEqual([PERIOD_PROBLEM])
+    }
+  })
+
+  it('accepts a period at the edge of the year range', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      periods: [{ from: MIN_CARE_YEAR, to: MAX_CARE_YEAR }],
+    })
+    expect(inputs.carePeriods).toEqual([
+      { from: MIN_CARE_YEAR, to: MAX_CARE_YEAR },
+    ])
+    expect(inputs.problems).toEqual([])
+  })
+
+  it('names the year range in the period problem', () => {
+    expect(PERIOD_PROBLEM).toContain(`${MIN_CARE_YEAR} to ${MAX_CARE_YEAR}`)
   })
 
   it('reports a reversed period', () => {

@@ -23,8 +23,7 @@ export const MAX_CARE_YEAR = 2100
 export const MIN_RATE = -0.05
 export const MAX_RATE = 0.15
 
-export const PERIOD_PROBLEM =
-  'Each child-rearing period needs a start year and an end year on or after it.'
+export const PERIOD_PROBLEM = `Each child-rearing period needs a start and an end year from ${MIN_CARE_YEAR} to ${MAX_CARE_YEAR}, with the end on or after the start.`
 
 export interface RawPeriod {
   readonly from?: number | null
@@ -134,7 +133,9 @@ export function readInputs(raw: RawInputs): Inputs {
   }))
   const careProblem = rows.some(
     (row) =>
-      row.from === undefined || row.to === undefined || row.to < row.from,
+      !inRange(row.from, MIN_CARE_YEAR, MAX_CARE_YEAR) ||
+      !inRange(row.to, MIN_CARE_YEAR, MAX_CARE_YEAR) ||
+      row.to < row.from,
   )
 
   const problems: string[] = []
@@ -187,7 +188,9 @@ export function readInputs(raw: RawInputs): Inputs {
     wageGrowth,
     carePeriods: rows.filter(
       (row): row is ChildRearingPeriod =>
-        row.from !== undefined && row.to !== undefined && row.to >= row.from,
+        inRange(row.from, MIN_CARE_YEAR, MAX_CARE_YEAR) &&
+        inRange(row.to, MIN_CARE_YEAR, MAX_CARE_YEAR) &&
+        row.to >= row.from,
     ),
     careProblem,
     problems,
