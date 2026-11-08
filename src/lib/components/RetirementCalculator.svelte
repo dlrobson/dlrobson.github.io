@@ -36,6 +36,7 @@
     clamp,
     formatPercent,
     nextEarningPeriod,
+    optionalYear,
     parseStoredState,
     parseWhole,
     readInputs,
@@ -132,8 +133,13 @@
       storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
     claimAge =
       storedNumber(saved.claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE) ?? claimAge
-    oasYears =
-      storedNumber(saved.oasYears, 0, OAS_FULL_RESIDENCE_YEARS) ?? oasYears
+    // A record without the key keeps the default; a cleared field is stored as
+    // null and has to come back cleared, so the reader sees the problem again.
+    if (saved.oasYears === null) {
+      oasYears = undefined
+    } else if (saved.oasYears !== undefined) {
+      oasYears = optionalYear(saved.oasYears) ?? oasYears
+    }
     oasStartAge =
       storedNumber(saved.oasStartAge, OAS_MIN_START_AGE, OAS_MAX_START_AGE) ??
       oasStartAge
@@ -253,6 +259,8 @@
       birthYear,
       earningPeriods,
       claimAge,
+      oasYears,
+      oasStartAge,
       inflationText,
       wageGrowthText,
       periods,
@@ -416,11 +424,13 @@
   })
 
   const oasModel = $derived.by(() => {
-    const rawYears =
-      typeof oasYears === 'number' && Number.isFinite(oasYears) ? oasYears : 0
-    const years = clamp(Math.floor(rawYears), 0, OAS_FULL_RESIDENCE_YEARS)
+    const years = clamp(
+      inputs.oasYears ?? DEFAULTS.oasYears,
+      0,
+      OAS_FULL_RESIDENCE_YEARS,
+    )
     const start = clamp(
-      parseWhole(oasStartAge) ?? OAS_MIN_START_AGE,
+      inputs.oasStartAge ?? DEFAULTS.oasStartAge,
       OAS_MIN_START_AGE,
       OAS_MAX_START_AGE,
     )
@@ -516,11 +526,10 @@
   })
 
   const combined = $derived.by(() => {
-    const cpp =
-      inputs.problems.length === 0
-        ? model.selected.monthlyIn(BASE_YEAR, model.cpi)
-        : 0
-    const oas = oasModel.monthly
+    const hasCpp = inputs.problems.length === 0
+    const hasOas = inputs.oasProblems.length === 0
+    const cpp = hasCpp ? model.selected.monthlyIn(BASE_YEAR, model.cpi) : 0
+    const oas = hasOas ? oasModel.monthly : 0
     const monthly = cpp + oas
     return {
       cpp,
@@ -530,7 +539,9 @@
       bothAge: Math.max(model.claim, oasModel.start),
       cppShare: monthly > 0 ? (cpp / monthly) * 100 : 0,
       oasShare: monthly > 0 ? (oas / monthly) * 100 : 0,
-      hasCpp: inputs.problems.length === 0,
+      hasCpp,
+      hasOas,
+      missing: !hasCpp && !hasOas ? 'CPP and OAS' : !hasCpp ? 'CPP' : 'OAS',
     }
   })
 </script>
@@ -954,141 +965,152 @@
       Each year after 65 adds 7.2%. The 10% increase at 75 is not modelled.
     </p>
 
-    <div class="result" aria-live="polite">
-      <p class="label">Estimated OAS at {oasModel.start}</p>
-      <p class="amount">
-        {format(oasModel.monthly)}<span>/month</span>
-      </p>
-      <p class="annual">
-        {format(oasModel.annual)} a year, in today's dollars, before tax and recovery
-        tax
-      </p>
-    </div>
+    {#if inputs.oasProblems.length > 0}
+      <div class="result" aria-live="polite">
+        <p class="label">No estimate yet</p>
+        <ul class="problems">
+          {#each inputs.oasProblems as problem (problem)}
+            <li>{problem}</li>
+          {/each}
+        </ul>
+      </div>
+    {:else}
+      <div class="result" aria-live="polite">
+        <p class="label">Estimated OAS at {oasModel.start}</p>
+        <p class="amount">
+          {format(oasModel.monthly)}<span>/month</span>
+        </p>
+        <p class="annual">
+          {format(oasModel.annual)} a year, in today's dollars, before tax and recovery
+          tax
+        </p>
+      </div>
 
-    <details>
-      <summary>Every OAS start age</summary>
-      <figure class="chart">
-        <figcaption>
-          Monthly OAS by start age; each row also shows the annual amount.
-        </figcaption>
-        {#each oasModel.rows as row (row.age)}
-          <button
-            type="button"
-            class="bar-row"
-            class:selected={row.age === oasModel.start}
-            aria-pressed={row.age === oasModel.start}
-            aria-label="Start OAS at {row.age}: {format(
-              row.monthly,
-            )} per month, {format(row.annual)} per year"
-            onclick={() => (oasStartAge = row.age)}
+      <details>
+        <summary>Every OAS start age</summary>
+        <figure class="chart">
+          <figcaption>
+            Monthly OAS by start age; each row also shows the annual amount.
+          </figcaption>
+          {#each oasModel.rows as row (row.age)}
+            <button
+              type="button"
+              class="bar-row"
+              class:selected={row.age === oasModel.start}
+              aria-pressed={row.age === oasModel.start}
+              aria-label="Start OAS at {row.age}: {format(
+                row.monthly,
+              )} per month, {format(row.annual)} per year"
+              onclick={() => (oasStartAge = row.age)}
+            >
+              <span class="bar-age">{row.age}</span>
+              <span class="bar-track">
+                <span class="bar" style:width="{row.width}%"></span>
+              </span>
+              <span class="bar-value">
+                <span>{format(row.monthly)}/mo</span>
+                <span class="bar-annual">{format(row.annual)}/yr</span>
+              </span>
+            </button>
+          {/each}
+        </figure>
+      </details>
+
+      <details class="totals">
+        <summary>Total OAS received by age: 65 vs 70</summary>
+        <figure>
+          <svg
+            class="totals-svg"
+            viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
+            role="img"
+            aria-labelledby="oas-totals-title oas-totals-desc"
           >
-            <span class="bar-age">{row.age}</span>
-            <span class="bar-track">
-              <span class="bar" style:width="{row.width}%"></span>
-            </span>
-            <span class="bar-value">
-              <span>{format(row.monthly)}/mo</span>
-              <span class="bar-annual">{format(row.annual)}/yr</span>
-            </span>
-          </button>
-        {/each}
-      </figure>
-    </details>
+            <title id="oas-totals-title">Total OAS received by age</title>
+            <desc id="oas-totals-desc">{oasCrossingText}</desc>
 
-    <details class="totals">
-      <summary>Total OAS received by age: 65 vs 70</summary>
-      <figure>
-        <svg
-          class="totals-svg"
-          viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
-          role="img"
-          aria-labelledby="oas-totals-title oas-totals-desc"
-        >
-          <title id="oas-totals-title">Total OAS received by age</title>
-          <desc id="oas-totals-desc">{oasCrossingText}</desc>
-
-          {#each oasYTicks as tick (tick)}
-            {#if tick > 0}
-              <line
-                class="grid"
-                x1={PLOT_LEFT}
-                x2={PLOT_RIGHT}
-                y1={oasTotalsY(tick)}
-                y2={oasTotalsY(tick)}
-              />
-            {/if}
-            <text
-              class="tick"
-              x={PLOT_LEFT - 6}
-              y={oasTotalsY(tick) + 4}
-              text-anchor="end">{compactMoney.format(tick)}</text
-            >
-          {/each}
-
-          <line
-            class="axis"
-            x1={PLOT_LEFT}
-            x2={PLOT_RIGHT}
-            y1={PLOT_BOTTOM}
-            y2={PLOT_BOTTOM}
-          />
-          <line
-            class="axis"
-            x1={PLOT_LEFT}
-            x2={PLOT_LEFT}
-            y1={PLOT_TOP}
-            y2={PLOT_BOTTOM}
-          />
-
-          {#each OAS_AGE_TICKS as age (age)}
-            <text
-              class="tick"
-              x={oasTotalsX(age)}
-              y={PLOT_BOTTOM + 16}
-              text-anchor="middle">{age}</text
-            >
-          {/each}
-
-          {#if oasTotals.max > 0}
-            {#each oasTotalsRows as row (row.age)}
-              <line
-                class="line"
-                class:prominent={row.emphasis === 1}
-                class:selected={row.emphasis === 2}
-                x1={oasTotalsX(row.age)}
-                y1={PLOT_BOTTOM}
-                x2={oasTotalsX(OAS_TOTALS_END)}
-                y2={oasTotalsY(row.total)}
-              />
-            {/each}
-
-            {#each oasTotalsRows as row (row.age)}
+            {#each oasYTicks as tick (tick)}
+              {#if tick > 0}
+                <line
+                  class="grid"
+                  x1={PLOT_LEFT}
+                  x2={PLOT_RIGHT}
+                  y1={oasTotalsY(tick)}
+                  y2={oasTotalsY(tick)}
+                />
+              {/if}
               <text
-                class="line-label"
-                class:selected={row.emphasis === 2}
-                x={PLOT_RIGHT + 4}
-                y={oasTotalsY(row.total) + 4}>{row.age}</text
+                class="tick"
+                x={PLOT_LEFT - 6}
+                y={oasTotalsY(tick) + 4}
+                text-anchor="end">{compactMoney.format(tick)}</text
               >
             {/each}
 
-            {#if oasCrossing.inRange}
-              {@const x = oasTotalsX(oasCrossing.age)}
-              {@const y = oasTotalsY(oasCrossing.total)}
-              <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
-              <text
-                class="break-even-label"
-                {x}
-                y={Math.max(y - 7, PLOT_TOP + 4)}
-                text-anchor="middle">{Math.round(oasCrossing.age)}</text
-              >
-            {/if}
-          {/if}
-        </svg>
-        <figcaption>{oasCrossingText}</figcaption>
-      </figure>
-    </details>
+            <line
+              class="axis"
+              x1={PLOT_LEFT}
+              x2={PLOT_RIGHT}
+              y1={PLOT_BOTTOM}
+              y2={PLOT_BOTTOM}
+            />
+            <line
+              class="axis"
+              x1={PLOT_LEFT}
+              x2={PLOT_LEFT}
+              y1={PLOT_TOP}
+              y2={PLOT_BOTTOM}
+            />
 
-    {#if combined.hasCpp}
+            {#each OAS_AGE_TICKS as age (age)}
+              <text
+                class="tick"
+                x={oasTotalsX(age)}
+                y={PLOT_BOTTOM + 16}
+                text-anchor="middle">{age}</text
+              >
+            {/each}
+
+            {#if oasTotals.max > 0}
+              {#each oasTotalsRows as row (row.age)}
+                <line
+                  class="line"
+                  class:prominent={row.emphasis === 1}
+                  class:selected={row.emphasis === 2}
+                  x1={oasTotalsX(row.age)}
+                  y1={PLOT_BOTTOM}
+                  x2={oasTotalsX(OAS_TOTALS_END)}
+                  y2={oasTotalsY(row.total)}
+                />
+              {/each}
+
+              {#each oasTotalsRows as row (row.age)}
+                <text
+                  class="line-label"
+                  class:selected={row.emphasis === 2}
+                  x={PLOT_RIGHT + 4}
+                  y={oasTotalsY(row.total) + 4}>{row.age}</text
+                >
+              {/each}
+
+              {#if oasCrossing.inRange}
+                {@const x = oasTotalsX(oasCrossing.age)}
+                {@const y = oasTotalsY(oasCrossing.total)}
+                <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
+                <text
+                  class="break-even-label"
+                  {x}
+                  y={Math.max(y - 7, PLOT_TOP + 4)}
+                  text-anchor="middle">{Math.round(oasCrossing.age)}</text
+                >
+              {/if}
+            {/if}
+          </svg>
+          <figcaption>{oasCrossingText}</figcaption>
+        </figure>
+      </details>
+    {/if}
+
+    {#if combined.hasCpp && combined.hasOas}
       <section class="total">
         <p class="label">From age {combined.bothAge}, once both are paying</p>
         <p class="amount">
@@ -1113,7 +1135,9 @@
     {:else}
       <section class="total">
         <p class="label">Total unavailable</p>
-        <p class="hint">Fix the CPP inputs above to see the combined total.</p>
+        <p class="hint">
+          Fix the {combined.missing} inputs above to see the combined total.
+        </p>
       </section>
     {/if}
   </div>

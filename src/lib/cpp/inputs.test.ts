@@ -8,6 +8,8 @@ import {
   MIN_BIRTH_YEAR,
   MIN_CARE_YEAR,
   NO_EARNING_PERIOD_PROBLEM,
+  OAS_RESIDENCE_PROBLEM,
+  OAS_START_AGE_PROBLEM,
   PERIOD_PROBLEM,
   clamp,
   formatPercent,
@@ -27,6 +29,8 @@ const FILLED = {
   birthYear: 1990,
   earningPeriods: [EARNING],
   claimAge: 65,
+  oasYears: 40,
+  oasStartAge: 65,
   inflationText: '2.50',
   wageGrowthText: '3.00',
   periods: [],
@@ -264,6 +268,7 @@ describe('read inputs', () => {
   it('reports nothing for a filled form', () => {
     const inputs = readInputs(FILLED)
     expect(inputs.problems).toEqual([])
+    expect(inputs.oasProblems).toEqual([])
     expect(inputs.birthYear).toBe(1990)
     expect(inputs.inflation).toBeCloseTo(0.025, 10)
     expect(inputs.wageGrowth).toBeCloseTo(0.03, 10)
@@ -463,6 +468,49 @@ describe('read inputs', () => {
     expect(readInputs({ ...FILLED, claimAge: 70 }).problems).toEqual([])
   })
 
+  it('reports a cleared residence count instead of paying nothing', () => {
+    const inputs = readInputs({ ...FILLED, oasYears: null })
+    expect(inputs.oasYears).toBeUndefined()
+    expect(inputs.oasProblems).toEqual([OAS_RESIDENCE_PROBLEM])
+    expect(inputs.problems).toEqual([])
+  })
+
+  it('reports a residence count outside 0 to 40', () => {
+    expect(readInputs({ ...FILLED, oasYears: 41 }).oasProblems).toEqual([
+      OAS_RESIDENCE_PROBLEM,
+    ])
+    expect(readInputs({ ...FILLED, oasYears: -1 }).oasProblems).toEqual([
+      OAS_RESIDENCE_PROBLEM,
+    ])
+  })
+
+  it('accepts the ends of the residence range', () => {
+    expect(readInputs({ ...FILLED, oasYears: 0 }).oasProblems).toEqual([])
+    expect(readInputs({ ...FILLED, oasYears: 40 }).oasProblems).toEqual([])
+  })
+
+  it('drops a partial residence year rather than rounding it up', () => {
+    const inputs = readInputs({ ...FILLED, oasYears: 39.9 })
+    expect(inputs.oasYears).toBe(39)
+    expect(inputs.oasProblems).toEqual([])
+  })
+
+  it('reports an OAS start age outside 65 to 70', () => {
+    expect(readInputs({ ...FILLED, oasStartAge: 64 }).oasProblems).toEqual([
+      OAS_START_AGE_PROBLEM,
+    ])
+    expect(readInputs({ ...FILLED, oasStartAge: 71 }).oasProblems).toEqual([
+      OAS_START_AGE_PROBLEM,
+    ])
+    expect(readInputs({ ...FILLED, oasStartAge: 65 }).oasProblems).toEqual([])
+    expect(readInputs({ ...FILLED, oasStartAge: 70 }).oasProblems).toEqual([])
+  })
+
+  it('names the ranges in the OAS problems', () => {
+    expect(OAS_RESIDENCE_PROBLEM).toContain('0 to 40')
+    expect(OAS_START_AGE_PROBLEM).toContain('65 to 70')
+  })
+
   it('reports an inflation entry that is not a number', () => {
     const inputs = readInputs({ ...FILLED, inflationText: 'abc' })
     expect(inputs.inflation).toBeUndefined()
@@ -546,5 +594,6 @@ describe('read inputs', () => {
       'Annual inflation must be -5% to 15%.',
       'Annual wage growth must be -5% to 15%.',
     ])
+    expect(inputs.oasProblems).toHaveLength(2)
   })
 })

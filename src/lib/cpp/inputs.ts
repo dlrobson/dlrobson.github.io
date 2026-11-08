@@ -15,6 +15,11 @@ import {
   type ChildRearingPeriod,
   type EarningPeriod,
 } from './estimator'
+import {
+  OAS_FULL_RESIDENCE_YEARS,
+  OAS_MAX_START_AGE,
+  OAS_MIN_START_AGE,
+} from './oas'
 
 export const MIN_BIRTH_YEAR = 1930
 export const MAX_BIRTH_YEAR = 2010
@@ -86,6 +91,10 @@ export type StoredResult =
   | { readonly ok: true; readonly saved: StoredState | null }
   | { readonly ok: false }
 
+export const OAS_RESIDENCE_PROBLEM = `Years in Canada after 18 must be 0 to ${OAS_FULL_RESIDENCE_YEARS}.`
+
+export const OAS_START_AGE_PROBLEM = `Age you start OAS must be ${OAS_MIN_START_AGE} to ${OAS_MAX_START_AGE}.`
+
 export interface RawPeriod {
   readonly from?: number | null
   readonly to?: number | null
@@ -95,6 +104,8 @@ export interface RawInputs {
   readonly birthYear?: number | null
   readonly earningPeriods?: readonly RawEarningPeriod[] | null
   readonly claimAge?: number | null
+  readonly oasYears?: number | null
+  readonly oasStartAge?: number | null
   readonly inflationText?: string | null
   readonly wageGrowthText?: string | null
   readonly periods?: readonly RawPeriod[] | null
@@ -105,11 +116,16 @@ export interface Inputs {
   readonly earningPeriods: readonly EarningPeriod[]
   readonly earningProblems: readonly string[]
   readonly claimAge?: number
+  readonly oasYears?: number
+  readonly oasStartAge?: number
   readonly inflation?: number
   readonly wageGrowth?: number
   readonly carePeriods: readonly ChildRearingPeriod[]
   readonly careProblem: boolean
+  /** What stops the CPP estimate. */
   readonly problems: readonly string[]
+  /** What stops the OAS estimate. */
+  readonly oasProblems: readonly string[]
 }
 
 export function clamp(value: number, min: number, max: number): number {
@@ -146,8 +162,9 @@ export function storedNumber(
 }
 
 /**
- * A calendar year as a whole number. Years are floored, not rounded, to match
- * the windows `childRearingWindows` builds from the same entry.
+ * A count of whole units, floored rather than rounded. Calendar years have to
+ * match the windows `childRearingWindows` builds from the same entry, and a
+ * year of residence drops its partial part the way the OAS pension does.
  */
 export function optionalYear(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value)
@@ -266,6 +283,8 @@ export function restoreEarningPeriods(
 export function readInputs(raw: RawInputs): Inputs {
   const birthYear = parseWhole(raw.birthYear)
   const claimAge = parseWhole(raw.claimAge)
+  const oasYears = optionalYear(raw.oasYears)
+  const oasStartAge = parseWhole(raw.oasStartAge)
   const inflation = percentFraction(raw.inflationText)
   const wageGrowth = percentFraction(raw.wageGrowthText)
 
@@ -342,11 +361,21 @@ export function readInputs(raw: RawInputs): Inputs {
   }
   if (careProblem) problems.push(PERIOD_PROBLEM)
 
+  const oasProblems: string[] = []
+  if (!inRange(oasYears, 0, OAS_FULL_RESIDENCE_YEARS)) {
+    oasProblems.push(OAS_RESIDENCE_PROBLEM)
+  }
+  if (!inRange(oasStartAge, OAS_MIN_START_AGE, OAS_MAX_START_AGE)) {
+    oasProblems.push(OAS_START_AGE_PROBLEM)
+  }
+
   return {
     birthYear,
     earningPeriods,
     earningProblems,
     claimAge,
+    oasYears,
+    oasStartAge,
     inflation,
     wageGrowth,
     carePeriods: rows.filter(
@@ -357,5 +386,6 @@ export function readInputs(raw: RawInputs): Inputs {
     ),
     careProblem,
     problems,
+    oasProblems,
   }
 }
