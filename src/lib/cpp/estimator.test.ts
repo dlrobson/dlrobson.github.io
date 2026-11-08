@@ -7,6 +7,7 @@ import {
   DEFAULT_CPI,
   defaultChildRearingPeriod,
   deflate,
+  earningPeriodsEarnings,
   ENHANCED_DIVISOR_MONTHS,
   estimate,
   FIRST_ADDITIONAL_RATE,
@@ -343,6 +344,53 @@ describe('today dollars', () => {
       result.monthly,
       9,
     )
+  })
+})
+
+describe('earning periods', () => {
+  it('holds each period salary flat in real terms', () => {
+    const earnings = earningPeriodsEarnings(
+      [
+        { fromAge: 22, toAge: 40, salary: 70000 },
+        { fromAge: 45, toAge: 65, salary: 50000 },
+      ],
+      1990,
+      2026,
+      0.025,
+    )
+    expect(earnings[2026]).toBe(70000)
+    for (const year of years(2012, 2030)) {
+      expect(earnings[year] / 1.025 ** (year - 2026)).toBeCloseTo(70000, 6)
+    }
+    for (const year of years(2035, 2055)) {
+      expect(earnings[year] / 1.025 ** (year - 2026)).toBeCloseTo(50000, 6)
+    }
+  })
+
+  it('leaves a gap between periods without earnings', () => {
+    const earnings = earningPeriodsEarnings(
+      [
+        { fromAge: 22, toAge: 35, salary: 70000 },
+        { fromAge: 45, toAge: 65, salary: 50000 },
+      ],
+      1990,
+      2026,
+      0.025,
+    )
+    for (const year of years(2026, 2034)) {
+      expect(earnings[year]).toBeUndefined()
+    }
+  })
+
+  it('counts the end age as a working year', () => {
+    const earnings = earningPeriodsEarnings(
+      [{ fromAge: 22, toAge: 40, salary: 70000 }],
+      1990,
+      2026,
+      0.025,
+    )
+    expect(earnings[2030]).toBeDefined()
+    expect(earnings[2031]).toBeUndefined()
   })
 })
 

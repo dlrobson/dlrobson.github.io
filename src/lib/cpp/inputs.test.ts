@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import {
+  EARNING_OVERLAP_PROBLEM,
+  EARNING_PERIOD_PROBLEM,
+  EARNING_SALARY_PROBLEM,
   MAX_BIRTH_YEAR,
   MAX_CARE_YEAR,
   MIN_BIRTH_YEAR,
   MIN_CARE_YEAR,
+  NO_EARNING_PERIOD_PROBLEM,
   PERIOD_PROBLEM,
   clamp,
   formatPercent,
@@ -15,11 +19,10 @@ import {
   storedNumber,
 } from './inputs'
 
+const EARNING = { fromAge: 22, toAge: 65, salary: 70000 }
 const FILLED = {
   birthYear: 1990,
-  salary: 70000,
-  startedAge: 22,
-  stoppedAge: 65,
+  earningPeriods: [EARNING],
   claimAge: 65,
   inflationText: '2.50',
   wageGrowthText: '3.00',
@@ -158,50 +161,149 @@ describe('read inputs', () => {
     expect(readInputs({ ...FILLED, birthYear: 2011 }).problems).toHaveLength(1)
   })
 
-  it('reports a negative salary', () => {
-    const inputs = readInputs({ ...FILLED, salary: -1 })
-    expect(inputs.salary).toBe(-1)
-    expect(inputs.problems).toEqual(['Annual salary must be zero or more.'])
+  it('parses each earning period', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [
+        { fromAge: 22.4, toAge: 39.4, salary: 70000.4 },
+        { fromAge: 40, toAge: 65, salary: 50000 },
+      ],
+    })
+    expect(inputs.earningPeriods).toEqual([
+      { fromAge: 22, toAge: 39, salary: 70000 },
+      { fromAge: 40, toAge: 65, salary: 50000 },
+    ])
+    expect(inputs.earningProblems).toEqual([])
   })
 
-  it('reports a stop age below the start age', () => {
-    const inputs = readInputs({ ...FILLED, startedAge: 22, stoppedAge: 18 })
-    expect(inputs.problems).toEqual([
-      'Age you stop working must be on or after the age you started.',
+  it('reports a cleared earning period instead of filling it in', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [{ fromAge: null, toAge: null, salary: null }],
+    })
+    expect(inputs.earningPeriods).toEqual([])
+    expect(inputs.earningProblems).toEqual([
+      EARNING_PERIOD_PROBLEM,
+      EARNING_SALARY_PROBLEM,
     ])
   })
 
-  it('accepts a stop age equal to the start age', () => {
-    expect(
-      readInputs({ ...FILLED, startedAge: 65, stoppedAge: 65 }).problems,
-    ).toEqual([])
+  it('reports a salary below zero', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [{ ...EARNING, salary: -1 }],
+    })
+    expect(inputs.earningPeriods).toEqual([])
+    expect(inputs.earningProblems).toEqual([EARNING_SALARY_PROBLEM])
   })
 
-  it('reports a start age outside 18 to 70', () => {
-    expect(readInputs({ ...FILLED, startedAge: 17 }).problems).toEqual([
-      'Age you started working must be 18 to 70.',
-    ])
-    expect(
-      readInputs({ ...FILLED, startedAge: 71, stoppedAge: 71 }).problems,
-    ).toEqual([
-      'Age you started working must be 18 to 70.',
-      'Age you stop working must be 18 to 70.',
-    ])
+  it('accepts a salary of zero', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [{ ...EARNING, salary: 0 }],
+    })
+    expect(inputs.earningPeriods).toEqual([{ ...EARNING, salary: 0 }])
+    expect(inputs.problems).toEqual([])
   })
 
-  it('reports a stop age outside 18 to 70', () => {
+  it('reports an end age below the start age', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [{ ...EARNING, fromAge: 22, toAge: 18 }],
+    })
+    expect(inputs.earningPeriods).toEqual([])
+    expect(inputs.earningProblems).toEqual([EARNING_PERIOD_PROBLEM])
+  })
+
+  it('accepts a period of one year', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [{ ...EARNING, fromAge: 65, toAge: 65 }],
+    })
+    expect(inputs.earningProblems).toEqual([])
+  })
+
+  it('reports an age outside 18 to 70', () => {
     expect(
-      readInputs({ ...FILLED, startedAge: 18, stoppedAge: 71 }).problems,
-    ).toEqual(['Age you stop working must be 18 to 70.'])
+      readInputs({
+        ...FILLED,
+        earningPeriods: [{ ...EARNING, fromAge: 17 }],
+      }).earningProblems,
+    ).toEqual([EARNING_PERIOD_PROBLEM])
+    expect(
+      readInputs({
+        ...FILLED,
+        earningPeriods: [{ ...EARNING, toAge: 71 }],
+      }).earningProblems,
+    ).toEqual([EARNING_PERIOD_PROBLEM])
   })
 
   it('accepts the ends of the working age range', () => {
     expect(
-      readInputs({ ...FILLED, startedAge: 18, stoppedAge: 18 }).problems,
+      readInputs({
+        ...FILLED,
+        earningPeriods: [{ ...EARNING, fromAge: 18, toAge: 18 }],
+      }).problems,
     ).toEqual([])
     expect(
-      readInputs({ ...FILLED, startedAge: 70, stoppedAge: 70 }).problems,
+      readInputs({
+        ...FILLED,
+        earningPeriods: [{ ...EARNING, fromAge: 70, toAge: 70 }],
+      }).problems,
     ).toEqual([])
+  })
+
+  it('reports an empty earning period list', () => {
+    const inputs = readInputs({ ...FILLED, earningPeriods: [] })
+    expect(inputs.earningPeriods).toEqual([])
+    expect(inputs.earningProblems).toEqual([NO_EARNING_PERIOD_PROBLEM])
+  })
+
+  it('reports overlapping earning periods', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [
+        { fromAge: 22, toAge: 40, salary: 70000 },
+        { fromAge: 40, toAge: 65, salary: 50000 },
+      ],
+    })
+    expect(inputs.earningPeriods).toHaveLength(2)
+    expect(inputs.earningProblems).toEqual([EARNING_OVERLAP_PROBLEM])
+  })
+
+  it('accepts adjacent and separated earning periods', () => {
+    expect(
+      readInputs({
+        ...FILLED,
+        earningPeriods: [
+          { fromAge: 22, toAge: 40, salary: 70000 },
+          { fromAge: 41, toAge: 65, salary: 50000 },
+        ],
+      }).problems,
+    ).toEqual([])
+    expect(
+      readInputs({
+        ...FILLED,
+        earningPeriods: [
+          { fromAge: 22, toAge: 35, salary: 70000 },
+          { fromAge: 45, toAge: 65, salary: 50000 },
+        ],
+      }).problems,
+    ).toEqual([])
+  })
+
+  it('keeps the earning periods it can read and reports the rest', () => {
+    const inputs = readInputs({
+      ...FILLED,
+      earningPeriods: [
+        { fromAge: 22, toAge: 40, salary: 70000 },
+        { fromAge: 41, toAge: 65, salary: null },
+      ],
+    })
+    expect(inputs.earningPeriods).toEqual([
+      { fromAge: 22, toAge: 40, salary: 70000 },
+    ])
+    expect(inputs.earningProblems).toEqual([EARNING_SALARY_PROBLEM])
   })
 
   it('reports a claim age outside 60 to 70', () => {
@@ -284,14 +386,19 @@ describe('read inputs', () => {
   it('reports every problem at once', () => {
     const inputs = readInputs({
       birthYear: null,
-      salary: null,
-      startedAge: null,
-      stoppedAge: null,
+      earningPeriods: [{ fromAge: null, toAge: null, salary: null }],
       claimAge: null,
       inflationText: '',
       wageGrowthText: '',
       periods: [],
     })
-    expect(inputs.problems).toHaveLength(7)
+    expect(inputs.problems).toEqual([
+      `Year you were born must be ${MIN_BIRTH_YEAR} to ${MAX_BIRTH_YEAR}.`,
+      EARNING_PERIOD_PROBLEM,
+      EARNING_SALARY_PROBLEM,
+      'Age you start CPP must be 60 to 70.',
+      'Annual inflation must be -5% to 15%.',
+      'Annual wage growth must be -5% to 15%.',
+    ])
   })
 })

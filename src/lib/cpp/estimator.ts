@@ -25,6 +25,12 @@ export interface Earnings {
   readonly [year: number]: number
 }
 
+export interface EarningPeriod {
+  readonly fromAge: number
+  readonly toAge: number
+  readonly salary: number
+}
+
 interface Month {
   readonly year: number
   readonly band: number
@@ -324,6 +330,30 @@ export function estimate(
 }
 
 /**
+ * Earnings for one or more salary periods held flat in real terms: each amount
+ * is given in `baseYear` dollars and grows with `cpi` in every later year.
+ * Ages are inclusive, and a gap between periods is a year with no earnings.
+ */
+export function earningPeriodsEarnings(
+  periods: readonly EarningPeriod[],
+  birthYear: number,
+  baseYear: number,
+  cpi: number,
+): Earnings {
+  const earnings: Record<number, number> = {}
+  for (const period of periods) {
+    for (
+      let year = birthYear + period.fromAge;
+      year <= birthYear + period.toAge;
+      year++
+    ) {
+      earnings[year] = period.salary * (1 + cpi) ** (year - baseYear)
+    }
+  }
+  return earnings
+}
+
+/**
  * Earnings for a salary held flat in real terms: the amount is given in
  * `baseYear` dollars and grows with `cpi` in every later year.
  */
@@ -335,15 +365,12 @@ export function steadySalaryEarnings(
   baseYear: number,
   cpi: number,
 ): Earnings {
-  const earnings: Record<number, number> = {}
-  for (
-    let year = birthYear + startedAge;
-    year <= birthYear + stoppedAge;
-    year++
-  ) {
-    earnings[year] = salary * (1 + cpi) ** (year - baseYear)
-  }
-  return earnings
+  return earningPeriodsEarnings(
+    [{ fromAge: startedAge, toAge: stoppedAge, salary }],
+    birthYear,
+    baseYear,
+    cpi,
+  )
 }
 
 export interface ChildRearingPeriod {

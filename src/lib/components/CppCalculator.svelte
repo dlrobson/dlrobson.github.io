@@ -13,9 +13,10 @@
     applyChildRearing,
     childRearingWindows,
     defaultChildRearingPeriod,
+    earningPeriodsEarnings,
     estimate,
     project,
-    steadySalaryEarnings,
+    type EarningPeriod,
   } from '$lib/cpp/estimator'
   import {
     MAX_BIRTH_YEAR,
@@ -62,30 +63,41 @@
 
   const DEFAULTS = {
     birthYear: 1990,
-    salary: 70000,
-    startedAge: 22,
-    stoppedAge: 65,
     claimAge: 65,
     inflationText: (DEFAULT_CPI * 100).toFixed(2),
     wageGrowthText: (DEFAULT_WAGE_GROWTH * 100).toFixed(2),
   }
 
-  const STORAGE_KEY = 'cpp-calculator:v1'
+  const DEFAULT_EARNING_PERIOD = {
+    fromAge: 22,
+    toAge: 65,
+    salary: 70000,
+  }
+
+  const STORAGE_KEY = 'cpp-calculator:v2'
+  const LEGACY_STORAGE_KEY = 'cpp-calculator:v1'
 
   interface SavedPeriod {
     from?: number
     to?: number
   }
 
+  interface SavedEarningPeriod {
+    fromAge?: number
+    toAge?: number
+    salary?: number
+  }
+
   interface SavedState {
     birthYear?: number
-    salary?: number
-    startedAge?: number
-    stoppedAge?: number
     claimAge?: number
     inflationText?: string
     wageGrowthText?: string
+    earningPeriods?: SavedEarningPeriod[]
     periods?: SavedPeriod[]
+    salary?: number
+    startedAge?: number
+    stoppedAge?: number
   }
 
   interface PeriodRow {
@@ -94,15 +106,23 @@
     to: number | undefined
   }
 
+  interface EarningRow {
+    id: number
+    fromAge: number | undefined
+    toAge: number | undefined
+    salary: number | undefined
+  }
+
+  let nextEarningId = 1
   let nextPeriodId = 1
 
   let birthYear = $state<number | undefined>(DEFAULTS.birthYear)
-  let salary = $state<number | undefined>(DEFAULTS.salary)
-  let startedAge = $state<number | undefined>(DEFAULTS.startedAge)
-  let stoppedAge = $state<number | undefined>(DEFAULTS.stoppedAge)
   let claimAge = $state<number | undefined>(DEFAULTS.claimAge)
   let inflationText = $state(DEFAULTS.inflationText)
   let wageGrowthText = $state(DEFAULTS.wageGrowthText)
+  let earningPeriods = $state<EarningRow[]>([
+    { id: nextEarningId++, ...DEFAULT_EARNING_PERIOD },
+  ])
   let periods = $state<PeriodRow[]>([])
   let hydrated = $state(false)
   let surfaceOpen = $state(false)
@@ -113,7 +133,9 @@
 
   function readStored(): Stored {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw =
+        localStorage.getItem(STORAGE_KEY) ??
+        localStorage.getItem(LEGACY_STORAGE_KEY)
       if (!raw) return { ok: true, saved: null }
       const saved = JSON.parse(raw)
       return saved && typeof saved === 'object'
@@ -128,11 +150,6 @@
     if (!saved) return
     birthYear =
       storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
-    salary = storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ?? salary
-    startedAge =
-      storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ?? startedAge
-    stoppedAge =
-      storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ?? stoppedAge
     claimAge =
       storedNumber(saved.claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE) ?? claimAge
     if (typeof saved.inflationText === 'string') {
@@ -140,6 +157,33 @@
     }
     if (typeof saved.wageGrowthText === 'string') {
       wageGrowthText = saved.wageGrowthText
+    }
+    if (Array.isArray(saved.earningPeriods)) {
+      earningPeriods = saved.earningPeriods.map((period) => ({
+        id: nextEarningId++,
+        fromAge: storedNumber(period?.fromAge, MIN_WORK_AGE, MAX_WORK_AGE),
+        toAge: storedNumber(period?.toAge, MIN_WORK_AGE, MAX_WORK_AGE),
+        salary: storedNumber(period?.salary, 0, Number.POSITIVE_INFINITY),
+      }))
+    } else if (
+      saved.salary !== undefined ||
+      saved.startedAge !== undefined ||
+      saved.stoppedAge !== undefined
+    ) {
+      earningPeriods = [
+        {
+          id: nextEarningId++,
+          fromAge:
+            storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
+            DEFAULT_EARNING_PERIOD.fromAge,
+          toAge:
+            storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
+            DEFAULT_EARNING_PERIOD.toAge,
+          salary:
+            storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ??
+            DEFAULT_EARNING_PERIOD.salary,
+        },
+      ]
     }
     if (Array.isArray(saved.periods)) {
       periods = saved.periods.map((period) => ({
@@ -168,12 +212,14 @@
     if (!hydrated) return
     const saved: SavedState = {
       birthYear,
-      salary,
-      startedAge,
-      stoppedAge,
       claimAge,
       inflationText,
       wageGrowthText,
+      earningPeriods: earningPeriods.map(({ fromAge, toAge, salary }) => ({
+        fromAge,
+        toAge,
+        salary,
+      })),
       periods: periods.map(({ from, to }) => ({ from, to })),
     }
     if (skipNextSave) {
@@ -197,6 +243,87 @@
     )
   }
 
+  function addEarningPeriod() {
+    if (earningPeriods.length === 0) {
+      earningPeriods = [{ id: nextEarningId++, ...DEFAULT_EARNING_PERIOD }]
+      return
+    }
+
+    const last = earningPeriods.reduce((latest, period) => {
+      const latestTo = parseWhole(latest.toAge) ?? MIN_WORK_AGE - 1
+      const periodTo = parseWhole(period.toAge) ?? MIN_WORK_AGE - 1
+      return periodTo >= latestTo ? period : latest
+    })
+    const from = clamp(
+      parseWhole(last.fromAge) ?? DEFAULT_EARNING_PERIOD.fromAge,
+      MIN_WORK_AGE,
+      MAX_WORK_AGE,
+    )
+    const to = clamp(
+      parseWhole(last.toAge) ?? DEFAULT_EARNING_PERIOD.toAge,
+      from,
+      MAX_WORK_AGE,
+    )
+
+    if (to > from) {
+      const split = Math.floor((from + to) / 2)
+      earningPeriods = earningPeriods.map((period) =>
+        period.id === last.id ? { ...period, toAge: split } : period,
+      )
+      earningPeriods = [
+        ...earningPeriods,
+        {
+          id: nextEarningId++,
+          fromAge: split + 1,
+          toAge: to,
+          salary: last.salary,
+        },
+      ]
+      return
+    }
+
+    if (to < MAX_WORK_AGE) {
+      earningPeriods = [
+        ...earningPeriods,
+        {
+          id: nextEarningId++,
+          fromAge: to + 1,
+          toAge: Math.min(MAX_WORK_AGE, to + 5),
+          salary: last.salary,
+        },
+      ]
+      return
+    }
+
+    if (from > MIN_WORK_AGE) {
+      const start = Math.max(MIN_WORK_AGE, from - 5)
+      earningPeriods = [
+        ...earningPeriods,
+        {
+          id: nextEarningId++,
+          fromAge: start,
+          toAge: from - 1,
+          salary: last.salary,
+        },
+      ]
+      return
+    }
+
+    earningPeriods = [
+      ...earningPeriods,
+      {
+        id: nextEarningId++,
+        fromAge: undefined,
+        toAge: undefined,
+        salary: last.salary,
+      },
+    ]
+  }
+
+  function removeEarningPeriod(id: number) {
+    earningPeriods = earningPeriods.filter((period) => period.id !== id)
+  }
+
   function addPeriod() {
     const birth = clamp(
       parseWhole(birthYear) ?? DEFAULTS.birthYear,
@@ -216,9 +343,7 @@
   const inputs = $derived(
     readInputs({
       birthYear,
-      salary,
-      startedAge,
-      stoppedAge,
+      earningPeriods,
       claimAge,
       inflationText,
       wageGrowthText,
@@ -232,17 +357,6 @@
       MIN_BIRTH_YEAR,
       MAX_BIRTH_YEAR,
     )
-    const started = clamp(
-      inputs.startedAge ?? DEFAULTS.startedAge,
-      MIN_WORK_AGE,
-      MAX_WORK_AGE,
-    )
-    const stopped = clamp(
-      inputs.stoppedAge ?? DEFAULTS.stoppedAge,
-      started,
-      MAX_WORK_AGE,
-    )
-    const pay = Math.max(0, inputs.salary ?? 0)
     const claim = clamp(
       inputs.claimAge ?? DEFAULTS.claimAge,
       MIN_CLAIM_AGE,
@@ -251,20 +365,19 @@
     const cpi = inputs.inflation ?? DEFAULT_CPI
     const growth = inputs.wageGrowth ?? DEFAULT_WAGE_GROWTH
 
-    // The ceilings grow at the wage rate; the salary and the result deflator
-    // use inflation, so the salary stays level in real terms.
+    // The ceilings grow at the wage rate; the salaries and the result deflator
+    // use inflation, so each salary stays level in real terms.
     const ceilings = project(CEILINGS, birth + 71, growth)
     const windows = childRearingWindows(inputs.carePeriods)
 
-    const salaryEarnings = steadySalaryEarnings(
-      pay,
-      started,
-      stopped,
-      birth,
-      BASE_YEAR,
-      cpi,
+    const earningPeriodsForModel: readonly EarningPeriod[] =
+      inputs.earningPeriods.length > 0
+        ? inputs.earningPeriods
+        : [DEFAULT_EARNING_PERIOD]
+    const earnings = applyChildRearing(
+      earningPeriodsEarnings(earningPeriodsForModel, birth, BASE_YEAR, cpi),
+      inputs.carePeriods,
     )
-    const earnings = applyChildRearing(salaryEarnings, inputs.carePeriods)
     const results = CLAIM_AGES.map((age) =>
       estimate(birth, age, earnings, ceilings, windows),
     )
@@ -274,8 +387,7 @@
       selected: results[claim - MIN_CLAIM_AGE],
       claim,
       birth,
-      started,
-      stopped,
+      earningPeriods: earningPeriodsForModel,
       cpi,
       growth,
       cpiPercent: (cpi * 100).toFixed(2),
@@ -413,30 +525,66 @@
           bind:value={birthYear}
         />
       </label>
-      <label>
-        <span>Annual salary (today's dollars)</span>
-        <input type="number" min="0" step="1000" bind:value={salary} />
-      </label>
-      <label>
-        <span>Age you started working</span>
-        <input
-          type="number"
-          min={MIN_WORK_AGE}
-          max={MAX_WORK_AGE}
-          step="1"
-          bind:value={startedAge}
-        />
-      </label>
-      <label>
-        <span>Age you stop working</span>
-        <input
-          type="number"
-          min={MIN_WORK_AGE}
-          max={MAX_WORK_AGE}
-          step="1"
-          bind:value={stoppedAge}
-        />
-      </label>
+    </div>
+
+    <div class="earning">
+      <p class="section-label">Earning periods</p>
+      {#each earningPeriods as period (period.id)}
+        <div class="earning-row">
+          <label>
+            <span>From age</span>
+            <input
+              type="number"
+              min={MIN_WORK_AGE}
+              max={MAX_WORK_AGE}
+              step="1"
+              bind:value={period.fromAge}
+            />
+          </label>
+          <label>
+            <span>To age</span>
+            <input
+              type="number"
+              min={MIN_WORK_AGE}
+              max={MAX_WORK_AGE}
+              step="1"
+              bind:value={period.toAge}
+            />
+          </label>
+          <label>
+            <span>Annual salary (today's dollars)</span>
+            <input
+              type="number"
+              min="0"
+              step="1000"
+              bind:value={period.salary}
+            />
+          </label>
+          <button
+            type="button"
+            class="remove"
+            onclick={() => removeEarningPeriod(period.id)}
+            aria-label="Remove earning period"
+          >
+            Remove
+          </button>
+        </div>
+      {/each}
+      <button type="button" class="add" onclick={addEarningPeriod}>
+        + Add earning period
+      </button>
+      <p class="hint">
+        Each row covers the calendar years in which you turn the start through
+        end ages. Leave a gap for years without earnings. Adding a row splits
+        the latest period so you can give the new stretch a different salary.
+      </p>
+      {#if inputs.earningProblems.length > 0}
+        <ul class="problems">
+          {#each inputs.earningProblems as problem (problem)}
+            <li>{problem}</li>
+          {/each}
+        </ul>
+      {/if}
     </div>
 
     <div class="claim-age">
@@ -713,17 +861,15 @@
         ontoggle={(event) =>
           (surfaceOpen = (event.currentTarget as HTMLDetailsElement).open)}
       >
-        <summary>Salary and working years</summary>
+        <summary>Final salary and working years</summary>
         {#if surfaceOpen}
           <CppSurface
             birthYear={model.birth}
-            startedAge={model.started}
-            stoppedAge={model.stopped}
             claimAge={model.claim}
             cpi={model.cpi}
             wageGrowth={model.growth}
             baseYear={BASE_YEAR}
-            salary={Math.max(0, salary ?? 0)}
+            earningPeriods={model.earningPeriods}
             childRearing={inputs.carePeriods}
           />
         {/if}
@@ -851,6 +997,35 @@
     margin-top: var(--space-md);
   }
 
+  .earning {
+    margin-top: var(--space-md);
+  }
+
+  .earning-row {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 0.7fr) minmax(0, 0.7fr)
+      minmax(0, 1.6fr) auto;
+    align-items: end;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
+
+  @media (max-width: 640px) {
+    .earning-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .earning-row label:nth-child(3),
+    .earning-row .remove {
+      grid-column: 1 / -1;
+    }
+
+    .earning-row .remove {
+      justify-self: start;
+    }
+  }
+
   .child-row {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
@@ -878,7 +1053,7 @@
   .remove {
     padding: 6px 0;
     border: 1px solid transparent;
-    line-height: normal;
+    line-height: inherit;
   }
 
   .add {

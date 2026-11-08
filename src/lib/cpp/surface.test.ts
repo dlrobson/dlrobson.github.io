@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { CEILINGS, LAST_PUBLISHED_YEAR } from './params'
 import {
   deflate,
+  earningPeriodsEarnings,
   estimate,
   project,
-  steadySalaryEarnings,
   ympeAverage,
 } from './estimator'
 import {
@@ -15,13 +15,14 @@ import {
 } from './surface'
 
 const BASE_YEAR = LAST_PUBLISHED_YEAR
+const PERIOD = { fromAge: 22, toAge: 65, salary: 70000 }
 const DEFAULTS = {
   birthYear: 1990,
-  startedAge: 22,
   claimAge: 65,
   cpi: 0.025,
   wageGrowth: 0.03,
   baseYear: BASE_YEAR,
+  earningPeriods: [PERIOD],
 }
 
 const grid = pensionSurface(DEFAULTS)
@@ -78,10 +79,8 @@ describe('pension surface', () => {
   })
 
   it('matches a direct estimate at the first ceiling', () => {
-    const earnings = steadySalaryEarnings(
-      grid.ceiling,
-      DEFAULTS.startedAge,
-      66,
+    const earnings = earningPeriodsEarnings(
+      [{ ...PERIOD, toAge: 66, salary: grid.ceiling }],
       DEFAULTS.birthYear,
       BASE_YEAR,
       DEFAULTS.cpi,
@@ -98,6 +97,61 @@ describe('pension surface', () => {
       ceilings,
     ).monthlyIn(BASE_YEAR, DEFAULTS.cpi)
     expect(grid.values[row(66)][column(1)]).toBeCloseTo(direct, 6)
+  })
+
+  it('keeps earlier periods fixed while the final salary varies', () => {
+    const earningPeriods = [
+      { fromAge: 22, toAge: 40, salary: 60000 },
+      { fromAge: 41, toAge: 65, salary: 50000 },
+    ]
+    const multi = pensionSurface({ ...DEFAULTS, earningPeriods })
+    const earnings = earningPeriodsEarnings(
+      [
+        earningPeriods[0],
+        { ...earningPeriods[1], toAge: 66, salary: grid.ceiling },
+      ],
+      DEFAULTS.birthYear,
+      BASE_YEAR,
+      DEFAULTS.cpi,
+    )
+    const ceilings = project(
+      CEILINGS,
+      DEFAULTS.birthYear + 71,
+      DEFAULTS.wageGrowth,
+    )
+    const direct = estimate(
+      DEFAULTS.birthYear,
+      DEFAULTS.claimAge,
+      earnings,
+      ceilings,
+    ).monthlyIn(BASE_YEAR, DEFAULTS.cpi)
+    expect(multi.values[row(66)][column(1)]).toBeCloseTo(direct, 6)
+  })
+
+  it('stops earlier periods at the age work stops', () => {
+    const earningPeriods = [
+      { fromAge: 22, toAge: 50, salary: 60000 },
+      { fromAge: 51, toAge: 65, salary: 50000 },
+    ]
+    const multi = pensionSurface({ ...DEFAULTS, earningPeriods })
+    const earnings = earningPeriodsEarnings(
+      [{ fromAge: 22, toAge: 30, salary: 60000 }],
+      DEFAULTS.birthYear,
+      BASE_YEAR,
+      DEFAULTS.cpi,
+    )
+    const ceilings = project(
+      CEILINGS,
+      DEFAULTS.birthYear + 71,
+      DEFAULTS.wageGrowth,
+    )
+    const direct = estimate(
+      DEFAULTS.birthYear,
+      DEFAULTS.claimAge,
+      earnings,
+      ceilings,
+    ).monthlyIn(BASE_YEAR, DEFAULTS.cpi)
+    expect(multi.values[row(30)][column(1)]).toBeCloseTo(direct, 6)
   })
 
   it('adds nothing above the second ceiling', () => {
@@ -138,7 +192,7 @@ describe('pension surface', () => {
       surface.values[row(66)][column(1)]
     const variants = [
       { birthYear: 1985 },
-      { startedAge: 25 },
+      { earningPeriods: [{ ...PERIOD, fromAge: 25 }] },
       { cpi: 0.04 },
       { wageGrowth: 0.05 },
       { baseYear: BASE_YEAR - 1 },
@@ -149,6 +203,37 @@ describe('pension surface', () => {
         0,
       )
     }
+  })
+
+  it('recomputes when an earlier salary changes', () => {
+    const earningPeriods = [
+      { fromAge: 22, toAge: 40, salary: 60000 },
+      { fromAge: 41, toAge: 65, salary: 50000 },
+    ]
+    const first = pensionSurface({ ...DEFAULTS, earningPeriods })
+    const second = pensionSurface({
+      ...DEFAULTS,
+      earningPeriods: [
+        { ...earningPeriods[0], salary: 40000 },
+        earningPeriods[1],
+      ],
+    })
+    expect(second.values[row(66)][column(1)]).not.toBeCloseTo(
+      first.values[row(66)][column(1)],
+      0,
+    )
+  })
+
+  it('reuses the grid when only the final salary changes', () => {
+    const first = pensionSurface({
+      ...DEFAULTS,
+      earningPeriods: [{ ...PERIOD, salary: 50000 }],
+    })
+    const second = pensionSurface({
+      ...DEFAULTS,
+      earningPeriods: [{ ...PERIOD, salary: 90000 }],
+    })
+    expect(second).toBe(first)
   })
 
   it('reports the largest value', () => {

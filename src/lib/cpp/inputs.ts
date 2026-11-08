@@ -12,6 +12,7 @@ import {
   MAX_CLAIM_AGE,
   MIN_CLAIM_AGE,
   type ChildRearingPeriod,
+  type EarningPeriod,
 } from './estimator'
 
 export const MIN_BIRTH_YEAR = 1930
@@ -24,6 +25,18 @@ export const MIN_RATE = -0.05
 export const MAX_RATE = 0.15
 
 export const PERIOD_PROBLEM = `Each child-rearing period needs a start and an end year from ${MIN_CARE_YEAR} to ${MAX_CARE_YEAR}, with the end on or after the start.`
+export const EARNING_PERIOD_PROBLEM = `Each earning period needs a start and an end age from ${MIN_WORK_AGE} to ${MAX_WORK_AGE}, with the end on or after the start.`
+export const EARNING_SALARY_PROBLEM =
+  'Each earning period needs a salary of zero or more.'
+export const EARNING_OVERLAP_PROBLEM =
+  'Earning periods cannot overlap. Leave a gap for years without earnings.'
+export const NO_EARNING_PERIOD_PROBLEM = 'Add at least one earning period.'
+
+export interface RawEarningPeriod {
+  readonly fromAge?: number | null
+  readonly toAge?: number | null
+  readonly salary?: number | null
+}
 
 export interface RawPeriod {
   readonly from?: number | null
@@ -32,9 +45,7 @@ export interface RawPeriod {
 
 export interface RawInputs {
   readonly birthYear?: number | null
-  readonly salary?: number | null
-  readonly startedAge?: number | null
-  readonly stoppedAge?: number | null
+  readonly earningPeriods?: readonly RawEarningPeriod[] | null
   readonly claimAge?: number | null
   readonly inflationText?: string | null
   readonly wageGrowthText?: string | null
@@ -43,9 +54,8 @@ export interface RawInputs {
 
 export interface Inputs {
   readonly birthYear?: number
-  readonly salary?: number
-  readonly startedAge?: number
-  readonly stoppedAge?: number
+  readonly earningPeriods: readonly EarningPeriod[]
+  readonly earningProblems: readonly string[]
   readonly claimAge?: number
   readonly inflation?: number
   readonly wageGrowth?: number
@@ -118,14 +128,64 @@ export function formatPercent(text: string): string {
   return fraction === undefined ? text : (fraction * 100).toFixed(2)
 }
 
+/** A period whose ages and salary have all been read as usable numbers. */
+export function isEarningPeriod(row: {
+  fromAge?: number
+  toAge?: number
+  salary?: number
+}): row is EarningPeriod {
+  return (
+    inRange(row.fromAge, MIN_WORK_AGE, MAX_WORK_AGE) &&
+    inRange(row.toAge, MIN_WORK_AGE, MAX_WORK_AGE) &&
+    row.toAge >= row.fromAge &&
+    row.salary !== undefined &&
+    row.salary >= 0
+  )
+}
+
 export function readInputs(raw: RawInputs): Inputs {
   const birthYear = parseWhole(raw.birthYear)
-  const salary = parseWhole(raw.salary)
-  const startedAge = parseWhole(raw.startedAge)
-  const stoppedAge = parseWhole(raw.stoppedAge)
   const claimAge = parseWhole(raw.claimAge)
   const inflation = percentFraction(raw.inflationText)
   const wageGrowth = percentFraction(raw.wageGrowthText)
+
+  const earningRows = (raw.earningPeriods ?? []).map((period) => ({
+    fromAge: parseWhole(period?.fromAge),
+    toAge: parseWhole(period?.toAge),
+    salary: parseWhole(period?.salary),
+  }))
+
+  const earningProblems: string[] = []
+  if (earningRows.length === 0) {
+    earningProblems.push(NO_EARNING_PERIOD_PROBLEM)
+  }
+  if (
+    earningRows.some(
+      (row) =>
+        !inRange(row.fromAge, MIN_WORK_AGE, MAX_WORK_AGE) ||
+        !inRange(row.toAge, MIN_WORK_AGE, MAX_WORK_AGE) ||
+        (row.fromAge !== undefined &&
+          row.toAge !== undefined &&
+          row.toAge < row.fromAge),
+    )
+  ) {
+    earningProblems.push(EARNING_PERIOD_PROBLEM)
+  }
+  if (earningRows.some((row) => row.salary === undefined || row.salary < 0)) {
+    earningProblems.push(EARNING_SALARY_PROBLEM)
+  }
+
+  const earningPeriods = earningRows.filter(isEarningPeriod)
+  const sorted = [...earningPeriods].sort(
+    (a, b) => a.fromAge - b.fromAge || a.toAge - b.toAge,
+  )
+  if (
+    sorted.some(
+      (period, index) => index > 0 && period.fromAge <= sorted[index - 1].toAge,
+    )
+  ) {
+    earningProblems.push(EARNING_OVERLAP_PROBLEM)
+  }
 
   const rows = (raw.periods ?? []).map((period) => ({
     from: optionalYear(period?.from),
@@ -144,23 +204,7 @@ export function readInputs(raw: RawInputs): Inputs {
       `Year you were born must be ${MIN_BIRTH_YEAR} to ${MAX_BIRTH_YEAR}.`,
     )
   }
-  if (salary === undefined || salary < 0) {
-    problems.push('Annual salary must be zero or more.')
-  }
-  if (!inRange(startedAge, MIN_WORK_AGE, MAX_WORK_AGE)) {
-    problems.push(
-      `Age you started working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
-    )
-  }
-  if (!inRange(stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE)) {
-    problems.push(
-      `Age you stop working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
-    )
-  } else if (startedAge !== undefined && stoppedAge < startedAge) {
-    problems.push(
-      'Age you stop working must be on or after the age you started.',
-    )
-  }
+  problems.push(...earningProblems)
   if (!inRange(claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE)) {
     problems.push(
       `Age you start CPP must be ${MIN_CLAIM_AGE} to ${MAX_CLAIM_AGE}.`,
@@ -180,9 +224,8 @@ export function readInputs(raw: RawInputs): Inputs {
 
   return {
     birthYear,
-    salary,
-    startedAge,
-    stoppedAge,
+    earningPeriods,
+    earningProblems,
     claimAge,
     inflation,
     wageGrowth,

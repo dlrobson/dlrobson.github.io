@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ChildRearingPeriod } from '$lib/cpp/estimator'
+  import type { ChildRearingPeriod, EarningPeriod } from '$lib/cpp/estimator'
   import {
     SURFACE_SHARE_MAX,
     SURFACE_STOP_FIRST,
@@ -10,25 +10,21 @@
 
   interface Props {
     birthYear: number
-    startedAge: number
-    stoppedAge: number
     claimAge: number
     cpi: number
     wageGrowth: number
     baseYear: number
-    salary: number
+    earningPeriods: readonly EarningPeriod[]
     childRearing: readonly ChildRearingPeriod[]
   }
 
   let {
     birthYear,
-    startedAge,
-    stoppedAge,
     claimAge,
     cpi,
     wageGrowth,
     baseYear,
-    salary,
+    earningPeriods,
     childRearing,
   }: Props = $props()
 
@@ -57,14 +53,31 @@
 
   const format = (value: number) => money.format(value)
 
+  const lastPeriod = $derived.by(() => {
+    let last: EarningPeriod | undefined
+    for (const period of earningPeriods) {
+      if (
+        !last ||
+        period.toAge > last.toAge ||
+        (period.toAge === last.toAge && period.fromAge > last.fromAge)
+      ) {
+        last = period
+      }
+    }
+    return last
+  })
+
+  const salary = $derived(lastPeriod?.salary ?? 0)
+  const stoppedAge = $derived(lastPeriod?.toAge ?? SURFACE_STOP_LAST)
+
   const grid = $derived(
     pensionSurface({
       birthYear,
-      startedAge,
       claimAge,
       cpi,
       wageGrowth,
       baseYear,
+      earningPeriods,
       childRearing,
     }),
   )
@@ -211,10 +224,14 @@
 
   const caption = $derived.by(() => {
     const flat = `Working past ${claimAge} does not change the estimate, because the pension counts earnings only up to the year you start.`
-    if (saturation === undefined) return flat
+    const periodNote =
+      earningPeriods.length > 1
+        ? ' The chart varies only your final earning period.'
+        : ''
+    if (saturation === undefined) return `${flat}${periodNote}`
     return `Extra salary adds nothing above about ${format(
       Math.round(saturation / 1000) * 1000,
-    )} a year, and ${flat.charAt(0).toLowerCase()}${flat.slice(1)}`
+    )} a year, and ${flat.charAt(0).toLowerCase()}${flat.slice(1)}${periodNote}`
   })
 </script>
 
@@ -227,7 +244,9 @@
     onmousemove={onmove}
     onmouseleave={() => (hover = null)}
   >
-    <title id="surface-title">Pension by salary and the age work stops</title>
+    <title id="surface-title"
+      >Pension by final salary and the age work stops</title
+    >
     <desc id="surface-desc">
       Monthly pension at {claimAge}, in today's dollars. {caption}
     </desc>

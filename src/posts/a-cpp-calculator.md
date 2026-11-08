@@ -1,7 +1,7 @@
 ---
 title: 'A CPP Calculator'
 date: '2026-11-07'
-description: 'Estimate your Canada Pension Plan retirement pension from your birth year, salary, working years, and the age you start it.'
+description: 'Estimate your Canada Pension Plan retirement pension from your birth year, earning periods, and the age you start it.'
 ---
 
 <script>
@@ -14,7 +14,7 @@ Your Canada Pension Plan pension is 25% of your career-average earnings plus two
 
 ## What it assumes
 
-- **A steady salary**, the same in today's dollars from the age you start working to the age you stop. Raises and promotions are not modelled.
+- **Earning periods**, each a salary in today's dollars over a range of ages. Earning periods cannot overlap; a gap between them is time with no earnings, and raises within a period are not modelled.
 - **Today's dollars**, with the earnings ceilings published through 2026 and projected after that at the wage-growth rate you enter.
 - **CPP only.** No OAS, survivor's pension, disability, or post-retirement benefits, and no check that you qualify. Quebec Pension Plan rules differ.
 - **Child-rearing years** are optional; they apply the provision to the base component, and you have to apply for it separately in real life.
