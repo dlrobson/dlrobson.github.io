@@ -236,6 +236,12 @@ describe('pension surface', () => {
     expect(second).toBe(first)
   })
 
+  it('reports no pension when the form holds no earning period', () => {
+    const empty = pensionSurface({ ...DEFAULTS, earningPeriods: [] })
+    expect(empty.max).toBe(0)
+    expect(empty.values.flat().every((value) => value === 0)).toBe(true)
+  })
+
   it('reports the largest value', () => {
     const values = grid.values.flat()
     expect(grid.max).toBe(Math.max(...values))

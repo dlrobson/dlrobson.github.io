@@ -16,7 +16,6 @@
     earningPeriodsEarnings,
     estimate,
     project,
-    type EarningPeriod,
   } from '$lib/cpp/estimator'
   import {
     DEFAULT_EARNING_PERIOD,
@@ -252,12 +251,8 @@
     const ceilings = project(CEILINGS, birth + 71, growth)
     const windows = childRearingWindows(inputs.carePeriods)
 
-    const earningPeriodsForModel: readonly EarningPeriod[] =
-      inputs.earningPeriods.length > 0
-        ? inputs.earningPeriods
-        : [DEFAULT_EARNING_PERIOD]
     const earnings = applyChildRearing(
-      earningPeriodsEarnings(earningPeriodsForModel, birth, BASE_YEAR, cpi),
+      earningPeriodsEarnings(inputs.earningPeriods, birth, BASE_YEAR, cpi),
       inputs.carePeriods,
     )
     const results = CLAIM_AGES.map((age) =>
@@ -269,7 +264,7 @@
       selected: results[claim - MIN_CLAIM_AGE],
       claim,
       birth,
-      earningPeriods: earningPeriodsForModel,
+      earningPeriods: inputs.earningPeriods,
       cpi,
       growth,
       cpiPercent: (cpi * 100).toFixed(2),
