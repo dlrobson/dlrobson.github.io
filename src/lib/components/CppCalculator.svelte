@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { CEILINGS, LAST_PUBLISHED_YEAR } from '$lib/cpp/params'
+  import { breakEvenAge, totalReceived } from '$lib/cpp/break-even'
   import {
     CHILD_REARING_DEFAULT_START_AGE,
     CHILD_REARING_DEFAULT_YEARS,
@@ -21,6 +22,23 @@
     currency: 'CAD',
     maximumFractionDigits: 0,
   })
+  const compactMoney = new Intl.NumberFormat('en-CA', {
+    notation: 'compact',
+    style: 'currency',
+    currency: 'CAD',
+    maximumFractionDigits: 1,
+  })
+
+  const TOTALS_START = 60
+  const TOTALS_END = 95
+  const TOTALS_WIDTH = 300
+  const TOTALS_HEIGHT = 230
+  const PLOT_LEFT = 52
+  const PLOT_RIGHT = 272
+  const PLOT_TOP = 18
+  const PLOT_BOTTOM = 200
+  const AGE_TICKS = [60, 65, 70, 75, 80, 85, 90, 95]
+  const EMPHASIS_AGES = [60, 65, 70]
 
   const DEFAULTS = {
     birthYear: 1990,
@@ -234,6 +252,100 @@
   })
 
   const format = (amount: number) => money.format(amount)
+
+  const totals = $derived.by(() => {
+    const rows = model.results.map((result) => {
+      const monthly = result.monthlyIn(BASE_YEAR, model.cpi)
+      return {
+        age: result.claimAge,
+        total: totalReceived(monthly, result.claimAge, TOTALS_END),
+      }
+    })
+    const max = Math.max(0, ...rows.map((row) => row.total))
+    return { rows, max }
+  })
+
+  const totalsRows = $derived.by(() =>
+    totals.rows
+      .map((row) => ({
+        ...row,
+        emphasis:
+          row.age === model.claim ? 2 : EMPHASIS_AGES.includes(row.age) ? 1 : 0,
+      }))
+      .sort((a, b) => a.emphasis - b.emphasis),
+  )
+
+  function totalsX(age: number): number {
+    return (
+      PLOT_LEFT +
+      ((age - TOTALS_START) / (TOTALS_END - TOTALS_START)) *
+        (PLOT_RIGHT - PLOT_LEFT)
+    )
+  }
+
+  function totalsY(value: number): number {
+    if (!(totals.max > 0)) return PLOT_BOTTOM
+    return PLOT_BOTTOM - (value / totals.max) * (PLOT_BOTTOM - PLOT_TOP)
+  }
+
+  function niceStep(value: number): number {
+    if (!(value > 0) || !Number.isFinite(value)) return 1
+    const power = 10 ** Math.floor(Math.log10(value))
+    const scaled = value / power
+    const steps = [1, 2, 2.5, 5, 10]
+    return (steps.find((step) => scaled <= step) ?? 10) * power
+  }
+
+  const yTicks = $derived.by(() => {
+    if (!(totals.max > 0)) return [0]
+    const step = niceStep(totals.max / 4)
+    return Array.from(
+      { length: Math.floor(totals.max / step) + 1 },
+      (_, index) => index * step,
+    )
+  })
+
+  const ANCHOR_PAIRS: readonly (readonly [number, number])[] = [
+    [60, 65],
+    [60, 70],
+    [65, 70],
+  ]
+
+  const anchorCrossings = $derived.by(() =>
+    ANCHOR_PAIRS.map(([a, b]) => {
+      const monthlyA = model.results[a - 60].monthlyIn(BASE_YEAR, model.cpi)
+      const monthlyB = model.results[b - 60].monthlyIn(BASE_YEAR, model.cpi)
+      const age = breakEvenAge(a, b, monthlyA, monthlyB)
+      const inRange =
+        Number.isFinite(age) && age >= TOTALS_START && age <= TOTALS_END
+      return {
+        key: `${a}-${b}`,
+        a,
+        b,
+        age,
+        inRange,
+        total: inRange ? totalReceived(monthlyA, a, age) : 0,
+      }
+    }),
+  )
+
+  const crossingText = $derived.by(() => {
+    const shown = anchorCrossings.filter((point) => point.inRange)
+    if (shown.length === 0) {
+      return 'With these inputs the later start does not pull ahead before age 95.'
+    }
+    const parts = shown.map(
+      (point) =>
+        `${point.b} pulls ahead of ${point.a} at about ${Math.round(point.age)}`,
+    )
+    const list =
+      parts.length === 1
+        ? parts[0]
+        : parts.length === 2
+          ? `${parts[0]} and ${parts[1]}`
+          : `${parts.slice(0, -1).join(', ')}, and ${parts[parts.length - 1]}`
+    return `With these inputs, ${list}.`
+  })
 </script>
 
 <div class="cpp-calculator">
@@ -415,6 +527,101 @@
         dollars
       </p>
     </div>
+
+    <figure class="totals">
+      <details>
+        <summary>Total received by age</summary>
+        <svg
+          class="totals-svg"
+          viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
+          role="img"
+          aria-labelledby="totals-title totals-desc"
+        >
+          <title id="totals-title">Total CPP received by age</title>
+          <desc id="totals-desc">
+            A later start pays more each month but for fewer years. {crossingText}
+          </desc>
+
+          {#each yTicks as tick (tick)}
+            {#if tick > 0}
+              <line
+                class="grid"
+                x1={PLOT_LEFT}
+                x2={PLOT_RIGHT}
+                y1={totalsY(tick)}
+                y2={totalsY(tick)}
+              />
+            {/if}
+            <text
+              class="tick"
+              x={PLOT_LEFT - 6}
+              y={totalsY(tick) + 4}
+              text-anchor="end">{compactMoney.format(tick)}</text
+            >
+          {/each}
+
+          <line
+            class="axis"
+            x1={PLOT_LEFT}
+            x2={PLOT_RIGHT}
+            y1={PLOT_BOTTOM}
+            y2={PLOT_BOTTOM}
+          />
+          <line
+            class="axis"
+            x1={PLOT_LEFT}
+            x2={PLOT_LEFT}
+            y1={PLOT_TOP}
+            y2={PLOT_BOTTOM}
+          />
+
+          {#each AGE_TICKS as age (age)}
+            <text
+              class="tick"
+              x={totalsX(age)}
+              y={PLOT_BOTTOM + 16}
+              text-anchor="middle">{age}</text
+            >
+          {/each}
+
+          {#if totals.max > 0}
+            {#each totalsRows as row (row.age)}
+              <line
+                class="line"
+                class:prominent={row.emphasis === 1}
+                class:selected={row.emphasis === 2}
+                x1={totalsX(row.age)}
+                y1={PLOT_BOTTOM}
+                x2={totalsX(TOTALS_END)}
+                y2={totalsY(row.total)}
+              />
+            {/each}
+
+            {#each totalsRows.filter( (row) => EMPHASIS_AGES.includes(row.age), ) as row (row.age)}
+              <text
+                class="line-label"
+                class:selected={row.emphasis === 2}
+                x={PLOT_RIGHT + 4}
+                y={totalsY(row.total) + 4}>{row.age}</text
+              >
+            {/each}
+
+            {#each anchorCrossings.filter((point) => point.inRange) as point (point.key)}
+              {@const x = totalsX(point.age)}
+              {@const y = totalsY(point.total)}
+              <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
+              <text
+                class="break-even-label"
+                {x}
+                y={Math.max(y - 7, PLOT_TOP + 4)}
+                text-anchor="middle">{Math.round(point.age)}</text
+              >
+            {/each}
+          {/if}
+        </svg>
+      </details>
+      <figcaption>{crossingText}</figcaption>
+    </figure>
 
     <details>
       <summary>Every start age</summary>
@@ -627,6 +834,88 @@
     margin: 0 0 var(--space-sm);
     color: var(--secondary-color);
     font-size: var(--font-sm);
+  }
+
+  .totals {
+    margin: var(--space-lg) 0 0;
+  }
+
+  .totals details {
+    margin-top: 0;
+  }
+
+  .totals-svg {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    margin: var(--space-md) auto 0;
+  }
+
+  .totals-svg text {
+    fill: var(--secondary-color);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .totals-svg .line-label {
+    fill: var(--text-color);
+    font-weight: 600;
+  }
+
+  .totals-svg .line-label.selected {
+    fill: var(--primary-color);
+  }
+
+  .totals-svg .grid {
+    stroke: var(--line-color);
+    stroke-width: 1;
+    stroke-opacity: 0.6;
+  }
+
+  .totals-svg .axis {
+    stroke: var(--line-color);
+    stroke-width: 1;
+  }
+
+  .totals-svg .line {
+    stroke: var(--secondary-color);
+    stroke-width: 1;
+    stroke-opacity: 0.35;
+    stroke-linecap: round;
+  }
+
+  .totals-svg .line.prominent {
+    stroke-width: 2;
+    stroke-opacity: 1;
+  }
+
+  .totals-svg .line.selected {
+    stroke: var(--primary-color);
+    stroke-width: 2.5;
+    stroke-opacity: 1;
+  }
+
+  .totals-svg .break-even-dot {
+    fill: var(--bg-surface);
+    stroke: var(--primary-color);
+    stroke-width: 2;
+  }
+
+  .totals-svg .break-even-label {
+    fill: var(--primary-color);
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: var(--bg-surface);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .totals figcaption {
+    margin-top: var(--space-sm);
+    color: var(--secondary-color);
+    font-size: var(--font-sm);
+    line-height: 1.45;
   }
 
   .result {

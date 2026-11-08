@@ -12,6 +12,8 @@ The Canada Pension Plan retirement pension is three pieces added together: a bas
 
 This calculator applies those rules to a steady salary. Change the age you start CPP, the growth assumptions, or the child-rearing years and the amount updates; open the chart to compare every start age from 60 to 70.
 
+Open **Total received by age** under the estimate to see the total collected by any age from 60 to 95, in today's dollars, for each start age. Because the figures are already normalised to today's dollars, each start age's monthly amount is flat in real terms and its total grows as a straight line from the age it begins. The chart assumes the money is spent as it arrives, not invested, so a later start only comes out ahead once its larger payments have made up for the years it went without.
+
 <CppCalculator />
 
 ## What it assumes
