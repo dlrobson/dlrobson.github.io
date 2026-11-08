@@ -8,6 +8,8 @@
     CHILD_REARING_DEFAULT_YEARS,
     DEFAULT_CPI,
     DEFAULT_WAGE_GROWTH,
+    MAX_CLAIM_AGE,
+    MIN_CLAIM_AGE,
     applyChildRearing,
     childRearingWindows,
     defaultChildRearingPeriod,
@@ -18,7 +20,16 @@
   } from '$lib/cpp/estimator'
 
   const BASE_YEAR = LAST_PUBLISHED_YEAR
-  const CLAIM_AGES = Array.from({ length: 11 }, (_, index) => 60 + index)
+  const MIN_BIRTH_YEAR = 1930
+  const MAX_BIRTH_YEAR = 2010
+  const MIN_WORK_AGE = 18
+  const MAX_WORK_AGE = 70
+  const MIN_CARE_YEAR = 1930
+  const MAX_CARE_YEAR = 2100
+  const CLAIM_AGES = Array.from(
+    { length: MAX_CLAIM_AGE - MIN_CLAIM_AGE + 1 },
+    (_, index) => MIN_CLAIM_AGE + index,
+  )
   const money = new Intl.NumberFormat('en-CA', {
     style: 'currency',
     currency: 'CAD',
@@ -51,6 +62,9 @@
     inflationText: (DEFAULT_CPI * 100).toFixed(2),
     wageGrowthText: (DEFAULT_WAGE_GROWTH * 100).toFixed(2),
   }
+
+  const PERIOD_PROBLEM =
+    'Each child-rearing period needs a start year and an end year on or after it.'
 
   const STORAGE_KEY = 'cpp-calculator:v1'
 
@@ -88,33 +102,60 @@
   let periods = $state<PeriodRow[]>([])
   let hydrated = $state(false)
   let surfaceOpen = $state(false)
+  let storageNote = $state<string | null>(null)
+  let skipNextSave = false
 
-  onMount(() => {
+  type Stored = { ok: true; saved: Partial<SavedState> | null } | { ok: false }
+
+  function readStored(): Stored {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const saved = JSON.parse(raw) as Partial<SavedState>
-        if (typeof saved.birthYear === 'number') birthYear = saved.birthYear
-        if (typeof saved.salary === 'number') salary = saved.salary
-        if (typeof saved.startedAge === 'number') startedAge = saved.startedAge
-        if (typeof saved.stoppedAge === 'number') stoppedAge = saved.stoppedAge
-        if (typeof saved.claimAge === 'number') claimAge = saved.claimAge
-        if (typeof saved.inflationText === 'string') {
-          inflationText = saved.inflationText
-        }
-        if (typeof saved.wageGrowthText === 'string') {
-          wageGrowthText = saved.wageGrowthText
-        }
-        if (Array.isArray(saved.periods)) {
-          periods = saved.periods.map((period) => ({
-            id: nextPeriodId++,
-            from: typeof period?.from === 'number' ? period.from : undefined,
-            to: typeof period?.to === 'number' ? period.to : undefined,
-          }))
-        }
-      }
+      if (!raw) return { ok: true, saved: null }
+      const saved = JSON.parse(raw)
+      return saved && typeof saved === 'object'
+        ? { ok: true, saved: saved as Partial<SavedState> }
+        : { ok: false }
     } catch {
-      // Unreadable or unavailable storage: keep the defaults.
+      return { ok: false }
+    }
+  }
+
+  function restore(saved: Partial<SavedState> | null) {
+    if (!saved) return
+    birthYear =
+      storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
+    salary = storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ?? salary
+    startedAge =
+      storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ?? startedAge
+    stoppedAge =
+      storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ?? stoppedAge
+    claimAge =
+      storedNumber(saved.claimAge, MIN_CLAIM_AGE, MAX_CLAIM_AGE) ?? claimAge
+    if (typeof saved.inflationText === 'string') {
+      inflationText = saved.inflationText
+    }
+    if (typeof saved.wageGrowthText === 'string') {
+      wageGrowthText = saved.wageGrowthText
+    }
+    if (Array.isArray(saved.periods)) {
+      periods = saved.periods.map((period) => ({
+        id: nextPeriodId++,
+        from: storedNumber(period?.from, MIN_CARE_YEAR, MAX_CARE_YEAR),
+        to: storedNumber(period?.to, MIN_CARE_YEAR, MAX_CARE_YEAR),
+      }))
+    }
+  }
+
+  onMount(() => {
+    const stored = readStored()
+    if (stored.ok) {
+      restore(stored.saved)
+    } else {
+      // An unreadable value stays on the device: overwriting it with the
+      // defaults would destroy inputs the reader might still recover.
+      skipNextSave = true
+      storageNote =
+        'Your saved inputs could not be read, so this starts from the defaults. They are left on this device untouched until you change something.'
     }
     hydrated = true
   })
@@ -134,21 +175,52 @@
       ),
       periods: periods.map(({ from, to }) => ({ from, to })),
     }
+    if (skipNextSave) {
+      skipNextSave = false
+      return
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
+      if (storageNote !== null) storageNote = null
     } catch {
-      // Storage can be unavailable; the calculator still works without it.
+      storageNote =
+        'This browser will not store the inputs, so they are not remembered on this device.'
     }
   })
 
-  function whole(value: number | undefined, fallback: number): number {
-    return value === undefined || !Number.isFinite(value)
-      ? fallback
-      : Math.round(value)
+  function parseWhole(value: number | undefined): number | undefined {
+    return typeof value === 'number' && Number.isFinite(value)
+      ? Math.round(value)
+      : undefined
+  }
+
+  function storedNumber(
+    value: unknown,
+    min: number,
+    max: number,
+  ): number | undefined {
+    return typeof value === 'number' &&
+      Number.isFinite(value) &&
+      value >= min &&
+      value <= max
+      ? value
+      : undefined
+  }
+
+  function inRange(
+    value: number | undefined,
+    min: number,
+    max: number,
+  ): value is number {
+    return value !== undefined && value >= min && value <= max
+  }
+
+  function clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value))
   }
 
   function clampRate(value: number): number {
-    return Math.min(0.15, Math.max(-0.05, value))
+    return clamp(value, -0.05, 0.15)
   }
 
   function percentValue(text: string | undefined, fallback: number): number {
@@ -172,13 +244,18 @@
   }
 
   function stepClaim(delta: number) {
-    claimAge = Math.min(70, Math.max(60, whole(claimAge, 65) + delta))
+    claimAge = clamp(
+      (parseWhole(claimAge) ?? 65) + delta,
+      MIN_CLAIM_AGE,
+      MAX_CLAIM_AGE,
+    )
   }
 
   function addPeriod() {
-    const birth = Math.min(
-      2010,
-      Math.max(1930, whole(birthYear, DEFAULTS.birthYear)),
+    const birth = clamp(
+      parseWhole(birthYear) ?? DEFAULTS.birthYear,
+      MIN_BIRTH_YEAR,
+      MAX_BIRTH_YEAR,
     )
     periods = [
       ...periods,
@@ -190,24 +267,92 @@
     periods = periods.filter((period) => period.id !== id)
   }
 
-  const carePeriods = $derived(
-    periods
-      .map((period) => ({
-        from: optionalYear(period.from),
-        to: optionalYear(period.to),
-      }))
-      .filter(
-        (period): period is ChildRearingPeriod =>
-          period.from !== undefined && period.to !== undefined,
-      ),
+  const careRows = $derived(
+    periods.map((period) => ({
+      from: optionalYear(period.from),
+      to: optionalYear(period.to),
+    })),
   )
 
+  const periodProblem = $derived(
+    careRows.some(
+      (row) =>
+        row.from === undefined || row.to === undefined || row.to < row.from,
+    ),
+  )
+
+  const carePeriods = $derived.by(() =>
+    careRows.filter(
+      (row): row is ChildRearingPeriod =>
+        row.from !== undefined && row.to !== undefined && row.to >= row.from,
+    ),
+  )
+
+  const parsed = $derived({
+    birth: parseWhole(birthYear),
+    salary: parseWhole(salary),
+    started: parseWhole(startedAge),
+    stopped: parseWhole(stoppedAge),
+    claim: parseWhole(claimAge),
+  })
+
+  /** What the reader still has to fix before an estimate means anything. */
+  const problems = $derived.by(() => {
+    const list: string[] = []
+    if (!inRange(parsed.birth, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR)) {
+      list.push(
+        `Year you were born must be ${MIN_BIRTH_YEAR} to ${MAX_BIRTH_YEAR}.`,
+      )
+    }
+    if (parsed.salary === undefined || parsed.salary < 0) {
+      list.push('Annual salary must be zero or more.')
+    }
+    if (!inRange(parsed.started, MIN_WORK_AGE, MAX_WORK_AGE)) {
+      list.push(
+        `Age you started working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
+      )
+    }
+    if (!inRange(parsed.stopped, MIN_WORK_AGE, MAX_WORK_AGE)) {
+      list.push(
+        `Age you stop working must be ${MIN_WORK_AGE} to ${MAX_WORK_AGE}.`,
+      )
+    } else if (
+      parsed.started !== undefined &&
+      parsed.stopped < parsed.started
+    ) {
+      list.push('Age you stop working must be on or after the age you started.')
+    }
+    if (!inRange(parsed.claim, MIN_CLAIM_AGE, MAX_CLAIM_AGE)) {
+      list.push(
+        `Age you start CPP must be ${MIN_CLAIM_AGE} to ${MAX_CLAIM_AGE}.`,
+      )
+    }
+    if (periodProblem) list.push(PERIOD_PROBLEM)
+    return list
+  })
+
   const model = $derived.by(() => {
-    const birth = Math.min(2010, Math.max(1930, whole(birthYear, 1990)))
-    const started = Math.min(70, Math.max(18, whole(startedAge, 22)))
-    const stopped = Math.min(70, Math.max(started, whole(stoppedAge, 65)))
-    const pay = Math.max(0, salary ?? 0)
-    const claim = Math.min(70, Math.max(60, whole(claimAge, 65)))
+    const birth = clamp(
+      parsed.birth ?? DEFAULTS.birthYear,
+      MIN_BIRTH_YEAR,
+      MAX_BIRTH_YEAR,
+    )
+    const started = clamp(
+      parsed.started ?? DEFAULTS.startedAge,
+      MIN_WORK_AGE,
+      MAX_WORK_AGE,
+    )
+    const stopped = clamp(
+      parsed.stopped ?? DEFAULTS.stoppedAge,
+      started,
+      MAX_WORK_AGE,
+    )
+    const pay = Math.max(0, parsed.salary ?? 0)
+    const claim = clamp(
+      parsed.claim ?? DEFAULTS.claimAge,
+      MIN_CLAIM_AGE,
+      MAX_CLAIM_AGE,
+    )
     const cpi = clampRate(percentValue(inflationText, DEFAULT_CPI * 100) / 100)
     const growth = clampRate(
       percentValue(wageGrowthText, DEFAULT_WAGE_GROWTH * 100) / 100,
@@ -217,7 +362,6 @@
     // use inflation, so the salary stays level in real terms.
     const ceilings = project(CEILINGS, birth + 71, growth)
     const windows = childRearingWindows(carePeriods)
-    const periodError = carePeriods.some((period) => period.to < period.from)
 
     const salaryEarnings = steadySalaryEarnings(
       pay,
@@ -244,7 +388,6 @@
       cpiPercent: (cpi * 100).toFixed(2),
       growthPercent: (growth * 100).toFixed(2),
       periods: windows,
-      periodError,
     }
   })
 
@@ -365,8 +508,8 @@
         <span>Year you were born</span>
         <input
           type="number"
-          min="1930"
-          max="2010"
+          min={MIN_BIRTH_YEAR}
+          max={MAX_BIRTH_YEAR}
           step="1"
           bind:value={birthYear}
         />
@@ -379,8 +522,8 @@
         <span>Age you started working</span>
         <input
           type="number"
-          min="18"
-          max="70"
+          min={MIN_WORK_AGE}
+          max={MAX_WORK_AGE}
           step="1"
           bind:value={startedAge}
         />
@@ -389,8 +532,8 @@
         <span>Age you stop working</span>
         <input
           type="number"
-          min="18"
-          max="70"
+          min={MIN_WORK_AGE}
+          max={MAX_WORK_AGE}
           step="1"
           bind:value={stoppedAge}
         />
@@ -404,14 +547,14 @@
           <button
             type="button"
             onclick={() => stepClaim(-1)}
-            disabled={model.claim <= 60}
+            disabled={model.claim <= MIN_CLAIM_AGE}
             aria-label="One year earlier">&minus;</button
           >
           <output for="claim-age">{model.claim}</output>
           <button
             type="button"
             onclick={() => stepClaim(1)}
-            disabled={model.claim >= 70}
+            disabled={model.claim >= MAX_CLAIM_AGE}
             aria-label="One year later">+</button
           >
         </div>
@@ -419,8 +562,8 @@
       <input
         id="claim-age"
         type="range"
-        min="60"
-        max="70"
+        min={MIN_CLAIM_AGE}
+        max={MAX_CLAIM_AGE}
         step="1"
         bind:value={claimAge}
       />
@@ -482,8 +625,8 @@
                 <span>From year</span>
                 <input
                   type="number"
-                  min="1930"
-                  max="2100"
+                  min={MIN_CARE_YEAR}
+                  max={MAX_CARE_YEAR}
                   step="1"
                   bind:value={period.from}
                 />
@@ -492,8 +635,8 @@
                 <span>To year</span>
                 <input
                   type="number"
-                  min="1930"
-                  max="2100"
+                  min={MIN_CARE_YEAR}
+                  max={MAX_CARE_YEAR}
                   step="1"
                   bind:value={period.to}
                 />
@@ -516,172 +659,185 @@
             {CHILD_REARING_DEFAULT_YEARS} years. The estimate assumes no earnings
             during these years and applies the child-rearing provision.
           </p>
-          {#if model.periodError}
-            <p class="hint error">
-              Each period's end year must be on or after its start year.
-            </p>
+          {#if periodProblem}
+            <p class="hint error">{PERIOD_PROBLEM}</p>
           {/if}
         </div>
       </div>
     </details>
 
-    <div class="result" aria-live="polite">
-      <p class="label">Estimated pension at {model.claim}</p>
-      <p class="amount">
-        {format(model.selected.monthlyIn(BASE_YEAR, model.cpi))}<span
-          >/month</span
-        >
-      </p>
-      <p class="annual">
-        {format(model.selected.annualIn(BASE_YEAR, model.cpi))} a year, in today's
-        dollars
-      </p>
-    </div>
+    {#if storageNote}
+      <p class="hint error">{storageNote}</p>
+    {/if}
 
-    <details>
-      <summary>Every start age</summary>
-      <figure class="chart">
-        <figcaption>
-          Monthly pension by start age; each row also shows the annual amount.
-        </figcaption>
-        {#each chart as row (row.age)}
-          <button
-            type="button"
-            class="bar-row"
-            class:selected={row.age === model.claim}
-            aria-pressed={row.age === model.claim}
-            aria-label="Start at {row.age}: {format(
-              row.monthly,
-            )} per month, {format(row.annual)} per year"
-            onclick={() => (claimAge = row.age)}
+    {#if problems.length > 0}
+      <div class="result" aria-live="polite">
+        <p class="label">No estimate yet</p>
+        <ul class="problems">
+          {#each problems as problem (problem)}
+            <li>{problem}</li>
+          {/each}
+        </ul>
+      </div>
+    {:else}
+      <div class="result" aria-live="polite">
+        <p class="label">Estimated pension at {model.claim}</p>
+        <p class="amount">
+          {format(model.selected.monthlyIn(BASE_YEAR, model.cpi))}<span
+            >/month</span
           >
-            <span class="bar-age">{row.age}</span>
-            <span class="bar-track">
-              <span class="bar" style:width="{row.width}%"></span>
-            </span>
-            <span class="bar-value">
-              <span>{format(row.monthly)}/mo</span>
-              <span class="bar-annual">{format(row.annual)}/yr</span>
-            </span>
-          </button>
-        {/each}
-      </figure>
-    </details>
+        </p>
+        <p class="annual">
+          {format(model.selected.annualIn(BASE_YEAR, model.cpi))} a year, in today's
+          dollars
+        </p>
+      </div>
 
-    <details class="totals">
-      <summary>Total received by age</summary>
-      <figure>
-        <svg
-          class="totals-svg"
-          viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
-          role="img"
-          aria-labelledby="totals-title totals-desc"
-        >
-          <title id="totals-title">Total CPP received by age</title>
-          <desc id="totals-desc">
-            A later start pays more each month but for fewer years. {crossingText}
-          </desc>
+      <details>
+        <summary>Every start age</summary>
+        <figure class="chart">
+          <figcaption>
+            Monthly pension by start age; each row also shows the annual amount.
+          </figcaption>
+          {#each chart as row (row.age)}
+            <button
+              type="button"
+              class="bar-row"
+              class:selected={row.age === model.claim}
+              aria-pressed={row.age === model.claim}
+              aria-label="Start at {row.age}: {format(
+                row.monthly,
+              )} per month, {format(row.annual)} per year"
+              onclick={() => (claimAge = row.age)}
+            >
+              <span class="bar-age">{row.age}</span>
+              <span class="bar-track">
+                <span class="bar" style:width="{row.width}%"></span>
+              </span>
+              <span class="bar-value">
+                <span>{format(row.monthly)}/mo</span>
+                <span class="bar-annual">{format(row.annual)}/yr</span>
+              </span>
+            </button>
+          {/each}
+        </figure>
+      </details>
 
-          {#each yTicks as tick (tick)}
-            {#if tick > 0}
-              <line
-                class="grid"
-                x1={PLOT_LEFT}
-                x2={PLOT_RIGHT}
-                y1={totalsY(tick)}
-                y2={totalsY(tick)}
-              />
+      <details class="totals">
+        <summary>Total received by age</summary>
+        <figure>
+          <svg
+            class="totals-svg"
+            viewBox="0 0 {TOTALS_WIDTH} {TOTALS_HEIGHT}"
+            role="img"
+            aria-labelledby="totals-title totals-desc"
+          >
+            <title id="totals-title">Total CPP received by age</title>
+            <desc id="totals-desc">
+              A later start pays more each month but for fewer years. {crossingText}
+            </desc>
+
+            {#each yTicks as tick (tick)}
+              {#if tick > 0}
+                <line
+                  class="grid"
+                  x1={PLOT_LEFT}
+                  x2={PLOT_RIGHT}
+                  y1={totalsY(tick)}
+                  y2={totalsY(tick)}
+                />
+              {/if}
+              <text
+                class="tick"
+                x={PLOT_LEFT - 6}
+                y={totalsY(tick) + 4}
+                text-anchor="end">{compactMoney.format(tick)}</text
+              >
+            {/each}
+
+            <line
+              class="axis"
+              x1={PLOT_LEFT}
+              x2={PLOT_RIGHT}
+              y1={PLOT_BOTTOM}
+              y2={PLOT_BOTTOM}
+            />
+            <line
+              class="axis"
+              x1={PLOT_LEFT}
+              x2={PLOT_LEFT}
+              y1={PLOT_TOP}
+              y2={PLOT_BOTTOM}
+            />
+
+            {#each AGE_TICKS as age (age)}
+              <text
+                class="tick"
+                x={totalsX(age)}
+                y={PLOT_BOTTOM + 16}
+                text-anchor="middle">{age}</text
+              >
+            {/each}
+
+            {#if totals.max > 0}
+              {#each totalsRows as row (row.age)}
+                <line
+                  class="line"
+                  class:prominent={row.emphasis === 1}
+                  class:selected={row.emphasis === 2}
+                  x1={totalsX(row.age)}
+                  y1={PLOT_BOTTOM}
+                  x2={totalsX(TOTALS_END)}
+                  y2={totalsY(row.total)}
+                />
+              {/each}
+
+              {#each totalsRows.filter( (row) => EMPHASIS_AGES.includes(row.age), ) as row (row.age)}
+                <text
+                  class="line-label"
+                  class:selected={row.emphasis === 2}
+                  x={PLOT_RIGHT + 4}
+                  y={totalsY(row.total) + 4}>{row.age}</text
+                >
+              {/each}
+
+              {#each anchorCrossings.filter((point) => point.inRange) as point (point.key)}
+                {@const x = totalsX(point.age)}
+                {@const y = totalsY(point.total)}
+                <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
+                <text
+                  class="break-even-label"
+                  {x}
+                  y={Math.max(y - 7, PLOT_TOP + 4)}
+                  text-anchor="middle">{Math.round(point.age)}</text
+                >
+              {/each}
             {/if}
-            <text
-              class="tick"
-              x={PLOT_LEFT - 6}
-              y={totalsY(tick) + 4}
-              text-anchor="end">{compactMoney.format(tick)}</text
-            >
-          {/each}
+          </svg>
+          <figcaption>{crossingText}</figcaption>
+        </figure>
+      </details>
 
-          <line
-            class="axis"
-            x1={PLOT_LEFT}
-            x2={PLOT_RIGHT}
-            y1={PLOT_BOTTOM}
-            y2={PLOT_BOTTOM}
+      <details
+        ontoggle={(event) =>
+          (surfaceOpen = (event.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary>Salary and working years</summary>
+        {#if surfaceOpen}
+          <CppSurface
+            birthYear={model.birth}
+            startedAge={model.started}
+            stoppedAge={model.stopped}
+            claimAge={model.claim}
+            cpi={model.cpi}
+            wageGrowth={model.growth}
+            baseYear={BASE_YEAR}
+            salary={Math.max(0, salary ?? 0)}
+            childRearing={carePeriods}
           />
-          <line
-            class="axis"
-            x1={PLOT_LEFT}
-            x2={PLOT_LEFT}
-            y1={PLOT_TOP}
-            y2={PLOT_BOTTOM}
-          />
-
-          {#each AGE_TICKS as age (age)}
-            <text
-              class="tick"
-              x={totalsX(age)}
-              y={PLOT_BOTTOM + 16}
-              text-anchor="middle">{age}</text
-            >
-          {/each}
-
-          {#if totals.max > 0}
-            {#each totalsRows as row (row.age)}
-              <line
-                class="line"
-                class:prominent={row.emphasis === 1}
-                class:selected={row.emphasis === 2}
-                x1={totalsX(row.age)}
-                y1={PLOT_BOTTOM}
-                x2={totalsX(TOTALS_END)}
-                y2={totalsY(row.total)}
-              />
-            {/each}
-
-            {#each totalsRows.filter( (row) => EMPHASIS_AGES.includes(row.age), ) as row (row.age)}
-              <text
-                class="line-label"
-                class:selected={row.emphasis === 2}
-                x={PLOT_RIGHT + 4}
-                y={totalsY(row.total) + 4}>{row.age}</text
-              >
-            {/each}
-
-            {#each anchorCrossings.filter((point) => point.inRange) as point (point.key)}
-              {@const x = totalsX(point.age)}
-              {@const y = totalsY(point.total)}
-              <circle class="break-even-dot" cx={x} cy={y} r="3.5" />
-              <text
-                class="break-even-label"
-                {x}
-                y={Math.max(y - 7, PLOT_TOP + 4)}
-                text-anchor="middle">{Math.round(point.age)}</text
-              >
-            {/each}
-          {/if}
-        </svg>
-        <figcaption>{crossingText}</figcaption>
-      </figure>
-    </details>
-
-    <details
-      ontoggle={(event) =>
-        (surfaceOpen = (event.currentTarget as HTMLDetailsElement).open)}
-    >
-      <summary>Salary and working years</summary>
-      {#if surfaceOpen}
-        <CppSurface
-          birthYear={model.birth}
-          startedAge={model.started}
-          stoppedAge={model.stopped}
-          claimAge={model.claim}
-          cpi={model.cpi}
-          wageGrowth={model.growth}
-          baseYear={BASE_YEAR}
-          salary={Math.max(0, salary ?? 0)}
-          childRearing={carePeriods}
-        />
-      {/if}
-    </details>
+        {/if}
+      </details>
+    {/if}
   </div>
 </div>
 
@@ -940,6 +1096,14 @@
   .totals figcaption {
     margin-top: var(--space-sm);
     color: var(--secondary-color);
+    font-size: var(--font-sm);
+    line-height: 1.45;
+  }
+
+  .problems {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    color: #c0392b;
     font-size: var(--font-sm);
     line-height: 1.45;
   }
