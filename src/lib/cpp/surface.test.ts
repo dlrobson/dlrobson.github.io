@@ -133,6 +133,24 @@ describe('pension surface', () => {
     expect(grid.max).toBeGreaterThan(early.max)
   })
 
+  it('recomputes when a keyed input changes', () => {
+    const cell = (surface: ReturnType<typeof pensionSurface>) =>
+      surface.values[row(66)][column(1)]
+    const variants = [
+      { birthYear: 1985 },
+      { startedAge: 25 },
+      { cpi: 0.04 },
+      { wageGrowth: 0.05 },
+      { baseYear: BASE_YEAR - 1 },
+    ]
+    for (const variant of variants) {
+      expect(cell(pensionSurface({ ...DEFAULTS, ...variant }))).not.toBeCloseTo(
+        cell(grid),
+        0,
+      )
+    }
+  })
+
   it('reports the largest value', () => {
     const values = grid.values.flat()
     expect(grid.max).toBe(Math.max(...values))

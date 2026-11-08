@@ -6,6 +6,7 @@ import {
   childRearingWindows,
   DEFAULT_CPI,
   defaultChildRearingPeriod,
+  deflate,
   ENHANCED_DIVISOR_MONTHS,
   estimate,
   FIRST_ADDITIONAL_RATE,
@@ -253,6 +254,28 @@ describe('second additional', () => {
       6,
     )
   })
+
+  it('pays the second additional rate on the best 480 months', () => {
+    const ympe: Record<number, number> = {}
+    const yampe: Record<number, number> = {}
+    for (let year = 2017; year <= 2069; year++) {
+      ympe[year] = 60000
+      yampe[year] = 90000
+    }
+    const earnings: Record<number, number> = {}
+    for (let year = 2024; year <= 2033; year++) earnings[year] = 75000
+    for (let year = 2034; year <= 2068; year++) earnings[year] = 90000
+
+    const result = estimate(1999, 70, earnings, { ympe, yampe })
+
+    // 540 months between the ceilings: 120 at 1250 and 420 at 2500. The best
+    // 480 drop sixty of the cheaper months.
+    const best480 = 60 * 1250 + 420 * 2500
+    expect(result.secondAdditional).toBeCloseTo(
+      (SECOND_ADDITIONAL_RATE * best480) / ENHANCED_DIVISOR_MONTHS,
+      6,
+    )
+  })
 })
 
 describe('claim age', () => {
@@ -279,6 +302,47 @@ describe('claim age', () => {
     expect(at70.monthsDroppedAfter65).toBe(59)
     expect(at65.monthsDroppedAfter65).toBe(0)
     expect(at70.monthly).toBeGreaterThan(at65.monthly)
+  })
+
+  it('applies the adjustment to every component', () => {
+    const result = estimate(
+      1999,
+      70,
+      fillEarnings(1999, 70, 'yampe'),
+      PROJECTED,
+    )
+    expect(result.secondAdditional).toBeGreaterThan(0)
+    expect(result.monthly).toBeCloseTo(
+      (result.base + result.firstAdditional + result.secondAdditional) * 1.42,
+      6,
+    )
+  })
+})
+
+describe('today dollars', () => {
+  const base = LAST_PUBLISHED_YEAR
+  const cpi = 0.025
+  const result = estimate(1999, 65, fillEarnings(1999, 65, 'ympe'), PROJECTED)
+  const deflated = result.monthly / (1 + cpi) ** (result.claimYear - base)
+
+  it('divides the pension by the inflation to the base year', () => {
+    expect(deflate(result.monthly, result.claimYear, base, cpi)).toBeCloseTo(
+      deflated,
+      6,
+    )
+    expect(result.monthlyIn(base, cpi)).toBeCloseTo(deflated, 6)
+  })
+
+  it('counts twelve payments in the annual figure', () => {
+    expect(result.annual).toBeCloseTo(12 * result.monthly, 9)
+    expect(result.annualIn(base, cpi)).toBeCloseTo(12 * deflated, 6)
+  })
+
+  it('leaves the pension alone in its own claim year', () => {
+    expect(result.monthlyIn(result.claimYear, cpi)).toBeCloseTo(
+      result.monthly,
+      9,
+    )
   })
 })
 
