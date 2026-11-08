@@ -73,6 +73,8 @@ export interface StoredCarePeriod {
 export interface StoredState {
   birthYear?: unknown
   claimAge?: unknown
+  oasYears?: unknown
+  oasStartAge?: unknown
   inflationText?: unknown
   wageGrowthText?: unknown
   earningPeriods?: StoredEarningPeriod[] | null
