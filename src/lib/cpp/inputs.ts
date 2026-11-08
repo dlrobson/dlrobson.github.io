@@ -1,6 +1,7 @@
 /**
- * Reading the calculator's form: the number behind each field, and what the
- * reader still has to fix before an estimate means anything.
+ * Reading the calculator's form: the number behind each field, what the reader
+ * still has to fix before an estimate means anything, and the rows the form
+ * starts from.
  *
  * A cleared number input binds `null` rather than `undefined`, so every field
  * arrives as `unknown` and is parsed before anything reads it. The model falls
@@ -32,11 +33,59 @@ export const EARNING_OVERLAP_PROBLEM =
   'Earning periods cannot overlap. Leave a gap for years without earnings.'
 export const NO_EARNING_PERIOD_PROBLEM = 'Add at least one earning period.'
 
+/** The period the form starts from, and the fallback for any field of a row. */
+export const DEFAULT_EARNING_PERIOD: EarningPeriod = {
+  fromAge: 22,
+  toAge: 65,
+  salary: 70000,
+}
+
 export interface RawEarningPeriod {
   readonly fromAge?: number | null
   readonly toAge?: number | null
   readonly salary?: number | null
 }
+
+/** An earning period as the form holds it before `readInputs` parses it. */
+export interface EarningPeriodFields {
+  fromAge: number | undefined
+  toAge: number | undefined
+  salary: number | undefined
+}
+
+/** An earning period as storage holds it. */
+export interface StoredEarningPeriod {
+  fromAge?: unknown
+  toAge?: unknown
+  salary?: unknown
+}
+
+/** A child-rearing period as storage holds it. */
+export interface StoredCarePeriod {
+  from?: unknown
+  to?: unknown
+}
+
+/**
+ * The calculator's form as storage holds it. Every field is `unknown`: a saved
+ * value is untrusted until `storedNumber` or a type check has read it.
+ */
+export interface StoredState {
+  birthYear?: unknown
+  claimAge?: unknown
+  inflationText?: unknown
+  wageGrowthText?: unknown
+  earningPeriods?: StoredEarningPeriod[] | null
+  periods?: StoredCarePeriod[] | null
+  salary?: unknown
+  startedAge?: unknown
+  stoppedAge?: unknown
+}
+
+/** A saved payload, or the fact that what was there could not be read. */
+export type StoredResult =
+  | { readonly ok: true; readonly saved: StoredState | null }
+  | { readonly ok: false }
 
 export interface RawPeriod {
   readonly from?: number | null
@@ -141,6 +190,105 @@ export function isEarningPeriod(row: {
     row.salary !== undefined &&
     row.salary >= 0
   )
+}
+
+/**
+ * The row "+ Add earning period" starts: after the latest period's end age and
+ * five years long, or with blank ages when the latest period already ends at
+ * `MAX_WORK_AGE`. The latest period is the one with the greatest end age, and a
+ * period with no end is treated as ending just before the youngest working age.
+ */
+export function nextEarningPeriod(
+  rows: readonly RawEarningPeriod[],
+): EarningPeriodFields {
+  if (rows.length === 0) return { ...DEFAULT_EARNING_PERIOD }
+
+  const endAge = (row: RawEarningPeriod) =>
+    parseWhole(row.toAge) ?? MIN_WORK_AGE - 1
+  const last = rows.reduce((latest, row) =>
+    endAge(row) >= endAge(latest) ? row : latest,
+  )
+  const from = clamp(
+    parseWhole(last.fromAge) ?? DEFAULT_EARNING_PERIOD.fromAge,
+    MIN_WORK_AGE,
+    MAX_WORK_AGE,
+  )
+  const to = clamp(
+    parseWhole(last.toAge) ??
+      parseWhole(last.fromAge) ??
+      DEFAULT_EARNING_PERIOD.toAge,
+    from,
+    MAX_WORK_AGE,
+  )
+  const salary = last.salary ?? DEFAULT_EARNING_PERIOD.salary
+
+  return to < MAX_WORK_AGE
+    ? { fromAge: to + 1, toAge: Math.min(MAX_WORK_AGE, to + 5), salary }
+    : { fromAge: undefined, toAge: undefined, salary }
+}
+
+/**
+ * The saved form from the current key, or from the legacy key when the current
+ * one holds nothing usable. `ok: false` means a value was there but none of it
+ * parsed, which the caller leaves on the device rather than overwrite.
+ */
+export function pickStoredState(
+  current: string | null,
+  legacy: string | null,
+): StoredResult {
+  let unreadable = false
+  for (const raw of [current, legacy]) {
+    if (!raw) continue
+    try {
+      const saved = JSON.parse(raw) as unknown
+      if (saved && typeof saved === 'object') {
+        return { ok: true, saved: saved as StoredState }
+      }
+      unreadable = true
+    } catch {
+      unreadable = true
+    }
+  }
+  return unreadable ? { ok: false } : { ok: true, saved: null }
+}
+
+/**
+ * The earning periods a saved form holds: the array the current key stores, or
+ * the single salary and working span the legacy key stored. `undefined` when
+ * the payload has neither, so the caller keeps the rows the form already shows.
+ */
+export function restoreEarningPeriods(
+  saved: StoredState,
+): readonly EarningPeriodFields[] | undefined {
+  if (Array.isArray(saved.earningPeriods)) {
+    return saved.earningPeriods.map((period) => ({
+      fromAge: storedNumber(period?.fromAge, MIN_WORK_AGE, MAX_WORK_AGE),
+      toAge: storedNumber(period?.toAge, MIN_WORK_AGE, MAX_WORK_AGE),
+      salary: storedNumber(period?.salary, 0, Number.POSITIVE_INFINITY),
+    }))
+  }
+
+  if (
+    saved.salary === undefined &&
+    saved.startedAge === undefined &&
+    saved.stoppedAge === undefined
+  ) {
+    return undefined
+  }
+
+  return [
+    {
+      fromAge:
+        storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
+        DEFAULT_EARNING_PERIOD.fromAge,
+      toAge:
+        storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
+        DEFAULT_EARNING_PERIOD.toAge,
+      salary:
+        storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ??
+        DEFAULT_EARNING_PERIOD.salary,
+    },
+  ]
 }
 
 export function readInputs(raw: RawInputs): Inputs {

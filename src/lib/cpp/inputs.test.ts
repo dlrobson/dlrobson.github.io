@@ -12,10 +12,13 @@ import {
   clamp,
   formatPercent,
   inRange,
+  nextEarningPeriod,
   optionalYear,
   parseWhole,
   percentFraction,
+  pickStoredState,
   readInputs,
+  restoreEarningPeriods,
   storedNumber,
 } from './inputs'
 
@@ -136,6 +139,148 @@ describe('formatPercent', () => {
     expect(formatPercent('abc')).toBe('abc')
     expect(formatPercent('20')).toBe('20')
     expect(formatPercent('')).toBe('')
+  })
+})
+
+describe('next earning period', () => {
+  it('starts five years after the latest period ends', () => {
+    expect(
+      nextEarningPeriod([{ fromAge: 22, toAge: 40, salary: 50000 }]),
+    ).toEqual({ fromAge: 41, toAge: 45, salary: 50000 })
+  })
+
+  it('finds the latest period whatever order the rows are in', () => {
+    expect(
+      nextEarningPeriod([
+        { fromAge: 45, toAge: 65, salary: 50000 },
+        { fromAge: 22, toAge: 40, salary: 70000 },
+      ]),
+    ).toEqual({ fromAge: 66, toAge: 70, salary: 50000 })
+  })
+
+  it('caps the new period at the oldest working age', () => {
+    expect(
+      nextEarningPeriod([{ fromAge: 60, toAge: 66, salary: 70000 }]),
+    ).toEqual({ fromAge: 67, toAge: 70, salary: 70000 })
+  })
+
+  it('leaves the ages blank when the latest period reaches the cap', () => {
+    expect(
+      nextEarningPeriod([{ fromAge: 22, toAge: 70, salary: 90000 }]),
+    ).toEqual({ fromAge: undefined, toAge: undefined, salary: 90000 })
+  })
+
+  it('falls back to the start age when the latest period has no end', () => {
+    expect(nextEarningPeriod([{ fromAge: 30, salary: 70000 }])).toEqual({
+      fromAge: 31,
+      toAge: 35,
+      salary: 70000,
+    })
+  })
+
+  it('starts from the default period when the form holds none', () => {
+    expect(nextEarningPeriod([])).toEqual({
+      fromAge: 22,
+      toAge: 65,
+      salary: 70000,
+    })
+  })
+})
+
+describe('stored earning periods', () => {
+  it('reads the array the current key stores', () => {
+    expect(
+      restoreEarningPeriods({
+        earningPeriods: [
+          { fromAge: 25, toAge: 60, salary: 55000 },
+          { fromAge: 61, toAge: 65, salary: 70000 },
+        ],
+      }),
+    ).toEqual([
+      { fromAge: 25, toAge: 60, salary: 55000 },
+      { fromAge: 61, toAge: 65, salary: 70000 },
+    ])
+  })
+
+  it('keeps a blank saved row blank instead of filling it in', () => {
+    expect(restoreEarningPeriods({ earningPeriods: [{}] })).toEqual([
+      { fromAge: undefined, toAge: undefined, salary: undefined },
+    ])
+  })
+
+  it('drops a saved value outside the range the form accepts', () => {
+    expect(
+      restoreEarningPeriods({
+        earningPeriods: [{ fromAge: 71, toAge: 65, salary: 0 }],
+      }),
+    ).toEqual([{ fromAge: undefined, toAge: 65, salary: 0 }])
+  })
+
+  it('turns the legacy salary and working span into one period', () => {
+    expect(
+      restoreEarningPeriods({ salary: 55000, startedAge: 25, stoppedAge: 60 }),
+    ).toEqual([{ fromAge: 25, toAge: 60, salary: 55000 }])
+  })
+
+  it('fills a legacy field the old form left empty with the defaults', () => {
+    expect(restoreEarningPeriods({ salary: 55000 })).toEqual([
+      { fromAge: 22, toAge: 65, salary: 55000 },
+    ])
+  })
+
+  it('prefers the stored array over the legacy fields', () => {
+    expect(
+      restoreEarningPeriods({
+        earningPeriods: [{ fromAge: 30, toAge: 40, salary: 1000 }],
+        salary: 55000,
+        startedAge: 25,
+        stoppedAge: 60,
+      }),
+    ).toEqual([{ fromAge: 30, toAge: 40, salary: 1000 }])
+  })
+
+  it('reports nothing to restore when the payload holds no earning period', () => {
+    expect(restoreEarningPeriods({})).toBeUndefined()
+  })
+})
+
+describe('picking the saved form', () => {
+  const SAVED = { birthYear: 1990, claimAge: 65 }
+
+  it('reports nothing saved when both keys are empty', () => {
+    expect(pickStoredState(null, null)).toEqual({ ok: true, saved: null })
+  })
+
+  it('reads the current key', () => {
+    expect(pickStoredState(JSON.stringify(SAVED), null)).toEqual({
+      ok: true,
+      saved: SAVED,
+    })
+  })
+
+  it('reads the legacy key when the current one is empty', () => {
+    expect(pickStoredState(null, JSON.stringify(SAVED))).toEqual({
+      ok: true,
+      saved: SAVED,
+    })
+  })
+
+  it('prefers the current key when both hold a value', () => {
+    expect(
+      pickStoredState(JSON.stringify({ claimAge: 60 }), JSON.stringify(SAVED)),
+    ).toEqual({ ok: true, saved: { claimAge: 60 } })
+  })
+
+  it('falls back to the legacy key when the current value does not parse', () => {
+    expect(pickStoredState('{"claimAge":', JSON.stringify(SAVED))).toEqual({
+      ok: true,
+      saved: SAVED,
+    })
+  })
+
+  it('reports an unreadable value when nothing parses', () => {
+    expect(pickStoredState('not json', null)).toEqual({ ok: false })
+    expect(pickStoredState('null', '5')).toEqual({ ok: false })
   })
 })
 
@@ -269,6 +414,31 @@ describe('read inputs', () => {
     })
     expect(inputs.earningPeriods).toHaveLength(2)
     expect(inputs.earningProblems).toEqual([EARNING_OVERLAP_PROBLEM])
+  })
+
+  it('finds an overlap whatever order the rows are in', () => {
+    const separate = readInputs({
+      ...FILLED,
+      earningPeriods: [
+        { fromAge: 45, toAge: 65, salary: 50000 },
+        { fromAge: 22, toAge: 40, salary: 70000 },
+      ],
+    })
+    expect(separate.earningPeriods).toEqual([
+      { fromAge: 45, toAge: 65, salary: 50000 },
+      { fromAge: 22, toAge: 40, salary: 70000 },
+    ])
+    expect(separate.earningProblems).toEqual([])
+
+    expect(
+      readInputs({
+        ...FILLED,
+        earningPeriods: [
+          { fromAge: 40, toAge: 65, salary: 50000 },
+          { fromAge: 22, toAge: 50, salary: 70000 },
+        ],
+      }).earningProblems,
+    ).toEqual([EARNING_OVERLAP_PROBLEM])
   })
 
   it('accepts adjacent and separated earning periods', () => {

@@ -19,6 +19,7 @@
     type EarningPeriod,
   } from '$lib/cpp/estimator'
   import {
+    DEFAULT_EARNING_PERIOD,
     MAX_BIRTH_YEAR,
     MAX_CARE_YEAR,
     MAX_WORK_AGE,
@@ -28,9 +29,15 @@
     PERIOD_PROBLEM,
     clamp,
     formatPercent,
+    nextEarningPeriod,
     parseWhole,
+    pickStoredState,
     readInputs,
+    restoreEarningPeriods,
     storedNumber,
+    type EarningPeriodFields,
+    type StoredResult,
+    type StoredState,
   } from '$lib/cpp/inputs'
 
   const BASE_YEAR = LAST_PUBLISHED_YEAR
@@ -68,37 +75,8 @@
     wageGrowthText: (DEFAULT_WAGE_GROWTH * 100).toFixed(2),
   }
 
-  const DEFAULT_EARNING_PERIOD = {
-    fromAge: 22,
-    toAge: 65,
-    salary: 70000,
-  }
-
   const STORAGE_KEY = 'cpp-calculator:v2'
   const LEGACY_STORAGE_KEY = 'cpp-calculator:v1'
-
-  interface SavedPeriod {
-    from?: number
-    to?: number
-  }
-
-  interface SavedEarningPeriod {
-    fromAge?: number
-    toAge?: number
-    salary?: number
-  }
-
-  interface SavedState {
-    birthYear?: number
-    claimAge?: number
-    inflationText?: string
-    wageGrowthText?: string
-    earningPeriods?: SavedEarningPeriod[]
-    periods?: SavedPeriod[]
-    salary?: number
-    startedAge?: number
-    stoppedAge?: number
-  }
 
   interface PeriodRow {
     id: number
@@ -106,11 +84,8 @@
     to: number | undefined
   }
 
-  interface EarningRow {
+  interface EarningRow extends EarningPeriodFields {
     id: number
-    fromAge: number | undefined
-    toAge: number | undefined
-    salary: number | undefined
   }
 
   let nextEarningId = 1
@@ -129,24 +104,18 @@
   let storageNote = $state<string | null>(null)
   let skipNextSave = false
 
-  type Stored = { ok: true; saved: Partial<SavedState> | null } | { ok: false }
-
-  function readStored(): Stored {
+  function readStored(): StoredResult {
     try {
-      const raw =
-        localStorage.getItem(STORAGE_KEY) ??
-        localStorage.getItem(LEGACY_STORAGE_KEY)
-      if (!raw) return { ok: true, saved: null }
-      const saved = JSON.parse(raw)
-      return saved && typeof saved === 'object'
-        ? { ok: true, saved: saved as Partial<SavedState> }
-        : { ok: false }
+      return pickStoredState(
+        localStorage.getItem(STORAGE_KEY),
+        localStorage.getItem(LEGACY_STORAGE_KEY),
+      )
     } catch {
       return { ok: false }
     }
   }
 
-  function restore(saved: Partial<SavedState> | null) {
+  function restore(saved: StoredState | null) {
     if (!saved) return
     birthYear =
       storedNumber(saved.birthYear, MIN_BIRTH_YEAR, MAX_BIRTH_YEAR) ?? birthYear
@@ -158,32 +127,12 @@
     if (typeof saved.wageGrowthText === 'string') {
       wageGrowthText = saved.wageGrowthText
     }
-    if (Array.isArray(saved.earningPeriods)) {
-      earningPeriods = saved.earningPeriods.map((period) => ({
+    const restoredEarningPeriods = restoreEarningPeriods(saved)
+    if (restoredEarningPeriods) {
+      earningPeriods = restoredEarningPeriods.map((period) => ({
         id: nextEarningId++,
-        fromAge: storedNumber(period?.fromAge, MIN_WORK_AGE, MAX_WORK_AGE),
-        toAge: storedNumber(period?.toAge, MIN_WORK_AGE, MAX_WORK_AGE),
-        salary: storedNumber(period?.salary, 0, Number.POSITIVE_INFINITY),
+        ...period,
       }))
-    } else if (
-      saved.salary !== undefined ||
-      saved.startedAge !== undefined ||
-      saved.stoppedAge !== undefined
-    ) {
-      earningPeriods = [
-        {
-          id: nextEarningId++,
-          fromAge:
-            storedNumber(saved.startedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
-            DEFAULT_EARNING_PERIOD.fromAge,
-          toAge:
-            storedNumber(saved.stoppedAge, MIN_WORK_AGE, MAX_WORK_AGE) ??
-            DEFAULT_EARNING_PERIOD.toAge,
-          salary:
-            storedNumber(saved.salary, 0, Number.POSITIVE_INFINITY) ??
-            DEFAULT_EARNING_PERIOD.salary,
-        },
-      ]
     }
     if (Array.isArray(saved.periods)) {
       periods = saved.periods.map((period) => ({
@@ -210,7 +159,7 @@
 
   $effect(() => {
     if (!hydrated) return
-    const saved: SavedState = {
+    const saved: StoredState = {
       birthYear,
       claimAge,
       inflationText,
@@ -244,43 +193,9 @@
   }
 
   function addEarningPeriod() {
-    if (earningPeriods.length === 0) {
-      earningPeriods = [{ id: nextEarningId++, ...DEFAULT_EARNING_PERIOD }]
-      return
-    }
-
-    const last = earningPeriods.reduce((latest, period) => {
-      const latestTo = parseWhole(latest.toAge) ?? MIN_WORK_AGE - 1
-      const periodTo = parseWhole(period.toAge) ?? MIN_WORK_AGE - 1
-      return periodTo >= latestTo ? period : latest
-    })
-    const parsedFrom = parseWhole(last.fromAge)
-    const from = clamp(
-      parsedFrom ?? DEFAULT_EARNING_PERIOD.fromAge,
-      MIN_WORK_AGE,
-      MAX_WORK_AGE,
-    )
-    const to = clamp(
-      parseWhole(last.toAge) ?? parsedFrom ?? DEFAULT_EARNING_PERIOD.toAge,
-      from,
-      MAX_WORK_AGE,
-    )
-
     earningPeriods = [
       ...earningPeriods,
-      to < MAX_WORK_AGE
-        ? {
-            id: nextEarningId++,
-            fromAge: to + 1,
-            toAge: Math.min(MAX_WORK_AGE, to + 5),
-            salary: last.salary ?? DEFAULT_EARNING_PERIOD.salary,
-          }
-        : {
-            id: nextEarningId++,
-            fromAge: undefined,
-            toAge: undefined,
-            salary: last.salary ?? DEFAULT_EARNING_PERIOD.salary,
-          },
+      { id: nextEarningId++, ...nextEarningPeriod(earningPeriods) },
     ]
   }
 
