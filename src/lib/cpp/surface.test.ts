@@ -83,7 +83,7 @@ describe('pension surface', () => {
       [{ ...PERIOD, toAge: 66, salary: grid.ceiling }],
       DEFAULTS.birthYear,
       BASE_YEAR,
-      DEFAULTS.cpi,
+      DEFAULTS.wageGrowth,
     )
     const ceilings = project(
       CEILINGS,
@@ -112,7 +112,7 @@ describe('pension surface', () => {
       ],
       DEFAULTS.birthYear,
       BASE_YEAR,
-      DEFAULTS.cpi,
+      DEFAULTS.wageGrowth,
     )
     const ceilings = project(
       CEILINGS,
@@ -138,7 +138,7 @@ describe('pension surface', () => {
       [{ fromAge: 22, toAge: 30, salary: 60000 }],
       DEFAULTS.birthYear,
       BASE_YEAR,
-      DEFAULTS.cpi,
+      DEFAULTS.wageGrowth,
     )
     const ceilings = project(
       CEILINGS,
@@ -187,9 +187,7 @@ describe('pension surface', () => {
     expect(grid.max).toBeGreaterThan(early.max)
   })
 
-  it('recomputes when a keyed input changes', () => {
-    const cell = (surface: ReturnType<typeof pensionSurface>) =>
-      surface.values[row(66)][column(1)]
+  it('rebuilds the grid when a keyed input changes', () => {
     const variants = [
       { birthYear: 1985 },
       { earningPeriods: [{ ...PERIOD, fromAge: 25 }] },
@@ -198,6 +196,21 @@ describe('pension surface', () => {
       { baseYear: BASE_YEAR - 1 },
     ]
     for (const variant of variants) {
+      expect(pensionSurface({ ...DEFAULTS, ...variant })).not.toBe(grid)
+    }
+  })
+
+  it('changes the pension when an assumption changes', () => {
+    const cell = (surface: ReturnType<typeof pensionSurface>) =>
+      surface.values[row(66)][column(1)]
+    // Years before 2019 are averaged, so a salary at the first ceiling earns
+    // the same from either start age and only the other assumptions move it.
+    for (const variant of [
+      { birthYear: 1985 },
+      { cpi: 0.04 },
+      { wageGrowth: 0.05 },
+      { baseYear: BASE_YEAR - 1 },
+    ]) {
       expect(cell(pensionSurface({ ...DEFAULTS, ...variant }))).not.toBeCloseTo(
         cell(grid),
         0,

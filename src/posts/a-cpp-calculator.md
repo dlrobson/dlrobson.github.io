@@ -14,7 +14,7 @@ Your Canada Pension Plan pension is 25% of your career-average earnings plus two
 
 ## What it assumes
 
-- **Earning periods**, each a salary in today's dollars over a range of ages. Earning periods cannot overlap; a gap between them is time with no earnings, and raises within a period are not modelled.
+- **Earning periods**, each a salary in today's dollars over a range of ages. Earning periods cannot overlap; a gap between them is time with no earnings, and a raise inside a period follows the wage-growth rate you enter.
 - **Today's dollars**, with the CPP earnings ceilings and the OAS maximum published for the fourth quarter of 2026. The CPP ceilings are projected after 2026 at the wage-growth rate you enter.
 - **CPP and OAS.** No survivor's pension, disability, post-retirement benefits, Guaranteed Income Supplement, or OAS recovery tax, and no check that you qualify for either. Quebec Pension Plan rules differ.
 - **OAS residency**, at 1/40 of the full pension for each year of Canadian residence after 18 that you enter, up to 40 years. The 10-year minimum is not checked.

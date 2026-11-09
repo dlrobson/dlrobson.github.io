@@ -4,9 +4,10 @@
  * Salary is a share of the modelled earnings ceiling rather than dollars. The
  * ceiling moves with the birth year and the wage-growth assumption, so a share
  * holds the first and second ceilings in one place on the chart; `ceiling`
- * converts a share back to today's dollars. Only the last earning period's
- * salary varies; earlier periods keep their entered salaries, and every period
- * is cut off at the age work stops.
+ * converts a share back to today's dollars. Salaries grow at the same wage rate
+ * as the ceilings, so a share keeps its place against them. Only the last
+ * earning period's salary varies; earlier periods keep their entered salaries,
+ * and every period is cut off at the age work stops.
  *
  * Amounts are in today's dollars, indexed [stop age][salary share].
  */
@@ -176,7 +177,7 @@ function buildSurface(options: SurfaceOptions): Surface {
         birthYear,
         claimAge,
         applyChildRearing(
-          earningPeriodsEarnings(periods, birthYear, baseYear, cpi),
+          earningPeriodsEarnings(periods, birthYear, baseYear, wageGrowth),
           childRearing,
         ),
         ceilings,

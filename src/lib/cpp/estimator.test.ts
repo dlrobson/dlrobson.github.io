@@ -5,6 +5,7 @@ import {
   applyChildRearing,
   childRearingWindows,
   DEFAULT_CPI,
+  DEFAULT_WAGE_GROWTH,
   defaultChildRearingPeriod,
   deflate,
   earningPeriodsEarnings,
@@ -345,7 +346,8 @@ describe('today dollars', () => {
 })
 
 describe('earning periods', () => {
-  it('holds each period salary flat in real terms', () => {
+  it('grows each period salary at the given rate', () => {
+    const growth = 0.03
     const earnings = earningPeriodsEarnings(
       [
         { fromAge: 22, toAge: 40, salary: 70000 },
@@ -353,14 +355,20 @@ describe('earning periods', () => {
       ],
       1990,
       2026,
-      0.025,
+      growth,
     )
     expect(earnings[2026]).toBe(70000)
     for (const year of years(2012, 2030)) {
-      expect(earnings[year]).toBeCloseTo(70000 * 1.025 ** (year - 2026), 6)
+      expect(earnings[year]).toBeCloseTo(
+        70000 * (1 + growth) ** (year - 2026),
+        6,
+      )
     }
     for (const year of years(2035, 2055)) {
-      expect(earnings[year]).toBeCloseTo(50000 * 1.025 ** (year - 2026), 6)
+      expect(earnings[year]).toBeCloseTo(
+        50000 * (1 + growth) ** (year - 2026),
+        6,
+      )
     }
   })
 
@@ -398,7 +406,7 @@ describe('child-rearing periods', () => {
     [{ fromAge: 22, toAge: 65, salary: 70000 }],
     1990,
     2026,
-    DEFAULT_CPI,
+    DEFAULT_WAGE_GROWTH,
   )
 
   it('defaults a new period to age 30 for five years', () => {

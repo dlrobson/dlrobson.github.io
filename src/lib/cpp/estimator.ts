@@ -335,8 +335,10 @@ export function estimate(
 }
 
 /**
- * Earnings for one or more salary periods held flat in real terms: each amount
- * is given in `baseYear` dollars and grows with `cpi` in every later year.
+ * Earnings for one or more salary periods: each amount is given in `baseYear`
+ * dollars and grows at `growth` for every other year, earlier or later. The
+ * calculator passes the wage-growth assumption, so a salary keeps its place
+ * against the earnings ceilings, which grow at the same rate.
  * Ages are inclusive, and a gap between periods is a year with no earnings.
  * The periods must not overlap: a year covered twice takes the salary of the
  * period later in the list, so `readInputs` rejects an overlapping set first.
@@ -345,7 +347,7 @@ export function earningPeriodsEarnings(
   periods: readonly EarningPeriod[],
   birthYear: number,
   baseYear: number,
-  cpi: number,
+  growth: number,
 ): Earnings {
   const earnings: Record<number, number> = {}
   for (const period of periods) {
@@ -354,7 +356,7 @@ export function earningPeriodsEarnings(
       year <= birthYear + period.toAge;
       year++
     ) {
-      earnings[year] = period.salary * (1 + cpi) ** (year - baseYear)
+      earnings[year] = period.salary * (1 + growth) ** (year - baseYear)
     }
   }
   return earnings

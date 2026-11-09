@@ -259,13 +259,14 @@
     const cpi = inputs.inflation ?? DEFAULT_CPI
     const growth = inputs.wageGrowth ?? DEFAULT_WAGE_GROWTH
 
-    // The ceilings grow at the wage rate; the salaries and the result deflator
-    // use inflation, so each salary stays level in real terms.
+    // The ceilings grow at the wage rate, and each salary grows with them, so a
+    // salary keeps its place against the ceilings. The result is deflated with
+    // inflation.
     const ceilings = project(CEILINGS, birth + 71, growth)
     const windows = childRearingWindows(inputs.carePeriods)
 
     const earnings = applyChildRearing(
-      earningPeriodsEarnings(inputs.earningPeriods, birth, BASE_YEAR, cpi),
+      earningPeriodsEarnings(inputs.earningPeriods, birth, BASE_YEAR, growth),
       inputs.carePeriods,
     )
     const results = CLAIM_AGES.map((age) =>
@@ -534,7 +535,9 @@
         Each row covers the calendar years in which you turn the start through
         end ages. Leave a gap for years without earnings. New rows start after
         your latest period, or with the ages blank when the pension no longer
-        counts those years; adjust the ages to place them.
+        counts those years; adjust the ages to place them. Each salary is in
+        today's dollars and rises with the wage-growth assumption, so it keeps
+        its place against the earnings ceilings.
       </p>
       {#if inputs.earningProblems.length > 0}
         <ul class="problems">
